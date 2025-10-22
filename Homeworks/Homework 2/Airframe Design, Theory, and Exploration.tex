@@ -1,0 +1,373 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\graphicspath{{figures/}}
+\usepackage{subcaption}
+\usepackage{adjustbox}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{caption}
+\definecolor{linkblue}{RGB}{6,125,233}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=linkblue,
+    urlcolor=linkblue,
+    citecolor=linkblue
+}
+\title{Airframe Design, Theory, and Exploration: Homework 2}
+\author{Ethan Creer}
+\date{4 October 2025}
+\begin{document}
+\maketitle
+\section{Wing Design Glossary}
+
+\textbf{Non-dimensional Numbers:}
+\begin{itemize}
+    \item[] \textbf{Reynolds Number:} An important parameter in the field of aerodynamics is that of the \textit{Reynolds number}. It is defined by the following equation:
+        \begin{equation}
+            \frac{\rho V c}{\mu}
+        \end{equation}
+        where $\rho$ is the fluid density, $V$ is the freestream speed, $c$ is a relevant length scale for normalization (for example the mean geometric chord length), and $\mu$ representing the fluid's dynamic viscosity.
+        This ratio is a representation of the inertial to viscous forces and is typically on the order of millions to tens of millions for airplanes at cruising speed. From this, we can conclude that viscous forces are extraordinarily low compared to the inertial forces.
+        It's also insightful to consider the typical flow patterns observed at high and low values for the Reynolds number. At high values, instabilities in the fluid are amplified causing turbulent flow. On the low end, instabilities in the fluid are damped and laminar flow occurs.
+    \item[] \textbf{Mach Number:} The \textit{Mach number} is also an important parameter in aerodynamics, especially when it comes to the study of drag --- most notably compressibility drag.
+    It is given by the following equation:
+    \begin{equation}
+    M = \frac{V}{a}
+    \end{equation}
+    where $V$ is the freestream or local speed and $a$ is the speed of sound. At Mach Number > 1, the local flow speed is greater than the speed of sound. This Mach barrier is difficult to cross as it requires immense energy
+    and is often achieved with afterburners. 
+
+    Note that the Mach number is only dependent on an aircraft's true airspeed. Thus, if the plane is traveling in a jet stream, the only relevant speed is the speed at which the airplane moves through the air. For example, if a plane is traveling with a ground speed of 450 knots through a jet stream headwind of 100 knots, the aircraft is moving through the air at 450 + 100 = 550 knots, and this would be the value of $V$ in our mach number calculation. 
+
+    Another important consideration in Mach number is the speed of the air molecules over the top of the wings. As a consequence of lift (pressure differential between the top and bottom of the wings), air moves faster over the top of the wing. Because of this, the local Mach number over the upper surface will be greater than the above calculated Mach number for the airplane.
+    As a consequence of this, in order for the aircraft to avoid the adverse affects of compressibility drag, it will need to travel at a lower Mach number to prevent the air speed over the wings to be less than the speed of sound. Typical jet airliners cruise at a Mach number around 0.75 to reduce the risk of compressibility drag.
+    \item[] \textbf{Coefficients:} Aerodynamic analysis involves the determining of a variety of coefficients to gain a full picture of the forces and moments acting on the aircraft as it moves through the air. 3 of the more important coefficients are described below.
+    \begin{itemize}
+        \item[] \textbf{Lift Coefficient:} The \textit{lift coefficient}, denoted as $C_L$, is the primary indicator of the pressure differential over the wing surfaces that cause the plane to \textit{lift} into the air.
+        It is given by the following:
+        \begin{equation}
+            C_L = \frac{L}{q_{\infty} S_{ref}}\label{lift_coefficient}
+        \end{equation}
+        This formula gives the normalization of the lifting force, $L$ by dividing it by the quantity $q_{\infty} S_{ref}$. In this quantity, $S_{ref}$ is the wing's reference area and $q_{\infty}$ is known as the dynamic pressure, which is calculated by the following:
+        \begin{equation}
+        q_{\infty} = \frac{1}{2} \rho_{\infty} V_{\infty}^2\label{dynamic_pressure}
+        \end{equation}
+        where $\rho$ is the air density and $V_{\infty}$ is the freestream speed.
+
+        One might wonder why a normalization factor is necessary when we really care about the lifting forces on the wing. The power in normalization is that it allows the engineer to compare the lift of a variety of wing shapes and sizes (with varying angle of attack, sweep, twist, dihedral, etc.). In the normalization formula, we divide the lifting force by the dynamic pressure (which would be the same for any wing traveling at the same speed through the same fluid).
+        Then we divide by the wing reference area. This is important as it normalizes the absolute magnitude of lift across wing sizes. It's obvious to see how the lift generated by a large airliner and a small propeller plane are vastly different.
+        Because of this, we factor out the wing area to compare the true efficiencies of wings of any size.
+        \item[] \textbf{Drag Coefficient:} The \textit{drag coefficient}, denoted as $C_D$, is the primary indicator of the forces acting against the airplanes motion.
+        Similar to the lift coefficient, the drag coefficient is given by the following:
+        \begin{equation}
+            C_D = \frac{D}{q_{\infty} S_{ref}}\label{drag_coefficient}
+        \end{equation}
+        One can clearly see the minor changes made between Equations~\eqref{lift_coefficient} and~\eqref{drag_coefficient}. Simply put, the lift variables were replaced with respective drag variables.
+        The drag variable in this context is the sum of all types of drag (induced, parasitic, and compressibility drag). Definitions for each of these types of drag were given previously in homework 1, and one can refer to that document for the associated equations for each type of drag.
+        Needless to say, the total drag coefficient, $C_D$, is equal to the sum of all other drag coefficients. Thus, 2 paths can be taken to calculate $C_D$; the total drag force can be calculated and then divided by the quantity $q_{\infty} S_{ref}$, or if individual component drag coefficients are known, they can be summed together for the overall drag coefficient.
+        
+        \item[] \textbf{Moment Coefficient:}
+        The moment coefficient is calculated in the same manner as the lift and drag coefficients with one small adjustment. It is given by:
+        \begin{equation}
+            C_m = \frac{M}{q_{\infty} S_{ref} c}\label{moment_coefficient}
+        \end{equation}
+        This equation introduces an additional $c$ term, representing the wings reference length (usually chord). This raises an important point with regard to all the above parameters being dimensionless. The dimensionless nature allows the coefficient to be easily compared with other airframes and is one of the main reasons we normalize the Moment in the first place. Unlike the lift and drag forces (units of Newtons), a moment is a force multiplied by a distance (i.e.\ units of Newton-meters).
+        Because this moment is in the numerator, the units of length need to be cancelled by a reference length in the denominator. This explains the presence of the $c$ in Equation~\eqref{moment_coefficient}.
+
+       It should also be noted the axes about which this moment is computed. In most situations, the moment of particular interest is the pitching moment, or its moment arm about the aircraft's y-axis (out the right wing). This moment is fundamental to the aircraft's stability. Other moments are also present on the aircraft, as seen in Figure~\ref{fig:airframe_axes}. However, these moments more primarily deal with maneuverability and can more easily be corrected by the pilot.
+        \begin{figure}[H]
+            \hspace*{\dimexpr\labelsep+\labelwidth}
+            \begin{minipage}{0.915\linewidth}
+                \centering
+                \includegraphics[width=\linewidth]{airframe_axes.png}
+                \captionsetup{width=\linewidth}
+                \caption{A depiction of the 3 principal body axes of an aircraft. Image from 
+                \href{https://commons.wikimedia.org/wiki/File:Yaw_Axis_Corrected.svg}{Jrvz}, Wikimedia, CC BY-SA 3.0}\label{fig:airframe_axes}
+            \end{minipage}
+        \end{figure}
+
+    \end{itemize}
+    It would be important to note that all the above coefficient definitions are for a 3D frame. If the 2D coefficient expressions are desired, simply replace the capital letter coefficient and lift/drag/moment variables with lowercase letters. That indicates that the coefficients and relevant variables are taken in the 2D frame.
+\end{itemize}
+\textbf{Airframe Performance:} The following two definitions are brief introductions to the concepts that they present. They are expounded upon in the subsequent Section~\ref{sec:theory} on vortex lattice method theory.
+\begin{itemize}
+    \item[] \textbf{Lift Distribution:}
+    Of fundamental importance in aerodynamic analysis is the concept of the lift distribution over an airframe's body. Various methods are used to approximate this lift distribution, but they all revolve around the idea that lift is mathematically related to the circulation of airflow around the wing via the Kutta-Joukowski theorem:
+    \begin{equation}\label{eq:kutta_Joukowski} 
+        L' = \rho V \Gamma
+    \end{equation}
+    Here, $L'$ is the lift per unit span, $\rho$ is the air density, $V$ is the freestream speed, and $\Gamma$ is the circulation.
+    In other words, changing circulation across the wing span results in a changing lift per unit span. Two of the best ways to calculate this lift distribution are with the lifting line theory and the vortex lattice method. The former will be briefly discussed in this section, while the latter (which is in part based off of the lifting line theory) will be discussed more depth in Section~\ref{sec:theory}.
+        \begin{figure}[H]
+            \hspace*{\dimexpr\labelsep+\labelwidth}
+            \begin{minipage}{0.915\linewidth}
+                \centering
+                \includegraphics[width=\linewidth]{lift_distribution.png}
+                \captionsetup{width=\linewidth}
+                \caption{A crude model of lift distribution over one wing on the span of an aircraft. Image from 
+                \href{https://commons.wikimedia.org/wiki/File:Lift\_distribution\_over\_a\_three-dimensional\_wing\_\%281\%29.svg}{Oliver Cleynen}, Wikimedia, CC BY-SA 3.0}\label{fig:lift_distribution}
+            \end{minipage}
+        \end{figure}
+    Lifting line theory is a simplified method of analyzing lift distribution and assumes a number of characteristics about the wing --- particularly that the wing is long and thin. It produces a lift distribution similar to the ones depicted in Figures~\ref{fig:lift_distribution} and~\ref{fig:elliptic_distribution} and helps an aerodynamicist make design decisions for a particular aircraft and its applications.
+    The lift distribution in Figure~\ref{fig:elliptic_distribution} is of particular importance for the applications of lifting line theory. It can be proven that an elliptical lift distribution produces the most efficient wing design --- meaning it minimizes induced drag for a maximum lift. This distribution can be produced by an elliptically shaped wing with no twist, but due to the difficulty in manufacturing of said wings, a different wing shapes with other features (like twist, washout, dihedral, etc.) are usually produced instead.
+
+        \begin{figure}[H]
+            \hspace*{\dimexpr\labelsep+\labelwidth}
+            \begin{minipage}{0.915\linewidth}
+                \centering
+                \includegraphics[width=\linewidth]{elliptical_distribution.png}
+                \captionsetup{width=\linewidth}
+                \caption{An example elliptic lift distribution --- the most efficient lift distribution that minimizes induced drag for maximum lift. Image from 
+                \href{https://www.researchgate.net/publication/358085076_LARGE_DEFLECTION_ANALYSIS_OF_AN_AIRCRAFT_WING_WITH_ELLIPTICAL_LIFT_DISTRIBUTION_AT_DIFFERENT_FLIGHT_CONDITIONS}{Md Golam Sarwar}, ResearchGate, 2017}\label{fig:elliptic_distribution}
+            \end{minipage}
+        \end{figure}
+
+    \item[] \textbf{Stall Speed:} The stall speed of an aircraft is crucial in the design of an airframe. In its simplest form it dictates the minimum speed an aircraft must travel to generate the required lifting force.
+    At speeds below the stall speed, an aircraft does not have enough air moving over its wings to generate lift that overcomes the downward force of gravity. If an aircraft does not have enough altitude, recovering from a stall can be nearly impossible and a catastrophic crash can occur.
+
+
+\end{itemize}
+
+
+
+\section{Vortex Lattice Method Theory}\label{sec:theory}
+\begin{itemize}
+\item[] \textbf{Potential Flow Theory:} At its core, potential flow theory is an idealized fluid flow model that describes a steady, incompressible, and irrotational flow. It operates under the three following independent assumptions: that the divergence of the associated velocity field is zero, the curl of the velocity field is zero, and that the velocity field does not change with time. That is,
+\begin{align}\label{eq:flow_assumptions}
+\nabla \cdot \vec{V} = 0 && \boldsymbol{\omega} \equiv \nabla \times \vec{V} = \boldsymbol{\vec{0}} && \frac{\partial \vec{V}}{\partial t} = \boldsymbol{\vec{0}}
+\end{align} 
+
+Each of these equations are, respectively, the divergence of the velocity field, the curl of the velocity field, and the partial derivative of the velocity field with respect to time. On the curl equation, an extra term is added, $\boldsymbol{\omega}$, which represents the vorticity field. This too is also equivalent to the zero vector. On a technical note, the potential flow theory does not necessarily require steady flow, but for the purposes of simplification and our application with the vortex lattice method, we will assume steady flow.
+
+Another important concept in the realm of potential flow is that of the velocity potential function, $\phi(x,y,z,t)$. The gradient of said scalar potential function represents the velocity field, and is defined with the following equation:
+
+\begin{equation}\label{eq:velocity_potential}
+\vec{V} = \nabla \phi
+\end{equation}
+
+This important function leads us to the ultimate governing equation of potential, which is the Laplace Equation:
+\begin{equation}\label{eq:laplace}
+\nabla^2 \phi = 0
+\end{equation}
+
+To explain, we note that the divergence of our velocity field function is zero (see Equation~\ref{eq:flow_assumptions}). When we take the divergence of this velocity function (substituting in Equation~\ref{eq:velocity_potential}) we get the following:
+
+\begin{equation}\label{eq:solution_proof}
+\nabla \cdot \vec{V} \equiv \nabla \cdot \nabla \phi \equiv \nabla^2\phi
+\end{equation}
+
+Thus, we see that the velocity potential satisfies the Laplace Equation, which can also be written in its component form:
+\begin{equation}\label{eq:component_laplace}
+\frac{\partial^2 \phi}{\partial x^2} + \frac{\partial^2 \phi}{\partial y^2} + \frac{\partial^2 \phi}{\partial z^2} = 0
+\end{equation}
+
+With all this in mind, we begin the application of potential flow to the Vortex Lattice Method (VLM). In addition to the above assumptions, it is important to remember that boundary conditions apply,
+to this equation, especially in the context of a wing through space. In a physical sense, flow cannot pass through these solid boundaries (think of an airfoil traversing through space --- air does not move through the airfoil, but rather around it). Also, potential flow is built on the idea of superposition, that is, multiple flow paths can be `added' together to form an effective flow path.
+Figure~\ref{fig:superposition}, depicts 2 flow fields that can be superposed to create a potential flow --- in this case, when the `A' and `B' elementary flows are superposed, they model the flow around a cylinder.
+        
+\begin{figure}[H]
+    \hspace*{\dimexpr\labelsep+\labelwidth}
+        \begin{minipage}{0.915\linewidth}
+            \centering
+            \includegraphics[width=\linewidth]{superposition.png}
+            \captionsetup{width=\linewidth}
+            \caption{Potential flow illustrated with the superposition of elementary flows: combining both of the above flows produces the flow around a cylinder.  Image from 
+            \href{https://commons.wikimedia.org/wiki/File:Construction_of_a_potential_flow.svg}{Oliver Cleynen}, Wikimedia, CC BY-SA 3.0}\label{fig:superposition}
+        \end{minipage}
+\end{figure}
+
+This is how the VLM theory works --- similar to the superposition of elementary flows in Figure~\ref{fig:superposition}, VLM uses series of superposed horseshoe vortices on the wing to model the air flow around the wing. 
+\item[] \textbf{Vortex Filament and Horseshoe Vortices:} With a knowledge of potential flow theory and a brief introduction to VLM, we now consider a more in-depth look at the details of vortex lattice method. We begin with the concept of a \textit{vortex filament}.
+Consider a whirlpool in a draining bathtub --- the water circulating around the epicenter of the vortex, downwards into the drain. Now imagine an infinitely thin curve 
+extending from the drain vertically, directly along the center of the vortex. Now imagine the entire effect of the whirlpool condensed onto that infinitely thin curve. 
+This is the basic notion of what a vortex filament is, and it has powerful applications for the VLM.\@
+With a mental picture of a vortex filament in mind, we can consider the various properties associated with the filament.
+The vorticity, $\omega = \nabla \times V$, for example, is effectively infinite as the vorticity is concentrated on the infinitesimally thin line.
+The circulation, $\Gamma$, however, is defined as the integral of the vorticity over a surface:
+\begin{equation}\label{eq:filament_Gamma}
+\Gamma = \int_{S}^{}\boldsymbol{\omega}\cdot d\boldsymbol{S}
+\end{equation}
+What's interesting about $\Gamma$, is if we take a closed control volume cylinder around a portion of the vortex filament, the circulation will sum to zero. This is a consequence of the Biot-Savart Law and Helmholtz's vortex theorems --- both of which can be read about more in a computational aerodynamics textbook. 
+For our purposes, we note that the circulation must be constant throughout the entire filament. 
+
+\textit{Horseshoe Vortices} are effectively vortex filaments that form in a shape similar to the one seen in Figure~\ref{fig:horseshoe_vortex}. 
+\begin{figure}[H]
+    \hspace*{\dimexpr\labelsep+\labelwidth}
+        \begin{minipage}{0.915\linewidth}
+            \centering
+            \includegraphics[width=\linewidth]{horseshoe2.png}
+            \captionsetup{width=\linewidth}
+            \caption{A simplified macroscopic representation of a horseshoe vortex over an entire airframe body --- includes the bound vortex on the wings leading edge, the trailing vortices extending along the aircraft's x-axis, and the starting vortex (which is typically disregarded in analysis).  Image from 
+            \href{https://commons.wikimedia.org/wiki/File:Aircraft_wing_lift_distribution_showing_trailing_vortices_(1).svg}{Oliver Cleynen}, Wikimedia, CC BY-SA 3.0}\label{fig:horseshoe_vortex}
+        \end{minipage}
+\end{figure}
+Here we see a singular finite horseshoe vortex surrounding an airframe. It is clear that the circulation along this filament is constant. In an actual aircraft, the trailing vortices of the horseshoe vortex will extend infinitely behind the aircraft. 
+This idea of a horseshoe vortex is fundamental to the VLM theory and is the basis for the evaluation of lift distributions over the span of a wing. 
+A singular horseshoe vortex is not enough however to model the lift distribution over a wing, and as such, a lattice is used, as described below.
+
+\item[] \textbf{Modeling a Lifting Surface with Horseshoe Vortices:} A significant application of the aforementioned potential flow theory and horseshoe vortices, is modeling the lift distribution over the span of a wing.
+This application is one of the primary purposes of aerodynamic analysis and allows the engineer to design an effective wing with an efficient lift distribution.
+
+As mentioned, the Vortex Lattice Method is a well-used approach to modeling this lift, and to do so requires effectively modeling a lifting surface using horseshoe vortices.
+Essentially, the wing is divided into panels (either chordwise, spanwise, or both) and a horseshoe vortex is place on each of these panels. When both chordwise and spanwise panels are used, a more 3D wing shape can be formed; if only spanwise panels are used, the method has a special name known as the Weissinger formulation.
+We have already established that each horseshoe vortex has a constant strength, but its magnitude is unknown. In the present application, we also re-consider the concept of boundary conditions, and recognize that no flow can occur through the panel. This rule is applied at a singular fixed control point on each panel.
+In practice, this control point is placed at three-quarters chord length down the panel. Further, the distributed vorticity is typically lumped into a single vortex located a quarter chord length down the panel. 
+In a mathematical context, the boundary condition here is specified as the flow tangency boundary condition and is satisfied when the following is true:
+\begin{equation}\label{boundary_condition}
+{\left[\left(\vec{V}_{\infty} - \vec{\Omega} \times \vec{r}_b + \vec{V}_{ind} + \vec{V}_{other}\right) \cdot \hat{n}\right]}_{cp} = 0 
+\end{equation}
+
+Here, the variables listed are (in order of appearance) the freestream velocity, the rotational velocity, a vector from the aircraft center of gravity to a point of interest, the self-induced velocity from vortices, and other velocity sources like wind gusts or wakes. This somewhat complicated looking formula is essentially saying that the flow over the wing must be tangent to the wing.
+In addition, this equation can frequently be simplified, as the rotational velocity is often negligible (especially for rudimentary analysis) and assuming no strong wind gusts, $\vec{V}_{other} = 0$. 
+
+Essentially what the vortex lattice method does is create a large system of linear equations, and linear algebra is employed to obtain a solution. Thus, matrix of linear algebra solver will be needed to find the solution.
+
+This system of linear equations can be represented by the following matrix equation:
+\begin{equation}\label{eq:AIC_matrix}
+\left[AIC\right]\Gamma = b
+\end{equation}
+
+Where the $AIC$ matrix is known as the aerodynamic influence coefficient matrix, $\Gamma$ is the circulation vector, and $b$ is a vector representing the projected freestream velocity vector onto the surface's normal vector.
+The $AIC$ matrix is of dimension $N \times N$ where $N$ represents the number of panels employed in the particular VLM application. Further, the $\Gamma$ and $b$ vectors are of dimension $N \times 1$, representing a vector for the circulation on each panel and the normal component of freestream velocity.
+
+To explain each component more, the $ij$th entry of the $AIC$ matrix is defined as the induced normal velocity at the $i$th control point, caused by the unit-strength horseshoe vortex on the $j$th panel. 
+This $ij$th value is given by complex calculations using the Biot-Savart Law and can be studied more in depth in an aerodynamics textbook.
+
+Solving this equation using a linear system of equations solvers, yields the $\Gamma$, or circulation, vector. Knowing the circulation matrix gives rise to calculation of the given wing's lift distribution, and a host of other coefficients and forces (drag, moments, x/y/z forces, etc.). The lift, in particular, is given by the Kutta-Joukowski Theorem, or Equation~\ref{eq:kutta_Joukowski}, 
+while the other coefficients and forces are derived from similar formulas.
+
+\item[] \textbf{External Drag and Stall:} An important caution should be given with regard to the above theory and its relation to aircraft stall. All the above calculations and theory are based on potential flow theory, with its associated inviscid flow. This idealized model is insufficient for stall calculations, as stall is based on
+a fundamentally different flow model. Stall occurs as a direct consequence of viscous flow behavior and occurs when the flow separates before the trailing edge of the airfoil. This is caused by the characteristics of a viscous fluid, and causes a sudden drop in lift. The lift and drag information obtained from VLM calculations are insufficient for
+predicting stall behavior because of its inviscid flow assumptions. As such, an external drag model is necessary for stall exploration.
+
+\end{itemize}
+With these fundamental principles as the backbone to the VLM theory, we are now ready to begin an exploration on various lift distributions and wing efficiency.
+
+\section{Exploration: Lift Distributions and Wing Efficiency}
+Consider three planform wings, discretized into an appropriate grid for vortex lattice method analysis. Each wing with the same fundamental parameters ($S_{ref}$, $V_{\infty}$, panel distribution spacing, etc.), but differentiated by their chord lengths. The first
+consists of a constant chord; the second, a tapered chord, and the third an elliptically distributed chord. We recall our prior claim that an elliptic lift distribution is the most efficient for a wing as it minimizes induced drag for a maximum lift. Our exploration intends
+to empirically show the truth in that claim. 
+
+The exploration begins by developing the chord equation for each wing. We recognize the getting started guide for the Vortex Lattice Method Julia package already contains a tapered wing, so we use the provided chord parameters varying from 2.2 m to 1.8 m for this wing.
+The constant chord wing is simple, in that we create a new system that has an invariant chord at 2.0 m. 
+The elliptic wing, is a little more tricky, but it's based on the fundamental ellipse equation of:
+
+\begin{equation}\label{eq:ellipse}
+\frac{x^2}{a^2} + \frac{y^2}{b^2} = 1
+\end{equation}
+where $a$ represents the ellipse's root radius along the x-axis, and $b$ represents the ellipse's root radius along the y-axis. To further simplify the process of creating this wing, we will take the wing's leading edge to be straight, and allow the chord to vary elliptically. This is known as a semi-elliptical wing and can still have the same properties and aerodynamic effects as that of a true elliptical wing.
+
+Knowing that the planform area of a full elliptic wing is given by:
+\begin{equation}\label{eq:elliptic_area}
+S_{ref} = \frac{\pi}{4} b_{ref}  c_{root}
+\end{equation}
+with $b_{ref}$ as the wing's full span and $c_{root}$ as the wing's root chord length, we can solve for the necessary root chord that gives the same reference area and span as the other 2 wings.
+
+This root chord formula, rearranged from Equation~\ref{eq:elliptic_area} is:
+\begin{equation}\label{c_root}
+c_{root} = \frac{4  S_{ref}}{\pi  b_{ref}}
+\end{equation}
+The root chord is important to know, as in our ellipse equation, it represents the minor radius of the wing. The major radius on the other hand is just simply the half span of the wing.
+
+With an understanding of the nature of an ellipse and Equations~\ref{eq:ellipse}~and~\ref{eq:elliptic_area} we can derive the chord formula as a function of y (or position along the span).
+Replacing $a$, $b$, and $x$ in Equation~\ref{eq:ellipse} with $c_{root}$, $\frac{b}{2}$, and $c(y)$, respectively, we rearrange for:
+\begin{equation}\label{chord_formula}
+c(y) = c_{root} \sqrt{1 - {\left(\frac{y}{b/2}\right)}^2}
+\end{equation}
+
+Now that we have functions for each wing's chord, we can visualize each wing as seen in Figure~\ref{fig:cumulative_planform} and begin our lift analysis.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{cumulative_planform.png}
+    \caption{Visual representation of the 3 described wings: tapered wing, constant chord wing, and elliptic chord wing}\label{fig:cumulative_planform}
+\end{figure}
+
+Putting all of our learned knowledge on potential flow theory and the vortex lattice method allows implementation using these three described wings.
+Using the outlined wings as a guide, the VLM software discretizes the outline in to a grid like pattern according to a Sine based distribution in the span direction and a uniform based distribution in the chord direction.
+
+A few other parameters need to be defined before running the software, including, twist, section rotation, camber line, reference area, etc.,\ but once the basics are defined, the code is run and a series of coefficients and forces are returned to the file.
+Interpreting all the returned values from this data requires a careful analysis, but once correct formulas are defined, the code runs smoothly and calculates the necessary values.
+
+For reference, one of the more important functions of the Julia VLM used for this particular application is the \texttt{lifting\_line\_coefficients()} function. % chktex 36
+This function directly computes the x, y, and z direction force coefficients per unit span for each spanwise segment and allows us to further compute the lift.
+It would be important to note, that we use the keyword argument \texttt{frame=Wind()} in our function call as this gives the lifting force perpendicular to the freestream direction. If the standard \texttt{frame=Body()} is used, we would need to use trigonometry to account for any difference in the freestream direction and the longitudinal x-axis of the aircraft. % chktex 36
+Using the wind frame simply does those calculations for us.
+
+Before we begin to calculate the lift distribution, for reference we plot the coefficient of lift distribution as seen in Figure~\ref{fig:cumulative_cl}
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=\textwidth]{cumulative_cl.png}
+    \caption{Visual representation of the 3 wings and their respective coefficient of lift distribution. Plotted in conjunction with the ideal coefficient of lift (a constant value across the length of the span)}\label{fig:cumulative_cl}
+\end{figure}
+
+Several important observations can be made from Figure~\ref{fig:cumulative_cl}.
+Examining each wing's $c_l$ distribution reveals unique insight into its respective efficiency. It's clear that the elliptic wing most closely approximates the constant ideal coefficient of lift depicted. What's interesting about the elliptic wing though, is its $c_l$ values near its wing tips.
+We notice that they begin to spike up. This can be explained in part by the numerical methods used to discretize the wing into its elliptic shape. From simple inspection of Figure~\ref{fig:cumulative_planform}, we can see that the chord length goes to zero at the wing tips.
+The VLM code is not adequately equipped to handle panel reference areas approaching zero, and as such we see the $c_l$ spike as a numerical artifact in our plot. To give a better picture in the overall cumulative plot, a few end points were taken off of each side of the wing to allow for proper scaling.
+Overall though, the principle is evident from this plot that the elliptic wing most closely approximates the ideal coefficient of lift distribution.
+The value chosen for the ideal elliptic coefficient of lift was determined from the VLM analysis on the elliptic wing and used its \texttt{elliptic\_CL} variable value, or the total lift coefficient for the wing.
+
+To examine why the ideal coefficient of lift distribution is a constant value across the length of the span, we note the definition of ``ideal' in our context. Ideal, in our analysis, means that induced drag is minimized across the wing for the maximum amount of lift, in other words, the wing is performing as efficiently as possible. Recalling that induced drag is caused by the air being deflected downwards (and the associated energy with that process), it would make sense that the less air deflected downwards, the less induced drag.
+Minimizing the induced angle of attack results in the least air deflection and its associated induced drag. Applying these concepts to a wing, we can reason that a constant induced angle of attack would result in this minimized induced drag. If we think about it from an efficiency standpoint, the constant induced angle of attack means that each portion of the wing is equally contributing to pushing the air downwards. As the final piece of the puzzle, we make the connection between a constant coefficient of lift and the constant induced angle of attack.
+Using thin airfoil theory at small angles of attack, the equation for coefficient of lift is given by:
+\begin{equation}\label{eq:coefficient_of_lift}
+c_l = \alpha_0(\alpha - \alpha_{L=0} -\alpha_i)
+\end{equation}
+where $\alpha_0$, $\alpha$, $\alpha_{L=0}$ and $\alpha_i$ represent the lift-curve slope, geometric angle of attack, zero-lift angle of attack, and induced angle of attack, respectively. 
+Because our wing is symmetric (e.g.\ no camber) the zero lift angle of attack is zero, so the equation simplifies to:
+\begin{equation}\label{eq:coefficient_of_lift_final}
+c_l = \alpha_0(\alpha -\alpha_i)
+\end{equation}
+
+Noting that both the lift curve slope is a constant for any given wing, and the geometric angle of attack for a wing with no twist is constant across its span, the only way for $c_l$ to vary would be for $\alpha_i$ to vary. Because we've already noted that induced angle of attack is constant across the span of an efficient wing, we can finally conclude that an efficient wing also has a constant coefficient of lift across its span.
+
+From an empirical standpoint, examining Figure~\ref{fig:cumulative_cl} reveals that the elliptic wing most closely approximates this constant coefficient of lift distribution and as such is the most efficient of the 3 described wings.
+
+Transitioning from the coefficient of lift distribution to the lift distribution, we note the relationship between $c_l$ and $L$ is given by the panel lift force equation:
+\begin{equation}\label{eq:lift_force_equation}
+L = c_l \frac{1}{2} \rho V_{\infty}^2 S_{ref}
+\end{equation}
+
+An important distinction for our panel discretized wing is that $S_{ref}$ is the area of each individual panel section. Since our equation is a per-unit span calculation, we take the collection of all chordwise panels in given spanwise section and approximate its area as a trapezoid. 
+In our case, we have taken the freestream velocity, ($V_{\infty}$), as 100 $\frac{m}{s}$ and the air density, ($\rho$), as 1.225 $\frac{kg}{m^3}$ to represent conditions for take-off at sea level.
+
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=\textwidth]{cumulative_lift.png}
+    \caption{Lifting force distribution for the 3 described wings along with the ideal lift distribution.}\label{fig:cumulative_L}
+\end{figure}
+
+After VLM code is run on the given described wings, we use each wing's associated array of $c_l$ values to compute the lifting force at each spanwise panel and plot the given results, as shown in Figure~\ref{fig:cumulative_L}
+
+A few initial things to note on this plot is that the ideal lift distribution's maximum lift was calculated as the average of the maxima in our 3 described wings, purely for comparison purposes. In actuality, the ideal lift distribution maximum would be equivalent to our elliptical wing's max, but for comparison, we've decided to average the 3.
+The ideal lift distribution follows a perfect ellipse, while each of the 3 wings deviate slightly from the ideal. Interestingly, the elliptic wing follows more of a parabola shape than the ellipse seen in the ideal case.
+Upon close examination at the end points of this curve, we see a change in concavity (which differs from the other wings) with the curve flattening out before approaching zero lifting force. Again, we can attribute this plot characteristic
+to the geometry of the discretized wing. With the chord length going to zero at the wing tips and all chordwise panels being contained in that portion of the wing, we would expect to see some numerical artifacts in our data.
+Though we would expect the elliptic wing to more closely match the ideal, it is accurate enough to avoid throwing out the data all together.
+
+We can also notice that the constant and tapered chord wings have nearly identical lifting force's per unit span, outside the middle portion of the wing.
+Typically, a higher $c_l$ value results in a higher $L$ value, but the present situation can be explained by close analysis of Equation~\ref{eq:lift_force_equation}.
+While the value of $c_l$ for the panels near the root chord may be higher for the constant chord wing, the value of $S_{ref}$ at those panels near the root chord is actually smaller than the tapered wing counterparts.
+We note that the root chord on the tapered wing is 2.2 m in length, while the root chord on the constant chord wing is 2.0 m. This small change in chord length changes the associated trapezoidal panel area and as a result changes the lift force per unit span value.
+Before our final analysis, we note that we could have normalized the span to go from -1 to 1, as is often typical in more advanced aerodynamic analysis. However, for our application, since each wing had the same span, and we chose to plot the true planform area in Figure~\ref{fig:cumulative_planform}, the true span was used for consistency and ease in interpretability.
+
+
+For our final discussion on our planform wing exploration, a decision is to be made on which of the given wings is the most efficient.
+Examining Figure~\ref{fig:cumulative_cl}, clearly displays that the elliptic wing most closely approximates the constant $c_l$ ideal value.
+For the plot displayed in Figure~\ref{fig:cumulative_L}, it's a little more difficult to differentiate between the 3 as which is most efficient, 
+but recalling the numerical artifact argument discussed earlier that is present in the elliptic wing, and in conjunction with our observations from Figure~\ref{fig:cumulative_cl}, we can conclude that the elliptic wing in this case is also the most efficient.
+
+It would be important to note however, that this efficient elliptic wing is an oversimplification of the complex flow over the wing.
+In our exploration, we only considered wings without dihedral or twist. In reality, most wings are designed with these characteristics to improve other aerodynamic qualities.
+While the elliptic wing with no twist and dihedral may be most optimized for minimizing induced drag, it is not necessarily the most optimized for other aerodynamic properties (such as its stall characteristics).
+In the design of a wing, an aerodynamicist would need to consider all aerodynamic properties and flow characteristics to appropriately design an optimal wing.
+
+
+Ultimately, our exploration gives only a brief introduction to the vast field of computational aerodynamics. Though brief in nature, its results lead to strong foundational conclusions that guide the principles of higher level
+aerodynamic computations and research. A thorough understanding of the fundamental laws described in our theory exploration is critical for future analysis with higher level applications in the world of aerodynamics.
+
+\end{document}

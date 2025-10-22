@@ -1,0 +1,413 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\graphicspath{{figures/}}
+\usepackage{subcaption}
+\usepackage{adjustbox}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{caption}
+\definecolor{linkblue}{RGB}{6,125,233}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=linkblue,
+    urlcolor=linkblue,
+    citecolor=linkblue
+}
+\usepackage{booktabs}
+
+\title{Airframe Design Optimization: Homework 3}
+\author{Ethan Creer}
+\date{18 October 2025}
+\begin{document}
+\maketitle
+\section{Stability and Optimization Glossary}
+\textbf{Stability:} One of the primary characteristics for aircraft design is that of its stability. One important principle regarding stability is that it comes with a cost of maneuverability.
+As such, it is sometimes preferable to decrease the aircraft's stability to increase its mobility. This gives insight into the aircraft mechanics of the highly maneuverable (yet somewhat lacking in stability) fighter jet
+and the highly stable (yet somewhat lacking in maneuverability) Airbus A380. As with any principle, there comes with it a series of definitions that aid in the understanding of the concept.
+\begin{itemize}
+    \item[] \textbf{Static Stability:}
+    The first series of definitions stems from the concept of static stability --- the principle that governs the aircraft's tendency to return to its neutral state after encountering an outside force. Fundamental to the nature of static stability is the concept of stability derivatives. This will be explained more in depth later, but it's appropriate for an initial exploration of the idea here.
+    It is natural to see how small changes in angle of attack and sideslip can effect the moments and forces acting on the airplane. In addition, the moments and forces acting on the airplane are also effected by small changes in roll, pitch, and yaw rates. These small changes in the described parameters leading to small changes in moments and forces are characterized by a series of partial derivatives to give the engineer further information about the stability of their designed wing.
+    These partial derivatives are known as stability derivatives, of which more will be said below. With this base understanding, we can now begin to explore some of the parameters that affect the stability derivatives.
+        \begin{itemize}
+            \item[] \textbf{Aerodynamic center:} A preliminary analysis on airfoil design probably taught the importance of the \textit{airfoil center of pressure}. In a sense, this is where the airfoil could be balanced on a point, with no applied moment, and remain static.
+            One of the drawbacks of the center of pressure is that its position changes with the aircraft's pitch and angle of attack, $\alpha$. From a design and engineering standpoint, it's important to identify the position on the airfoil where the moment properties do not change with angle of attack, $\alpha$.
+            
+            This point is known as the \textit{aerodynamic center}, and has great importance in designing for stability. As stated, it is the place where the pitching moment does not change with angle of attack. In math terms, we denote this property as:
+            \begin{equation}\label{eq:aerodynamic_center_condition}
+                \frac{\partial C_m}{\partial \alpha} = 0
+            \end{equation}
+
+            For reference, this location is usually located at or near the quarter-chord line --- in our exploration, we will take it to be on the quarter-chord line.
+            \item[] \textbf{Center of gravity:} In the subsequent equations relating to stability derivatives, we will see the importance of an aircraft's \textit{center of gravity} in conjunction with its aerodynamic center.
+            The center of gravity (commonly abbreviated in subscripts as `cg') is no different from the definition taught in any other physics class: it is simply the position on an aircraft where the sum of all weight-based forces could be placed without a moment acting on any axis of the airplane.
+            As we will see in our discussion on stability derivatives below, the distance between the center of gravity and the aerodynamic center (denoted as `x') is crucial in creating longitudinal static stability. It should be noted that the center of gravity of the aircraft needs to be in front of the aerodynamic center for longitudinal static stability.
+            \item[] \textbf{Static margin:} The \textit{static margin} parameter is simply defined as:
+            \begin{equation}\label{eq:static_margin}
+                \text{Static Margin} =  \frac{x_{ac} - x_{cg}}{c}
+            \end{equation}
+            where $x_{ac}$ represents the aerodynamic center position, $x_{cg}$ the center of gravity position, and $c$ a reference chord length, usually the mean aerodynamic chord.
+            This parameter is a good measure of the longitudinal stability present in the aircraft.
+            \item[]
+                \noindent
+                \begin{minipage}{\linewidth}
+                    \centering
+                    \begin{figure}[H]
+                        \centering
+                        \includegraphics[width=0.995\linewidth]{airframe_axes.png}
+                        
+                        \captionsetup{width=0.995\linewidth, justification=raggedright}
+                        \caption{A depiction of the 3 principal body axes of an aircraft. Image from
+                        \href{https://commons.wikimedia.org/wiki/File:Yaw_Axis_Corrected.svg}{Jrvz}, Wikimedia, CC BY-SA 3.0}\label{fig:airframe_axes}
+                    \end{figure}
+                \end{minipage}
+            \vspace{12pt}
+    
+            Before we get into the partial derivatives governing the stability characteristics of the aircraft, we first describe the primary axes about which the aircraft can pivot as well as a few other important parameters. A helpful diagram of the aircraft axes is present in Figure~\ref{fig:airframe_axes}.
+            \item[] \textbf{Roll:} The \textit{roll} of an aircraft is rotation about the axis running the length of the fuselage. It is essentially rotation about (what is usually referred to as) the x-axis. A pilot controls an airplane's roll with use of ailerons, which are depicted (along with the other control surfaces) in Figure~\ref{fig:control_surfaces}.
+            \item[] \textbf{Pitch:} The \textit{pitch} of an aircraft is rotation about the axis running the length of the wings. This rotation occurs about the aircraft's y-axis and controlling the airplane's pitch is done with use of elevators, located on the horizontal stabilizers of the aircraft. The vertical and horizontal stabilizers are arranged in what is known as the aircraft's \textit{empennage}. Many types of empennages exist, such as the T-tail, cruciform tail, and H-tail, just to name a few.
+            The empennage arrangement again controls the stability of the aircraft and a simple google search will provide more information on the various empennage arrangements commonly in use. 
+            \item[] \textbf{Yaw:} The \textit{yaw} of an aircraft is rotation about an aircraft's vertical axis (about the lifting direction). This axis is commonly referred to as the z-axis. Yaw can be controlled with use of the airplane's rudder, located on the vertical stabilizer. 
+            
+            In the body axis system, all positive directions of these axes are shown in Figure~\ref{fig:airframe_axes}. It should also be noted that whenever the pilot induces roll rotation via aileron use, the aileron deflecting downwards experiences more induced drag (because of its increased lift). This induced drag on that side of the aircraft creates a yawing moment, resulting in \textit{adverse yaw} which would need to be corrected with rudder use. Further, in a roll, the lift vector is also tilted, so elevators are also used in a turn. We can clearly see that ``turning right' in an airplane uses all control surfaces and requires a \textit{coordinated turn} from the pilot. 
+                \noindent
+                \begin{minipage}{\linewidth}
+                    \centering
+                    \begin{figure}[H]
+                        \centering
+                        \includegraphics[width=0.995\linewidth]{control_surfaces.jpeg}
+                        \captionsetup{width=0.995\linewidth, justification=raggedright}
+                        \caption{A depiction of the 3 control surfaces directly influencing the 3 primary axes of an aircraft. Image adapted from
+                        \href{https://commons.wikimedia.org/wiki/File:Control-surfaces-in-aircraft.jpg}{Fikret Caliskan, Youmin Zhang, N. Eva Wu, and Jong-Yeob Shin}, Wikimedia, CC 4.0 International}\label{fig:control_surfaces}
+                    \end{figure}
+                \end{minipage}
+            \vspace{12pt}        
+            \item[] \textbf{Sideslip Angle:} The final parameter to be discussed before the ultimate discussion on stability derivatives is that of an aircraft's \textit{sideslip angle}. This angle is commonly denoted as $\beta$ and is the angle between the freestream velocity vector and the longitudinal x-axis. 
+            A good depiction of this angle can be seen in Figure~\ref{fig:sideslip}. In terms of sign convention, positive sideslip angle is defined in the direction depicted in Figure~\ref{fig:sideslip}. In an ideal and stable flight scenario, this angle would be 0, and the aircraft would be flying straight into the wind. This creates the most efficient flight with minimum drag and creates the most comfortable passenger experience.
+            \item[] 
+                \noindent
+                \begin{minipage}{\linewidth}
+                    \centering
+                    \begin{figure}[H]
+                        \centering
+                        \includegraphics[width=0.995\linewidth]{sideslip.jpeg}
+                        \captionsetup{width=0.995\linewidth, justification=raggedright}
+                        \caption{A depiction of sideslip angle, $\beta$}\label{fig:sideslip}
+                    \end{figure}
+                \end{minipage}
+            \vspace{12pt}   
+            
+            \item[] \textbf{Stability Derivatives:} With all relevant parameters defined, we can now begin a more in depth discussion about stability derivatives to prepare for exploration.
+            At its core, a stability derivative is a partial derivative that relates how a specified aerodynamic coefficient (e.g.\ drag, lift, sideslip, and moment coefficients) varies with a specified flight characteristic (e.g.\ angle of attack, sideslip angle, roll rate, pitch rate, and yaw rate).
+
+            The denotations for stability derivatives can get convoluted, so below is a list of the various common subscripts used in the partial derivatives.
+
+            \begin{align*}
+            \alpha &= Angle~of~Attack &
+            \beta &= Sideslip~Angle
+            \end{align*}
+            \begin{align*}
+            p &= Roll~Rate &
+            q &= Pitch~Rate &
+            r &= Yaw~Rate
+            \end{align*}
+            \begin{align*}
+            C_D &= Drag~Coefficient &
+            C_Y &= Sideslip~Coefficient
+            \end{align*}
+            \begin{align*}
+            C_L &= Lift~Coefficient
+            \end{align*}
+            \begin{align*}
+            C_l &= Roll~Coefficient &
+            C_m &= Pitch~Coefficient
+            \end{align*}
+            \begin{align*}
+            C_n &= Yaw~Coefficient
+            \end{align*}
+
+            One other common way to notate these stability derivatives (aside from the format seen in Equation~\ref{eq:aerodynamic_center_condition}) is $C_{m,\alpha}$ (read as $C_m$ $\alpha$). 
+            This same notational format can be followed for any of the commonly used stability derivatives.
+            Further analysis of these partial derivatives will be in the exploration section of the document. 
+        \end{itemize}
+
+    \item[] \textbf{Dynamic Stability:} Even if an aircraft has the tendency to return to its original state, the dynamic stability reveals any oscillating/damping behavior in its restoring force.
+    Differential equations and matrix properties govern the stability modes of this dynamic system, the details of which are described more in depth below.
+        \begin{itemize}
+            \item[] \textbf{Stability Modes:} The dynamic stability modes of an aircraft can be broken down into two primary categories --- that of longitudinal and lateral stability.
+            
+            The first, longitudinal stability, has two associated modes --- \textit{short-period} and \textit{phugoid} modes, the latter of which is sometimes referred to as \textit{long-period} mode. The short period mode is typically heavily damped and difficult for a pilot to feel.
+            It is essentially a rapid oscillation of angle of attack and pitch rate. The phugoid mode, is typically only lightly damped and results in a continuing long period oscillation between airspeed and altitude.
+
+            The second, lateral stability, has three associated modes --- \textit{roll subsidence}, \textit{spiral}, and \textit{dutch roll} modes. The roll subsidence mode is characterized by an oscillating roll that is typically damped fairly well. One of the most common ways to improve roll stability is to add dihedral to the wing design.
+            The spiral mode is more dangerous in that it is a diverging mode. Essentially, a disturbance can cause the airplane to start rolling into a bank, causing a turn which tightens overtime, which increases the bank, and so on. This continues, resulting in a tightening and descending spiral with increased airspeed.
+            The dutch roll mode is a little more difficult to visualize, but is characterized by a combined rolling and yawing oscillation that looks as if the airplane is swaying back and forth. Visual depictions for each of the above described modes are easily found in with a simple internet search.
+            The physics behind each of these modes can also be studied in an aerodynamics textbook.
+
+
+            \item[] \textbf{Eigenvalues:} As expected from a dynamic systems course, the \textit{eigenvalues} of the system's state matrix dictate the dynamic stability of the aircraft.
+    The eigenvalues typically have a real and complex part, corresponding to their stability and oscillation frequency respectively:
+    \begin{equation}
+    \lambda = \sigma + \omega i
+    \end{equation}
+    In our analysis, we primarily focus on the real portion of the eigenvalue, $\sigma$, as this tells us whether the oscillations will decay or amplify in time.
+        \end{itemize}
+
+
+    \item[] \textbf{Tails:}
+        \begin{itemize}
+            \item[] \textbf{Tail Volume Ratios:} In our exploration section, we will examine the stability of an aircraft by varying what are known as \textit{tail volume ratios}. In a sense, these parameters are measures of a tail's ability to exert a moment on the center of gravity of the airplane.
+            Essentially, it describes the ability of the airplane's horizontal and vertical stabilizers to create static and dynamic stability in flight. The fundamental equations governing horizontal and vertical tail volume ratios are, respectively:
+            \begin{align}
+            V_h &= \frac{S_h x_h}{S_w c_w} &
+            V_v = \frac{S_v x_v}{S_w b_w}
+            \end{align}
+
+            In these definitions, we note that presence of various surface areas and distance parameters. The area notations are true to their typical meaning with an added subscript to denote what the measurement is referring to.
+            In particular, an `h' subscript represents the horizontal stabilizer, `w' the primary wing, and `v' the vertical stabilizer. We also note that the presence of $x_h$ and $x_v$ representing the distance between the aircraft's center of gravity and the horizontal/vertical stabilizer's aerodynamic center.
+
+        \end{itemize}
+\end{itemize}
+\textbf{Optimization:} With a knowledge of aircraft stability, we pivot to another fundamental concept in aircraft design (and engineering in general) to that of optimization.
+Representing the core principle of efficiency, optimization seeks to find the best possible solution to a given set of design variables, objectives, and constraints, as described below.
+    \begin{itemize}
+        \item[] \textbf{Design variables:} The \textit{design variables} of an optimization problem are the independent parameters that can be directly controlled by the user. They control the problem's dimensionality, and as such the number of design variables in any given system will aid in the selection of the optimization algorithm.
+        For emphasis, we again state that design variables must be independent for each other, and the resulting optimization system must not contain any linear combinations of variables, otherwise an ill-defined system will result.
+        Design variables can be discrete or continuous (i.e.\ they can be specific individual values, or they can take on any number in a continuous spectrum.)
+        Further, the variables can be bounded or unbounded (with both an upper and lower limit, or just one or the other). It is common practice to set realistic bounds on the variables so that the algorithm does not solve for a `solution' that is not feasible.
+        Each of these different types of design variables require different handling techniques when it comes to the specific algorithm chosen for optimization.
+        \item[] \textbf{Objective:} The objective is the particular value that the designer would like to minimize or maximize. An objective of `efficiency' is an intuitive representation of this concept as a designer typically wants to maximize efficiency.
+        The objective is characterized with a function that is then operated on with a particular optimization algorithm. An objective function with 2 design variables is often visualized in a contour plot to give a visual representation of the associated minimum or maximum value.
+        \item[] \textbf{Constraints:} Any problem comes with it a set of \textit{constraints} that dictate what a solution can and cannot be. As such, optimization solvers take into account these constraints to find the best solution within the specified solution range.
+        There are 2 types of constraints that can be imposed on a system. An equality constraint dictates exactly what a specific variable must be. An inequality constraint on the other hand provides a range of valid values that a specific parameter can take on.
+    \end{itemize}
+This brief, but important, explanation on optimization will be examined more in depth later in the semester and will become integral to efficient wing design.
+
+\section{Exploration: Stability as a Function of Wing Parameters}
+We now consider the effects of variations in the following parameters on aircraft stability derivatives:
+\begin{itemize}
+    \item[-] Vertical Tail Volume Ratios
+    \item[-] Horizontal Tail Volume Ratios
+    \item[-] Wing Sweep
+    \item[-] Wing dihedral
+\end{itemize}
+
+In particular, we will examine how these airframe parameters affect the stability about the 3 principle axes seen in Figure~\ref{fig:airframe_axes}. 
+From a static stability standpoint, we give the following notations: Lateral static stability is static stability about the roll axis, longitudinal static stability about the pitch axis, and directional static stability about the yaw axis.
+Our dynamic stability notations are simply given by roll damping, pitch damping, and yaw damping.
+
+Before leveraging the power inherent in Vortex Lattice, we first need to define how we will vary our 4 parameters, then we'll logically reason through each scenario and display relevant plots to show effects on stability.
+
+\begin{itemize}
+    \item[-] To vary the vertical tail volume ratio, we will effectively make the vertical stabilizer larger by increasing the height of the stabilizer. To do this, we use a for loop to iterate through a range of values controlling the height of the stabilizer.
+    \item[-] To vary the horizontal tail volume ratio, we also will effectively make the horizontal stabilizer bigger. We do this by iterating over a range of values for the length of the stabilizer in the y direction.
+    \item[-] Wing sweep was varied by varying the wing tip's x coordinate. For this particular range, we decided to see the effects of a slightly forward swept wing in addition to the more traditional backward swept wing.
+    \item[-] Wing dihedral was varied by varying the $\phi$ values from a slight anhedral angle to the more standard dihedral angles.
+
+\end{itemize}
+
+
+Having defined our notations and the methods by which we will vary our wing parameters, we are now ready to give more thorough analysis for each particular parameter.
+
+\bigskip
+
+For our first varying parameter, we recall that the primary purpose of a \textbf{vertical stabilizer} is to provide directional stability to the aircraft.
+Any sideslip against this vertical `paddle' provides a necessary aligning moment to align the aircraft with the freestream velocity direction.
+It can help to remember that the rudder is located on the vertical stabilizer, which directly influences the aircraft's yaw.
+
+Because of these observations, we would expect the most important derivatives associated with this parameter would involve the yaw moment coefficient $C_n$, yaw rate $r$, and/or sideslip angle $\beta$.
+For example, we could reason that $C_{n\text{,}\beta}$ would increase with a larger vertical tail (or in our case, a larger vertical tail volume ratio).
+In a typical sign convention (as is used in VortexLattice.jl) a positive value for this derivative indicates a more stable airframe.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Vertical Tail Plots/Cnb vs Vertical Tail Volume Ratio.png}
+    \caption{A depiction of the relationship between vertical tail volume ratio and the stability derivative $C_{n \text{,} \beta}$}\label{fig:cnb}
+\end{figure}
+The relationship depicted in Figure~\ref{fig:cnb} clearly displays this linear trend between increasing vertical tail volume ratio and the change in yaw moment coefficient with respect to sideslip angle, thus confirming our assumption.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Vertical Tail Plots/Cnr vs Vertical Tail Volume Ratio.png}
+    \caption{A depiction of the relationship between vertical tail volume ratio and the stability derivative $C_{n \text{,} r}$\label{fig:cnr}}
+\end{figure}
+From a dynamic stability standpoint, the vertical stabilizer aids in yaw damping such that increased tail volume ratio, makes the stability derivative $C_{n\text{,}r}$ more negative.
+We can see this strong relationship present in Figure~\ref{fig:cnr}.
+
+These two plots beg the question of when a more positive or more negative stability derivative value results in a more stable airframe.
+To understand this, we need to further understand the sign convention for the aircraft body, and how positive roll, pitch, and yaw are defined.
+
+As previously seen in Figure~\ref{fig:airframe_axes}, the positive axis directions are coupled with the right-hand rule to define positive roll, pitch, and yaw.
+Thus, a positive roll indicates the right wing goes down/the left wing comes up, a positive pitch indicates the nose pitching up, and a positive yaw indicates the nose yaws right.
+Positive moments are defined in the same way. Therefore, we must reason for each stability derivative what would be more stable.
+
+In the first example, if the nose of the aircraft points increasingly left, a positive yawing moment is needed to restore the airframe to be aligned with the freestream velocity.
+So we see that an increasing sideslip angle, $\beta$, would best be accompanied by an increasing (positive) yaw moment coefficient. This explains why we would want this stability derivative to be positive (and can see why it would naturally increase with increased vertical tail volume ratio).
+
+For the second example, we recognize that a positive yaw rate indicates the aircraft is yawing to the right (pivoting counter-clockwise about the z axis). To counter-act this, a \textit{negative} yawing moment is needed (which causes the aircraft to yaw to the left, restoring itself to equilibrium).
+Here we see that an increasing positive yaw rate will require a negative yaw moment, giving rise to the desired negative value of the $C_{n\text{,}r}$ stability derivative.
+
+\bigskip
+
+Next, the \textbf{horizontal stabilizer} is added to provide longitudinal stability to the aircraft.
+Located on the far end of the aircraft, this horizontal stabilizer provides a moment arm that can re-align an aircraft's pitch when faced with a freestream disturbance.
+This is consistent with the fact that the elevators are placed on the horizontal stabilizer to control the plane's pitch.
+With these observations, we would expect that the most analytically important stability derivatives would involve pitching moment, $m$, pitching rate, $q$, and angle of attack, $\alpha$. 
+As such, we will take a closer look at how the two following stability derivatives change with a varied horizontal tail volume ratio: $C_{m\text{,}\alpha}$ and $C_{m\text{,}q}$.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Horizontal Tail Plots/Cma vs Horizontal Tail Volume Ratio.png}
+    \caption{A depiction of the relationship between horizontal tail volume ratio and the stability derivative $C_{m \text{,} \alpha}$\label{fig:Cma}}
+\end{figure}
+
+Figure~\ref{fig:Cma} reveals again, that as horizontal tail volume ratio increases, $C_{m \text{,} \alpha}$ decreases linearly.
+A negative value for this stability derivative is critical for ensuring a statically stable flight. 
+Consider what would happen when the nose of the aircraft pitches up --- this positive angle of attack will need a negative pitching moment to counteract the upward pitch.
+A positive pitching moment would further tilt the plane up and exacerbate the pitch. Considering the primary purpose of the horizontal stabilizer is to provide this longitudinal correction,
+it would make sense that a larger horizontal stabilizer would create a more longitudinally stable aircraft. This is the exact trend we see in Figure~\ref{fig:Cma} --- confirming our assumptions.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Horizontal Tail Plots/Cmq vs Horizontal Tail Volume Ratio.png}
+    \caption{A depiction of the relationship between horizontal tail volume ratio and the stability derivative $C_{m \text{,} q}$\label{fig:Cmq}, in effect the effect of $V_h$ on pitch damping}
+\end{figure}
+Looking at the dynamic stability effects of the horizontal stabilizer, we see a similar line of reasoning to that of the $C_{m \text{,} \alpha}$ stability derivative.
+In this case however, rather than analyzing with respect to the angle of attack, we analyze the aircraft with respect to pitch rate. 
+Consider a positive pitch rate, indicating the aircraft tilting up with a positive angular velocity.
+For the same reasons as to why the positive angle of attack needed to be counteracted with a negative pitching moment, the positive pitch rate needs to be counteracted with the same, meaning a negative value for $C_{m \text{,} q}$ is needed.
+This idea is clearly illustrated in Figure~\ref{fig:Cmq}, along with the previously mentioned concept that increasing horizontal tail volume ratio will increase aircraft stability (in this case making the stability derivative more negative).
+
+\bigskip
+
+As noted previously in our discussion on stability modes, \textbf{dihedral} is added to an aircraft to improve lateral roll stability --- the next parameter of interest.
+Recall that ailerons are placed on the primary wings of the aircraft to provide roll control. 
+This gives further validity to the concept that roll stability would be improved by altering the parameters of the wing, and it turns out that dihedral is one of the best ways to do that.
+
+This stability is a little more difficult to visualize and understand than the others, but consider what would happen when an aircraft banks to the right --- this causes a tilted lift vector.
+Looking at the aircraft from behind, the sideways component of the tilted lift vector causes the wind to hit the right side of the aircraft. This is defined as a positive sideslip.
+To overcome this positive sideslip, a negative rolling moment is needed to rotate the lift vector back to its neutral position.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Dihedral Plots/CLb vs Dihedral Angle (Degrees).png}
+    \caption{A depiction of the relationship between dihedral angle and the stability derivative $C_{l \text{,} \beta}$\label{fig:Clb}}
+\end{figure}
+
+Figure~\ref{fig:Clb} displays this needed negative stability derivative, while also demonstrating that increasing dihedral angle increases roll stability (in this case, making the stability derivative more negative).
+To understand why this is the case, we recognize that dihedral causes a component vector of the wind direction to exist along the wing: a parallel and perpendicular to the dihedral component.
+In our case of the wing being banked right, the perpendicular components to these vectors act ``upwards'' on the right wing, and ``downwards'' on the left wing.
+This would clearly create a net negative rolling moment on the wing, thus confirming the assumption that dihedral would increase roll stability.
+Two notes should be made on this topic: one, that an anhedral angle will have the opposite effect on roll stability, and two, that too much roll stability is not necessarily a good thing as it will make turning the aircraft difficult.
+
+\bigskip
+
+
+Now, for our final parameter of interest, we examine the effect of \textbf{wing sweep} on aircraft stability. Though the primary purpose of wing sweep is to reduce drag, especially travelling close to Mach speed, it does have an important effect on aircraft stability.
+From the static standpoint, $C_{l\text{,}\beta}$ is affected by wing sweep in a similar way that dihedral affects the derivative.
+This time however, the sweep acts in a way that aligns the ``low'' wing more with the wind velocity.
+If we think about it, relative to the sideslip, a non-swept wing is significantly less aligned with the wind than a swept wing is.
+When this lower swept wing is more aligned with the wind, more lift can be generated across its surface, and (assuming the initial bank was to the right) thus causes a negative rolling moment that restores the aircraft to neutral.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Sweep Plots/CLb vs Sweep Angle (Degrees).png}
+    \caption{A depiction of the relationship between sweep angle and the stability derivative $C_{l \text{,} \beta}$\label{fig:Clb_sweep}}
+\end{figure}
+
+Examining Figure~\ref{fig:Clb_sweep} reveals that increasing sweep angle makes $C_{l\text{,}\beta}$ more negative (i.e.\ makes the wing more stable). 
+One thing to note in comparing Figures~\ref{fig:Clb} and~\ref{fig:Clb_sweep} is that dihedral appears to have a much stronger effect on this stability derivative than sweep angle.
+With just 10 degrees of dihedral angle increase, the coefficient decreases by over 0.20, while an over 30 degree change in sweep angle produces a coefficient decrease of under 0.1.
+
+Finally, we'll examine the dynamic stability effects of wing sweep, particularly with regard to the $C_{n\text{,} r}$ variable.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Sweep Plots/Cnr vs Sweep Angle (Degrees).png}
+    \caption{A depiction of the relationship between sweep angle and the stability derivative $C_{n \text{,} r}$\label{fig:Cnr_sweep}}
+\end{figure}
+
+Looking at Figure~\ref{fig:Cnr_sweep} again shows that this derivative value decreases with increasing wing sweep, though only by a small amount.
+This can be explained by the following --- consider an aircraft yawing to the right.
+With this positive angular velocity, the swept back left wing aligns itself more closely with the airflow direction and as such produces more lift and induced drag.
+This increased induced drag on the left wing causes a negative yawing moment that will restore the aircraft to flying into the wind.
+
+\bigskip
+\bigskip
+
+Having examined a variety of important stability derivatives and their implications for static and dynamic stable flight, we now provide a brief summary of the discussed derivatives (as well as a few other important ones we couldn't cover in this report).
+
+\begin{table}[H]
+    \centering
+    \caption{Stability derivatives and their desired values}\label{tab:stability}
+    \begin{tabular}{l c c}
+        \toprule
+        \textbf{Derivative} & \textbf{Affected By} & \textbf{Desired Value}\\
+        \midrule
+        $C_{n,\beta}$ & $V_v$  & $ > 0$ \\
+        $C_{n,r}$ & $V_v$ and $\Lambda$ & $ < 0$ \\
+        $C_{m,\alpha}$ & $V_h$ & $ < 0$ \\
+        $C_{m,q}$ & $V_h$ & $ < 0$ \\
+        $C_{l,\beta}$ & $\phi$ and $\Lambda$ & $ < 0$ \\
+        $C_{l,p}$ & $\Lambda$ & $ < 0$\\
+        $C_{n,p}$ & $\Lambda$ & $ < 0$\\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+And finally, using what we know about stability derivatives, we are ready to make an initial model of a stable airframe:
+Based off of our findings, we will provide wing parameters with increased vertical and horizontal tail volume ratios, dihedral, and wing sweep.
+We will construct this by using the following parameters: 
+\begin{itemize}
+    \item[-] An x-leading edge for the wing of 0 at the root and 1.5 at the tip
+    \item[-] A dihedral angle of 0 at the root and 0.1 at the tip
+    \item[-] A horizontal stabilizer with a halfspan of 1.4
+    \item[-] A vertical stabilizer with a height of 1.5
+\end{itemize}
+
+Using these parameters, we build the system using our code, construct the geometry in a ParaView file, and display it as seen in Figure~\ref{fig:optimized}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{optimized_airframe.png}
+    \caption{An optimized wing's geometry grid}\label{fig:optimized}
+\end{figure}
+
+We also perform the stability derivative calculations on the system producing the following values seen in Table~\ref{tab:optimized_derivs}
+
+\begin{table}[H]
+    \centering
+    \caption{Optimized wing stability derivative values}\label{tab:optimized_derivs}
+    \begin{tabular}{l c c}
+        \toprule
+        \textbf{Derivative} & \textbf{Value} \\
+        \midrule
+        $C_{n,\beta}$ & 0.126 \\
+        $C_{n,r}$ & -0.129 \\
+        $C_{m,\alpha}$ & -4.756\\
+        $C_{m,q}$ & -32.125 \\
+        $C_{l,\beta}$ & -0.344 \\
+        $C_{l,p}$ & -0.578 \\
+        $C_{n,p}$ & -0.042\\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Recognizing that all of these derivatives follow the sign convention established in Table~\ref{tab:stability}, we can conclude that this is a somewhat stable aircraft. Whether it is an optimally stable aircraft is a question we will examine in future analysis.
+
+
+\section{Conclusion}
+Ultimately, stability derivatives give key insight into the important static and dynamic stability of an airframe. 
+They tell us how an aircraft and its geometry responds to various disturbances in flow or intentional maneuvers.
+Using the information provided by these stability derivatives, an engineer can design an efficient and optimized wing that meets the desired stability characteristics.
+
+
+
+Note on plots:
+\begin{itemize}
+    \item [-] The attached code to this submission includes robust code that will plot all coefficients and stability derivatives as a function of the 4 varied parameters discussed above. Note that rather than providing a universal y-axis for each plot, the code provides an autoscaling on the y-axis, so be careful in comparing one plot with another.
+\end{itemize}
+
+
+\end{document}

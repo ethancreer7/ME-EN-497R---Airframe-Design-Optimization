@@ -1,0 +1,362 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{adjustbox}
+\usepackage{float}
+\title{An Introduction to Wing Geometry, Airframes, and Drag: Homework 1}
+\author{Ethan Creer}
+\date{September 2025}
+\begin{document}
+\maketitle
+\section{Aeronautical Glossary}
+
+
+\begin{itemize}
+    \item[] \textbf{Wing Area:} There are several ways to define the wing area, S, with the specific definition 
+    required depending on the individual use case. One common use of wing area is the 2D projection as viewed from above. 
+    This type of wing area is known as the \textit{planform area}, $S$ and is used in several equations as 
+    discussed later in this glossary. The \textit{exposed area}, $S_{exposed}$, is this 2D projection less any portion
+    mounted within the fuselage.
+    The \textit{wetted area}, $S_{wet}$ of a wing is what is defined as the surface area of the wing that would be covered if
+    dipped in a fluid. It can be approximated by
+    \begin{equation}
+    S_{wet} \approx 2\left(1+0.2 \frac{t}{c}\right)S_{exposed}
+    \end{equation}
+    where $t$ is the airfoil thickness, and $c$ is the chord length (defined later).
+    The \textit{reference area}, $S_{ref}$ of the wing is also important. 
+    Though several ways to calculate the $S_{ref}$ exist, the most common is the trapezoidal reference
+    area (taking a simple trapezoid approximation of the wing from the aircraft centerline to the wing tips). 
+    This calculation is easier than others and produces accurate enough results that it is usually preferred.
+
+    The wing area is an important parameter as it affects the fundamental parameters of flight, 
+    including lift, drag, and stall speed. As a result, an important understanding regarding the 
+    wing area geometry is important so that correct area definitions are used in conjunction with
+    correct applications.
+    \item[] \textbf{Chord:} The chord of a wing is an important wing parameter that describes the length 
+    from the leading edge of the airfoil to the trailing edge. As expected, most wing designs have 
+    varying chord length to fine tune aerodynamic properties. As a result, several definitions of the wing
+    chord emerge. The root chord and tip chord are the most basic of definitions; the former 
+    representing the chord length of the airfoil closest to (or on) the centerline of the aircraft, 
+    and the latter representing the chord length of the airfoil furthest from the centerline.
+    The \textit{camber line} is also sometimes referenced and is defined as the line from leading to trailing edge that traverses the center of the airfoil. 
+    Occasionally the term \textit{quarter-chord} is used which represents not a chord length, but rather the point
+    on the chord a quarter distance down from the leading edge. This point is used in calculating the \textit{sweep}
+    of the wing, as defined later. Because of the varying chord lengths along the \textit{span} (see below) of the wing,
+    a single length value, representative of the entire wing, is often desired. 2 of such chord lengths are commonly
+    used as defined below.
+    \begin{itemize}
+        \item The \textbf{\textit{Mean Geometric Chord}} is defined as $\bar{c} = \frac{S}{b}$, or the \textit{planform area} divided
+        by the span of the wings. This definition is rudimentary in nature and as such is not often used.
+        \item A more useful and accurate representation of the wing chord is the \textbf{\textit{Mean Aerodynamic Chord}}.
+        This is defined by the following
+        \begin{equation}
+        c_{mac} = \frac{2}{S} \int_{0}^{\frac{b}{2}} c^2 dy
+        \end{equation}
+        where S again represents the planform wing area, b as the span, and c as the function representing the varying chord.
+        As expected, this integral is done over the limits 0 to $\frac{b}{2}$ (or one wing of the aircraft). If the wing is 
+        linearly tapered, an integral is not necessary, and the general solution is described by
+        \begin{equation}
+        c_{mac} = \frac{2}{3}\left(c_r + c_t - \frac{c_r c_t}{c_r + c_t}\right)
+        \end{equation}
+    \end{itemize}
+    \item[] \textbf{Taper Ratio:} The \textit{taper ratio}, $\lambda$, is defined as the ratio between the tip chord
+    length and the root chord length: $\lambda = \frac{c_t}{c_r}$. The lift over the wing area ($S_{exposed}$) is distributed in
+    a way that is closely linked to this ratio.
+
+    \item[] \textbf{Span:} The \textit{span} of the airplane is another crucial parameter used in a variety of 
+    aerodynamic applications, perhaps most notably the computation of drag. In its simplistic form, span is defined
+    as the length from wingtip to wingtip of an aircraft when viewed from above (its 2D projection). Wings are designed to
+    bend under various loading conditions, and with this flexion, the span may slightly change.
+
+    Span notably affects a number of aircraft properties. It affects the induced drag (as defined below) by a factor
+    of $\frac{1}{b^2}$, the overall structural weight fo the wing, the wing area, etc. These relationships
+    should be accounted for when designing wings for their desired aerodynamic properties.
+
+    \item[] \textbf{Aspect Ratio:} The \textit{aspect ratio} parameter is defined simply as
+    \begin{equation}
+    AR = \frac{b^2}{S}
+    \end{equation}
+    or the ratio of span squared to wing area. It is used frequently in induced drag calculations
+    and also appears in a variety of other parameters including the angle of attack, $\alpha$, (defined below).
+    This and other variables are crucial to a variety of lift and drag calculations. For example, wings with high aspect ratios create
+    less induced drag while wings with low aspect ratios have more induced drag, but are more maneuverable and have a higher angle of attack for stall.
+
+    \item[] \textbf{Sweep:} \textit{Wing sweep} is primarily designed to reduce drag when an aircraft is traveling
+    close to the speed of sound (or Mach 1). It is defined as the angle at which the wing is swept back from horizontal
+    line perpendicular to the fuselage. The angle is typically measured from the quarter-chord point, as defined earlier. The reason
+    wing sweep reduces drag is because the incoming air flow over the wing is broken up into two components: a normal and tangential piece.
+    The spanwise flow (the tangential component of air flow tangent to the leading edge) does not contribute to 
+    wing drag or lift, while chordwise flow (the normal component) is responsible for lift and drag. The greater the wing sweep, the greater
+    the tangential flow component is, overall resulting in less experienced drag.
+
+    \item[] \textbf{Dihedral:} The \textit{dihedral} angle, $\phi$, is a measure of wing angle from the horizontal. This angle can be constant over the length of the span
+    or can vary throughout the span to achieve specific aerodynamic properties. One of the main purposes of wing dihedral is to adjust an airframe's
+    roll stability. Positive wing dihedral, meaning the wing angle is positive from the horizontal, increases an aircraft's roll stability. Negative wing dihedral (or anhedral), 
+    decreases roll stability.
+
+    \item[] \textbf{Twist:} The \textit{twist}, $\theta$, is defined as the varying angle of attack along the span of the wing. The twist distribution can be linear, or some other
+    varying function, but ultimately aids in aircraft stability and safety by ensuring the root of the wing stalls before the wing tips (where the ailerons are), allowing a pilot
+    to control roll before a complete stall.
+    
+    \item[] \textbf{Washout:} Wing \textit{Washout} is a form of wing twist that affects the lift distribution. Specifically, it is where the wing tips are twisted down (wing \textit{wash-in}
+    is when the wing tips are twisted up). The wing washout insures that the root of the wing stalls before the wing tips, which is where the ailerons are. This allows the pilot to continue
+    controlling roll at the beginning of a stall.
+    
+    \item[] \textbf{Lift:} \textit{Lift} is one of the primary forces acting on an airframe. The lift characterizes an aircraft's ability to accelerate vertically and gain altitude.
+    Lift is caused by a difference in pressure over the wing. When air flows faster over the top of the wing than the bottom, a difference in pressure develops and creates a difference
+    in forces. A higher pressure on the bottom side of the wing results in the lifting force. This pressure difference occurs because of a wing's airfoil profile --- which is carefully
+    designed to achieve this result. It would be important to note that lift is perpendicular to the freestream velocity.
+    
+    \item[] \textbf{Drag:}
+    A comprehensive definition of \textit{drag} will not be able to be covered in this glossary, but  introductions will be given to each type of drag 
+    with some relevant equations. Drag is parallel to the freestream velocity, of which there are three primary types --- induced, parasitic, and compressibility --- are listed below and each must be considered in the design of an airframe.
+    
+        \begin{itemize}
+            \item \textbf{Induced Drag:} \textit{Induced drag} is a direct consequence of the lift of an aircraft. By Newton's Third Law, because energy is used to lift
+            the aircraft, energy must also be used to push the air flow downward. This energy does not contribute useful work to the airframe and is the source of induced drag.
+            One can get a sense for the induced drag by considering the aircraft wake. When the high air pressure airflow is pushed downward, it circulates to the top side of the wing
+            where low pressure airflow is present. This circulation results in a trail of airflow vortices sometimes known as wake turbulence. It can be easy to see how this would 
+            in effect take energy away from the aircraft. Several equations exist for the calculation of induced drag, but just a few are listed below with appropriate definitions for included variable.
+            It would be important to note that these formulas apply to viscous fluid flow.
+            \begin{equation}
+            D_i = \frac{L^2}{q_{\infty}\pi b^2 e}
+            \end{equation}
+            \begin{equation}
+            C_{Di} = \frac{C_L^2}{\pi ARe}\label{eq:drag_eq}
+            \end{equation}
+
+            These two equations represent the total induced drag and coefficient of induced drag respectively,
+            and use several key variables (i.e. $q_{\infty}$, $AR$, and $e$) which in and of themselves are derived through
+            various formulas:
+
+            \begin{align*}
+            q_{\infty} = \frac{1}{2} \rho V_{\infty}^2 && C_L = \frac{L}{q_{\infty} S_{ref}}
+            \end{align*}
+
+            \begin{align*}
+            e = \frac{1}{\displaystyle \frac{1}{e_{inv}}+KC_{D_P}\pi AR}  && e_{inv} = 0.98\left[1-2\left(\frac{d_f}{b}^2  \right) \right]
+            \end{align*}
+            
+            These equations, though seemingly complex, are ultimately just numerical expressions of wing design characteristics and
+            flow conditions that govern the induced drag experienced.
+
+            \item \textbf{Parasitic Drag:} While induced drag is a non-escapable side effect of lift, \textit{parasitic drag}
+            is characterized as an adverse drag effect. Airframes are designed to keep this type of drag at a minimum. Two
+            types of parasitic drag are discussed below.
+            
+                \begin{itemize}
+                    \item \textbf{\textit{Skin Friction Drag}} can be thought of as the effect of viscous fluid flow
+                    over the wing. It's essentially the effect friction has between the inviscid flow and the boundary layer formed on
+                    the outer surface of the wing. Formulas for the skin friction drag and coefficient of skin friction drag are described with the following:
+                    \begin{equation}
+                    D' = \int_{0}^{L} \tau_w dx
+                    \end{equation}
+                    \begin{equation}
+                    C_f = \frac{D'}{q_{\infty}L} = \frac{1}{q_{\infty}} \int_{0}^{1} \tau_w d \left(\frac{x}{L}\right)
+                    \end{equation}
+
+                    Here, $\tau_d$ represents the wall shear stress. A few simplistic solutions to this integral are
+                    available for fully laminar or fully turbulent flow with an incompressible boundary layer. They are listed below:
+
+                    \begin{align*}
+                    C_{f_{inc}} = \frac{1.328}{\sqrt{Re}} \text{ (laminar)} && C_{f_{inc}} = \frac{0.074}{Re^{0.2}} \text{ (turbulent)}
+                    \end{align*}
+                    where $Re = \dfrac{\rho V c}{\mu}$ with $\rho$ and $\mu$ as the fluid's density and dynamic viscosity respectively.
+                    These formulas are crucial in design of wing airfoils to limit this form of parasitic drag.
+                    
+                    \item \textbf{\textit{Pressure Drag}} is the other type of parasitic drag, and is best thought of as the effect of
+                    imperfect efficiency and wake (an effect of a velocity differential over the wing). Streamlining the shape of an airfoil
+                    can greatly help in reducing pressure drag, and as such it is natural to see how the form factor of the airfoil, k, is
+                    numerically represented in the equations for pressure drag. In fact, for our purposes, we estimate the pressure drag by 
+                    multiplying the above listed skin friction drag by the form factor k as defined below.
+                    
+                    \begin{equation}
+                    k = 1 + Z \frac{t}{c} + 100{\left(\frac{t}{c}\right)}^4                    
+                    \end{equation}
+                    with
+                    \begin{equation}
+                    Z = \frac{\left(2-M_{\infty}^2\right)\cos{\Lambda}}{\sqrt{1-M_{\infty}^2\cos^2{\Lambda}}}
+                    \end{equation}
+                    
+                    Here, $\Lambda$ represents the quarter-chord sweep angle. 
+
+
+
+
+                \end{itemize}
+            
+            Combining both skin friction and pressure drag we get a formula for total parasitic drag:
+            \begin{equation}
+            D_p = kC_f q_{\infty}S_{wet}
+            \end{equation}
+            Where $S_{wet} \approx 2\left(1 + 0.2 \frac{t}{c}\right)S_{exposed}$ of the lifting surface. Finally, in order to normalize this total parasitic drag, the following coefficient is computed:
+            \begin{equation}
+            C_{D_p} = k C_f \frac{S_{wet}}{S_{ref}}
+            \end{equation}
+            
+
+            \item \textbf{Compressibility Drag:} The final component of drag discussed here is \textit{compressibility drag} or sometimes referred to as \textit{wave drag}. This is the drag
+            experienced by an aircraft at transonic (0.7 --- 1.0 Mach) or supersonic speeds. In the former case an estimated compressibility drag coefficient is presented in the piecewise function below. Note that
+            $M_{\infty}$ is the freestream Mach number, $M_{cc}$ is the crest critical Mach number --- when airflow over the top of the wing begins to be supersonic, and $M_{dd}$ is the point just before significantly
+            compressibility drag increase.
+            \begin{equation}
+            C_{D_c} = \begin{cases}
+            0 & \text{for } M_{\infty} <  M_{cc},\\
+            20{(M_{\infty} - M_{cc})}^4  & \text{for } M_{cc} < M_{\infty} < 1\\
+            \end{cases}
+            \end{equation}
+
+            The equations for compressibility drag at supersonic speed are significantly more complicated, involving components related to volume, lift, and fuselage volume. It is recommended to consult an aeronautical textbook 
+            for these equations. However, the basic idea of these equations is that wave drag is reduced by decreasing volume and elongating the body. In fact, it is shown that the volume component of wave drag
+            is proportional according to the following relation:
+            \begin{equation}
+            D_w \propto \frac{volume^2}{l^4}
+            \end{equation}
+            Further efforts to reduce this drag can be made by reducing the fuselage volume near the wings and ensuring a smooth area distribution and minimal sharp changes. Wings are also swept back --- 
+            which introduces a normal and tangential component of airflow as discussed earlier in our wing sweep definition. 
+
+        \end{itemize}
+        
+
+
+    \item[] \textbf{Pitching Moment:} As the name suggests, the \textit{pitching moment} is the 2D moment exerted on the airfoil as a result of the lift and drag forces about the aerodynamic center of the wing.
+    A negative pitching moment causes the plane to tilt downward, and a positive pitching moment causes the plane to pitch upwards. It would be important to note that this variable is taken strictly in a 2D plane and
+    disregards the 3D flow around a wing.
+    
+    \item[] \textbf{Lift Curves and Drag Polars:} The \textit{lift curves and drag polars} of an airfoil are the variation of lift coefficients and drag coefficients with the angle of attack. Analyzing these
+    curves are fundamental to understanding the stall point of an airfoil as well as the best angle of attack for aircraft climb. 
+    
+        \begin{itemize}
+            \item The \textbf{\textit{Angle of Attack}} of the aircraft is an important consideration especially in the climbing and descending phase of flight. It is defined as the angle between the chord line
+            and the freestream velocity vector, $V_{\infty}$
+            
+            \item As the name suggests, the \textbf{\textit{Zero Lift angle of attack}}, $\alpha_0$, is the angle of attack at which zero lift occurs, This angle is negative, and serves as the angle where there is no airflow pressure difference
+            over the top and bottom of the wing.
+            
+            \item The \textbf{\textit{Lift Curve Slope}} is the graphical representation of the relationship between coefficient of lift angle of attack. On this graph, one can see the zero lift angle of attack, $\alpha_0$, and the 
+            maximum lift coefficient before stall $c_{l_{\max}}$ (in 2D) or $C_{L_{\max}}$ (in 3D).
+            
+            \item \textbf{\textit{Stall}} occurs when an angle of attack is too steep resulting in the breaking away of airflow from the wing and significant drag increase and lift decrease. There exist many tradeoffs
+            in the designing for stall speed, such as runway takeoff speed and runway length required. References to stall have been made in several of the
+            above definitions, giving weight to its importance in aerodynamic design considerations.
+            
+        \end{itemize}
+
+\end{itemize}
+
+
+\section{A Preliminary Exploration of the Vortex Lattice Method}
+Below we begin to work with the VortexLattice.jl file for a basic wing to gain an initial understanding and application of the above definitions.
+Here we set our wing parameters as follows:
+\begin{flalign*}
+x_{le} &= [0.0, 0.4] & y_{le} &= [0.0, 7.5] & z_{le} &= [0.0, 0.0]
+\end{flalign*}
+\begin{flalign*}
+c &= [2.2,1.8] & \theta &= [\pi/90, \pi/90] & \phi &= [0.0, 0.0]
+\end{flalign*}
+With $x_{le}$, $y_{le}$, and $z_{le}$ representing the leading edge positions in the x, y, and z directions and $c$, $\theta$, and $\phi$ representing the chord length, twist (in radians), and section rotation about the x axis respectively at the root and tip of the wing.
+
+Under these wing parameters, the surface was discretized into 12 spanwise panels and 6 chordwise panels with a sine based distribution for the former and a uniform (or even) based distribution for the latter.
+Here, a sine based distribution is represented by closely packed panels at the wing tips, and more spread out panels at the wing root.
+
+A series of reference dimensions are also given for the wing as follows,
+\begin{flalign*}
+S_{ref} &= 30.0 & c_{ref} &= 2.0 & b_{ref} &= 15.0 & r_{ref} &= [0.50,0.0,0.0] & V_{\infty} &= 1.0
+\end{flalign*}
+representing the reference area, reference chord length, reference span length, reference location for rotations and moments, and the reference velocity magnitude, respectively
+
+With a varying angle of attack, $\alpha$, from $-\pi/12$ to $\pi/4$ radians, a constant sideslip angle, $\beta$, of zero, rotational velocity values, $\omega$, about the reference locations of zero, the wing system is ready to be analyzed for forces, moments, and coefficients of lift and drag.
+
+The first graph of interest in our analysis is examining the coefficient of lift, $C_L$ as a function of angle of attack.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{lift_Aoa.png}
+    \caption{Lift coefficient, $C_L$, as a function of angle of attack from $\alpha = -\pi/12$ to $\pi/4$ radians}\label{fig:lift_Aoa}
+\end{figure}
+As seen in Figure~\ref{fig:lift_Aoa}, we can identify a somewhat linear relationship between the two, with $C_L$ leveling off slightly at higher angles of attack.
+
+Examining the slope of the lift curve reveals an initial slope of 4.620 per radian. This is taken directly from the VortexLattice.jl file and its variable CLa, quantifying how $C_L$ varies with $\alpha$. This value of 4.620 is interesting in comparison to the thin airfoil theory which gives a lift curve slope of $2\pi \approx 6.283$.
+This discrepancy between the two slopes (as the vortex lattice method is based on the thin airfoil theory) represents an error of 1.663 or approximately $26.5\%$.
+This begs the question of where this error comes from, and an understanding of how the vortex lattice method and thin airfoil theory work is critical to its answer. 
+At its core, the thin airfoil theory assumes an infinite span wing --- which is obviously not the case in our finite wing. The vortex lattice method is employed on finite wings
+and as a result experiences downwash. As discussed in the glossary, downwash can be thought of as a product of Newton's third law and adversely affects the lift of a wing. This is a major contributor to the difference in lift curve slope between the thin airfoil theory and the vortex lattice method implementation.
+
+In order to decrease the error inherent in this model, we would need to increase the wing span (which effectively makes the wing's span closer to infinity in length). By increasing the span, we more closely approximate the thin airfoil theory and as a result we more closely approach the theoretical maximum of $2\pi$ for the lift curve slope.
+For our code, we would need to increase the span, $b$, and then update the reference surface area, $S_{ref}$ to see the appropriate reduction in error
+
+As a final examination of Figure~\ref{fig:lift_Aoa}, it should be noted the difference between the theoretical data (which in this case neglects the stall point) and typical experimental data, which has an associated stall angle of attack.
+Though the produced lift curve is typical of that of an experimental wing for low angles of attack, it would be important to note the inaccuracy of the curve past the stall point of the wing. This stall point typically occurs between 15 and 20 degrees (about $\pi/12$ radians), but this plot examines angles of attack up to 45 degrees (or $\pi/4$ radians).
+Fundamental to the vortex lattice model is its assumption of steady flow over the wing. It neglects the presence of turbulent flow --- which occurs during stall and various angles of attack. 
+Because of this, Figure~\ref{fig:lift_Aoa} does not exhibit a sharp drop in $C_L$ at the typical stall point, but instead continues with a steady increase in $C_L$ with $\alpha$. So even though the curve may be accurate for steady flow at low angles of attack, the veracity of Figure~\ref{fig:lift_Aoa} decreases with angles of attack beyond the stall point.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{near_far_drag_Aoa.png}
+    \caption{Near and far field drag coefficients, $C_D$, as a function of angle of attack from $\alpha = -\pi/12$ to $\pi/4$ radians}\label{fig:near_far_drag_Aoa}
+\end{figure}
+
+Figure~\ref{fig:near_far_drag_Aoa} is an excellent depiction of the differences between a near and far field analysis of drag on an airframe. As noted in the VortexLattice.jl documentation,
+the coefficient of drag, $C_D$ is often corrupted by numerical noise in the near-field frame. This noise is amplified with continued increase in angle of attack, and as such the accuracy of $C_D$ diminishes as $\alpha$ increases.
+To account for this, a far-field analysis can be performed on the wing. This far-field analysis produces less numerical noise and as such results in more accurate values for $C_D$. As seen in the near-field analysis portion of Figure~\ref{fig:near_far_drag_Aoa},
+the drag coefficient begins to level off as the wing approaches an angle of attack of $\pi/4$ radians. If the graph were extended to $\pi/2$ radians, it would report a value of 0 for $C_D$, which would obviously not be the case. A more accurate representation of the
+drag is seen in the far-field analysis portion of the plot. Here is shown a steady increase in $C_D$ with $\alpha$ which doesn't level off. This interesting relationship is important to note and depending on the context should be leveraged to produce more accurate results.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{drag_polar.png}
+    \caption{Drag polar presented as the drag coefficient, $C_D$, vs lift coefficient, $C_L$}\label{fig:drag_polar}
+\end{figure}
+The drag polar seen in Figure~\ref{fig:drag_polar} is one of the most important graphs to consider in analyzing the information provided from the vortex lattice method. This graph
+is a direct indicator of wing efficiency, depicting how much induced drag is associated with a particular amount of lift. In our wing we see a parabolic relationship between the two.
+In particular, near the minimum of Figure~\ref{fig:drag_polar}, we see that changes in $C_L$ is associated with only small changes in $C_D$. However, for larger magnitudes of $C_L$, small changes result in much larger
+changes in $C_D$ compared to near the plot vertex. This would make sense when we consider all of the plots presented so far. Even though higher angles of attack are associated with higher lift, the trade off is that they result in increasing rate of induced drag. Thus, when the information from Figure~\ref{fig:lift_Aoa} and Figure~\ref{fig:near_far_drag_Aoa} are put together, we see the relationship presented in Figure~\ref{fig:drag_polar}.
+
+
+\begin{figure}[H]
+    \begin{adjustbox}{width=1.25\textwidth, center}
+        \begin{minipage}{\textwidth}
+            \begin{center}
+                \begin{subfigure}[b]{.47\linewidth}
+                    \centering
+                    \includegraphics[width=\linewidth]{roll_Aoa.png}
+                    \caption{Rolling moment coefficient as a function of angle of attack from $\alpha = -\pi/12$ to $\pi/4$ radians}\label{fig:roll_Aoa}
+                \end{subfigure}
+                \hfill
+                \begin{subfigure}[b]{.47\linewidth}
+                    \centering
+                    \includegraphics[width=\linewidth]{pitch_Aoa.png}
+                    \caption{Pitching moment coefficient as a function of angle of attack from $\alpha = -\pi/12$ to $\pi/4$ radians}\label{fig:pitch_Aoa}
+                \end{subfigure}
+
+                \vspace{0.5em}
+
+                \begin{subfigure}[b]{.48\linewidth}
+                    \centering
+                    \includegraphics[width=\linewidth]{yaw_Aoa.png}
+                    \caption{Yaw moment coefficient as a function of angle of attack from $\alpha = -\pi/12$ to $\pi/4$ radians}\label{fig:yaw_Aoa}
+                \end{subfigure}
+            \end{center}
+        \end{minipage}
+    \end{adjustbox}
+    \centering
+    \caption{A measure of moment coefficients across 3 axes as a function of angle of attack}\label{fig:moments}
+
+\end{figure}
+Associated with our vortex lattice analysis is various moment coefficients (roll, pitch, and yaw). As seen in Figure~\ref{fig:moments}\ref{sub@fig:roll_Aoa} and~\ref{fig:moments}\ref{sub@fig:yaw_Aoa}, these coefficients are very small, and do not contribute much to forces exhibited on the airframe. This would be expected from steady flow as there are not many moments in these respective directions.
+Of more interest is Figure~\ref{fig:moments}\ref{sub@fig:pitch_Aoa}. A pitching moment would cause the plane to tilt upwards or downwards depending on its sign.
+What's interesting in this plot is the pitching stability inherent in the data. As the angle of attack increases, the pitching moment becomes more negative, causing the plane to tilt downward and return to a coefficient of 0. The opposite applies as the angle of attack becomes more negative.
+On the plot we see that the point of pitching stability is actually not associated with $\alpha = 0$, but rather less than zero by a few degrees. This means that the airframe's angle of attack needs to be slightly negative to keep its pitching moment stable at zero.
+Though this result may be somewhat counterintuitive, its implication is important for aircraft design. Specifically, the aircraft tail will need to be designed to create a balancing moment such that the plane can fly with a positive angle of attack (and subsequently produce lift).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{lift_drag_Aoa.png}
+    \caption{Ratio of lift coefficient to drag coefficient as a function of angle of attack from $\alpha = 0$ to $\pi/4$ radians}\label{fig:lift_drag_Aoa}
+\end{figure}
+
+The final figure presented in this exploration is Figure~\ref{fig:lift_drag_Aoa} depicting the ratio of lift coefficient to drag coefficient as a function of angle of attack.
+An interesting relationship is observed here, particularly near $\alpha = 0$. As we can see, as angle of attack approaches zero, the ratio of coefficients approaches what appears to be a vertical asymptote. This means that the
+coefficient of drag is approaching zero faster than the coefficient of lift is. This makes sense as we know from Equation~\eqref{eq:drag_eq} that $C_{Di} \propto C_L^2$, which clearly demonstrates that as $C_L$ gets closer to zero, $C_{Di}$ approaches it even faster.
+This ratio is important as it is a measure of wing efficiency in creating lift. The greater the ratio the more efficient the wing is (meaning more lift for less drag). 
+
+\end{document}

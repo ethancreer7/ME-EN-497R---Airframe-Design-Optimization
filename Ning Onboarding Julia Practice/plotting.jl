@@ -1,0 +1,21 @@
+using Plots
+include("arrays.jl")
+
+x_combined = vcat(x, reverse(x))
+combined_2412 = vcat(UpperVals, reverse(LowerVals))
+Upper0008, Lower0008 = UpperAndLower(0, 0, 8, x)
+combined_0008 = vcat(Upper0008, reverse(Lower0008))
+Upper0012, Lower0012 = UpperAndLower(0, 0, 12, x)
+combined_0012 = vcat(Upper0012, reverse(Lower0012))
+Upper4412, Lower4412 = UpperAndLower(4, 4, 12, x)
+combined_4412 = vcat(Upper4412, reverse(Lower4412))
+Upper2424, Lower2424 = UpperAndLower(2, 4, 24, x)
+combined_2424 = vcat(Upper2424, reverse(Lower2424))
+
+plot(x_combined, combined_0008, label="NACA 0008", color=:darkblue, linewidth=1.5, linestyle=:solid)
+plot!(x_combined, combined_0012, label="NACA 0012", color=:green, linewidth=1.5, linestyle=:solid)
+plot!(x_combined, combined_2412, label="NACA 2412", color=:red,linestyle=:dash)
+plot!(x_combined, combined_2424, label="NACA 2424", color=:purple,  linestyle=:dashdotdot)
+plot!(x_combined, combined_4412, label="NACA 4412", color=:black, linestyle=:solid)
+plot!(legend=:topright, xlim=(0,1.1), ylim=(-0.15, 0.30),grid=false, xticks=[0,1], yticks=[-0.15, 0, 0.25],legend_background_color=:transparent, legend_foreground_color=:transparent)
+savefig("NACA_airfoils.pdf")
