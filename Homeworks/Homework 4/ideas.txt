@@ -1,0 +1,27 @@
+We could have a 3 vector chord distribution and fix the root and tip. We'd place the center vector somewhere in the middle --- 
+potentially even varying where along the y axis it is --- accomplished through adjusting yle in the build_system function call.
+
+More importantly I think would be varying the x-length of this specific vector component -- i.e. varying the chord vector's components.
+Fixing the root at, say, 2m, and the tip at say, 0.2 m, and then varying the middle component chord length could accomplish this purpose.
+
+Next Steps:
+- ✅ Decide on set variables (xle, yle, zle, etc...) --- note that xle needs to be predefined. Two routes --- let xle be constant like in homework 2, or attempt an elliptic leading edge. Probably the former for this assignment, while SNOW can probably handle the latter for the next assignment. 
+- Code for loop to vary chord = [c1, c2, c3]...
+- vary c1, c2, or c3 one at a time. 
+- Determine how to plot results --- (cDiff vs variable parameter value), this would require some verbal and visual explanation --- probably a plot of the wing's base planform area, with highlights or something on the chord parameter being varied.
+- Analyze where we'd expect the minimum cDiff to occur --- Look into it a little more, but this would probably be the chord length where the value creates a mathematical point based ellipse. at least that would probably be true for the middle component. For the tip, would it be zero? For the root, there would probably be some inverse algebra based on our set tip and midpoint chord values and where they fall.
+- Note in .tex file that we're only varying 3 vars for this assignment. Next assignment (HW5), there will be more stations, probably more like 20. The optimizer will take care of the brute force of varying all those parameters.
+
+
+
+Set values for base wing:
+xle = [0,0,0], yle = [0, 3.25, 7.5], zle = [0, 0, 0],
+chord = [c1, c2, c3] - where base chord values will be [2, 1.8024674446122 , 0.05] --- the 1.802 number is just the mathematical definition of an ellipse with a major horizontal radius of 7.5 and a minor vertical radius of 2. Note the value of 0.05 for the final chord component. This is to prevent numerical instability in the VLM solver. However, the true ellipse chord distribution for the midpoint component is based on this value being zero.
+theta, phi, fc all = 0
+ns = 20, nc = 6 --- These shouldn't effect our cdiff values as long as they're held constant
+Uniform spacing for both.
+
+Sref - build a helper function to create area as the summation of 2 trapezoids???
+Vinf = 100, bref = 7.5, alpha = 5.0 * pi/180, beta = 0.0, omega = [0.0; 0.0; 0.0], 
+mirror = true, cref = mean(chord) (for simplicity),
+rref = [0.25 * cref, 0.0, 0.0]
