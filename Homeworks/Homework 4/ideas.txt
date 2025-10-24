@@ -6,12 +6,18 @@ Fixing the root at, say, 2m, and the tip at say, 0.2 m, and then varying the mid
 
 Next Steps:
 - ✅ Decide on set variables (xle, yle, zle, etc...) --- note that xle needs to be predefined. Two routes --- let xle be constant like in homework 2, or attempt an elliptic leading edge. Probably the former for this assignment, while SNOW can probably handle the latter for the next assignment. 
-- Code for loop to vary chord = [c1, c2, c3]...
-- vary c1, c2, or c3 one at a time. 
-- Determine how to plot results --- (cDiff vs variable parameter value), this would require some verbal and visual explanation --- probably a plot of the wing's base planform area, with highlights or something on the chord parameter being varied.
-- Analyze where we'd expect the minimum cDiff to occur --- Look into it a little more, but this would probably be the chord length where the value creates a mathematical point based ellipse. at least that would probably be true for the middle component. For the tip, would it be zero? For the root, there would probably be some inverse algebra based on our set tip and midpoint chord values and where they fall.
+- ✅Code for loop to vary chord = [c1, c2, c3]...
+- ✅vary c1, c2, or c3 one at a time. 
+- (✅ 50%) Determine how to plot results --- (cDiff vs variable parameter value), this would require some verbal and visual explanation --- probably a plot of the wing's base planform area, with highlights or something on the chord parameter being varied.
+- (✅ 50%)Analyze where we'd expect the minimum cDiff to occur --- Look into it a little more, but this would probably be the chord length where the value creates a mathematical point based ellipse. at least that would probably be true for the middle component. For the tip, would it be zero? For the root, there would probably be some inverse algebra based on our set tip and midpoint chord values and where they fall.
 - Note in .tex file that we're only varying 3 vars for this assignment. Next assignment (HW5), there will be more stations, probably more like 20. The optimizer will take care of the brute force of varying all those parameters.
+- Write Report
 
+
+Weekend Tasks:
+- Return to your xle definition. Make it an elliptical leading edge and then half the chord values.
+- Re visit your plots to see what happens
+- Consider fixing C1 instead of varying it... maybe if we do HW 5 do that instead. It could give you more 
 
 
 Set values for base wing:
