@@ -50,7 +50,8 @@ function build_system(chord;
 
     dCFs, dCMs = stability_derivatives(system)
 
-    println("CL = ", CL, ", CD = ", CDiff)
+    # prints CL and CD for debugging
+    # println("CL = ", CL, ", CD = ", CDiff)
     return system, CDiff, dCFs, dCMs
 
 end
@@ -60,8 +61,8 @@ end
 
 Function writes ParaView Files for visualization.
 """
-function make_paraview(system)
-    path = joinpath(@__DIR__, "ParaView Files")
+function make_paraview(system, filename)
+    path = joinpath(@__DIR__, "ParaView Files", filename)
     mkpath(path)
     write_vtk(path, system)
 end
@@ -93,7 +94,12 @@ results_c3 = make_empty_results()
 for i in range(start = 0.05, stop = 2.0, length = 51)
     system, CDiff, dCFs, dCMs = build_system([2, mathematical_midpoint, i])
     append_result!(results_c3, i, CDiff)
+    # if i == 0.05
+    #     make_paraview(system, "c3_vary_test")
+    # end
+
 end
+
 
 results_c2 = make_empty_results()
 for i in range(start = 0.05, stop = 2.0, length = 51)
@@ -106,9 +112,29 @@ results_c1 = make_empty_results()
 for i in range(start = 0.05, stop = 2.0, length = 51)
     system, CDiff, dCFs, dCMs = build_system([i, mathematical_midpoint, 0.05])
     append_result!(results_c1, i, CDiff)
+    if i == 2.0
+        make_paraview(system, "c1_vary_test")
+    end
 end
 
+# prints dfs for debugging
 # print(results_c3)
 # print(results_c2)
 # print(results_c1)
 
+
+"""
+    function plot_df(df, color)
+
+Plots the given data frame to gain an understanding of where the minimum induced drag would be
+"""
+function plot_df(df, color)
+    return plot(df[!, "chordValue"], df[!, "CDiff"], linewidth = 1.5, linestyle =:solid, color = color, grid = false, xlabel = "Chord Value", ylabel = "CDiff")
+end
+
+
+c3_vary = plot_df(results_c3, :orange) # Tip chord length vary plot
+display(c3_vary)
+c2_vary = plot_df(results_c2, :green) # Mid point chord length vary plot
+display(c2_vary)
+c1_vary = plot_df(results_c1, :purple) # Root chord length vary plot
