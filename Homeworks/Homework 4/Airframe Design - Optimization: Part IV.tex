@@ -1,0 +1,57 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\graphicspath{{figures/}}
+\usepackage{subcaption}
+\usepackage{adjustbox}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{caption}
+\definecolor{linkblue}{RGB}{6,125,233}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=linkblue,
+    urlcolor=linkblue,
+    citecolor=linkblue
+}
+\usepackage{booktabs}
+\title{Airframe Design Optimization: Homework 4}
+\author{Ethan Creer}
+\date{1 November 2025}
+\begin{document}
+\maketitle
+\section{Preliminary Optimization}
+The fundamental objective of our exploration is to seek wing geometry that produces an elliptic lift distribution, using the chord distribution as our design variable.
+Considering the connection between a true elliptic lift distribution and its corresponding induced drag, we gain insight into what our formal objective function should be for this optimization problem.
+We know that a true elliptic lift distribution gives the minimum induced drag (because of its constant downwash), and as such we will set out objective function to be the following:
+\begin{equation}\label{eq:objectiveFunction}
+    J(x) = C_{D,i}
+\end{equation}
+In other words, we will seek to minimize the coefficient of induced drag.
+
+A more rigorous design variable sweep will be performed using an actual optimization package like SNOW.jl (which allows for higher dimensional vector sweeps), but for the analysis in this assignment we only seek to confirm that the objective function behaves as expected.
+Thus, we will manually vary our 2 dimensional chord distribution vector and observe the changes in our objective function value.
+We can reasonably assume that a wing with geometry similar to an elliptic wing will produce a relatively low $C_{D,i}$ value compared to a more rectangular wing with geometry unlike an elliptic wing.
+
+
+
+
+% Consider also using the below as an alternate objective function to compare results. You could also change the RMS to just being an SSE difference of actual and target L' values
+% Our objective function will be defined by the following:
+% \begin{equation}
+%     J(x) = {\left(RMS_x - RMS_y\right)}^2
+% \end{equation}
+
+
+
+\section{Introduction and Methodology}
+
+
+
+
+
+
+
+
+\end{document}
