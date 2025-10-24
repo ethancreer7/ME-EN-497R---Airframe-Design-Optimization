@@ -1,3 +1,6 @@
+Thoughts/ideas/goals ... not necessarily a fully organized list. More of my thinking outloud on paper...
+
+
 We could have a 3 vector chord distribution and fix the root and tip. We'd place the center vector somewhere in the middle --- 
 potentially even varying where along the y axis it is --- accomplished through adjusting yle in the build_system function call.
 
