@@ -79,7 +79,11 @@ function make_empty_results()
     return results
 end
 
+"""
+    function append_result!(df::DataFrame, param_value, CDiff)
 
+Appends a line of data to the results dataframe to prepare for plotting.
+"""
 function append_result!(df::DataFrame, param_value, CDiff)
     row = Dict(
     "chordValue" => param_value,
@@ -129,7 +133,7 @@ end
 Plots the given data frame to gain an understanding of where the minimum induced drag would be
 """
 function plot_df(df, color)
-    return plot(df[!, "chordValue"], df[!, "CDiff"], linewidth = 1.5, linestyle =:solid, color = color, grid = false, xlabel = "Chord Value", ylabel = "CDiff")
+    return plot(df[!, "chordValue"], df[!, "CDiff"], linewidth = 1.5, linestyle =:solid, color = color, grid = false, xlabel = "Chord Length", ylabel = "CDiff", legend = false)
 end
 
 
