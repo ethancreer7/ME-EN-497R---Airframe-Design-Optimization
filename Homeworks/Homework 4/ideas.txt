@@ -1,4 +1,7 @@
 Thoughts/ideas/goals ... not necessarily a fully organized list. More of my thinking outloud on paper...
+This was written before we were told that we didn't need to finish Homework 4. I basically just added the plots to the report, and cleaned up some things to submit. However, this is NOT what I would turn in if we were supposed to finish the report.
+Most of my time this week was spent learning GitHub, drafting a plan for the next few assignments, and then writing the code for the assignment, so I did not get much of the report written. Since we'll be meeting with Ben on Tuesday to go over what we'll be doing the rest of the Semester, I think that will take up most of our time so I'm just going to leave this as it is.
+If this isn't satisfactory, let me know and I can correct some things to make it better.
 
 
 We could have a 3 vector chord distribution and fix the root and tip. We'd place the center vector somewhere in the middle --- 
@@ -14,6 +17,7 @@ Next Steps:
 - (✅ 50%) Determine how to plot results --- (cDiff vs variable parameter value), this would require some verbal and visual explanation --- probably a plot of the wing's base planform area, with highlights or something on the chord parameter being varied.
 - (✅ 50%)Analyze where we'd expect the minimum cDiff to occur --- Look into it a little more, but this would probably be the chord length where the value creates a mathematical point based ellipse. at least that would probably be true for the middle component. For the tip, would it be zero? For the root, there would probably be some inverse algebra based on our set tip and midpoint chord values and where they fall.
 - Note in .tex file that we're only varying 3 vars for this assignment. Next assignment (HW5), there will be more stations, probably more like 20. The optimizer will take care of the brute force of varying all those parameters.
+- Compute Jacobian using ForwardDiff package from Julia. See notes from Friday's meeting on how to do that
 - Write Report
 
 

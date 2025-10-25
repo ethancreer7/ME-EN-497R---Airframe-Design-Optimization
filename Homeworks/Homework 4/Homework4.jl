@@ -132,13 +132,16 @@ end
 
 Plots the given data frame to gain an understanding of where the minimum induced drag would be
 """
-function plot_df(df, color)
-    return plot(df[!, "chordValue"], df[!, "CDiff"], linewidth = 1.5, linestyle =:solid, color = color, grid = false, xlabel = "Chord Length", ylabel = "CDiff", legend = false)
+function plot_df(df, color, filename)
+    plotted = plot(df[!, "chordValue"], df[!, "CDiff"], linewidth = 1.5, linestyle =:solid, color = color, grid = false, xlabel = "Chord Length", ylabel = L"C_{D,i}", legend = false, dpi = 600)
+    save_path = joinpath(@__DIR__, "Figures", filename)
+    savefig(plotted, save_path)
+    return plotted
 end
 
 
-c3_vary = plot_df(results_c3, :orange) # Tip chord length vary plot
+c3_vary = plot_df(results_c3, :orange, "tip_chord_vary.png") # Tip chord length vary plot
 display(c3_vary)
-c2_vary = plot_df(results_c2, :green) # Mid point chord length vary plot
+c2_vary = plot_df(results_c2, :green, "mid_chord_vary.png") # Mid point chord length vary plot
 display(c2_vary)
-c1_vary = plot_df(results_c1, :purple) # Root chord length vary plot
+c1_vary = plot_df(results_c1, :purple, "root_chord_vary.png") # Root chord length vary plot

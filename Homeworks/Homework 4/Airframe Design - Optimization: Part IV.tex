@@ -6,6 +6,8 @@
 \usepackage{adjustbox}
 \usepackage{float}
 \usepackage{xcolor}
+\usepackage{array}
+\usepackage{gensymb}
 \usepackage{caption}
 \definecolor{linkblue}{RGB}{6,125,233}
 \usepackage{hyperref}
@@ -30,11 +32,53 @@ We know that a true elliptic lift distribution gives the minimum induced drag (b
 \end{equation}
 In other words, we will seek to minimize the coefficient of induced drag.
 
-A more rigorous design variable sweep will be performed using an actual optimization package like SNOW.jl (which allows for higher dimensional vector sweeps), but for the analysis in this assignment we only seek to confirm that the objective function behaves as expected.
-Thus, we will manually vary our 2 dimensional chord distribution vector and observe the changes in our objective function value.
+A more rigorous design variable sweep will be performed using an actual optimization package like SNOW.jl (which makes it easier for higher dimensional vector sweeps), but for the analysis in this assignment we only seek to confirm that the objective function behaves as expected.
+Thus, we will manually vary our 3 dimensional chord distribution vector and observe the changes in our objective function value.
 We can reasonably assume that a wing with geometry similar to an elliptic wing will produce a relatively low $C_{D,i}$ value compared to a more rectangular wing with geometry unlike an elliptic wing.
+However, because this is a relatively simple wing, with only 3 spanwise chord specifications, it would not be surprising to see some other phenomena in our $C_{D,i}$ plots.
+
+Our approach requires a default wing with set values. Table~\ref{tab:defaults} lists the important values that defines our control wing.
+
+\begin{table}[H]
+    \centering
+    \caption{A representation of our control wing complete with necessary default values to be defined as a wing in VLM}\label{tab:defaults}
+    \begin{tabular}{l c}
+        \toprule
+        \textbf{Default Variable} & \textbf{Default Value} \\
+        \midrule
+        x Leading Edge & [0.0, 1.802, 2.0]\\
+        y Leading Edge & [0.0, 3.25, 7.5] \\
+        z Leading Edge, $\theta$, $\phi$, and Camber Line Function & [0.0, 0.0, 0.0] \\
+        Reference Chord & Average of 3 Chord Lengths \\
+        Number of Spanwise Panels & 20 \\
+        Number of Chordwise Panels & 6 \\
+        Spanwise and Chordwise Panel Spacing & Uniform \\
+        Reference Span & 7.5 \\
+        $\alpha$ & 5$\degree$ \\
+        $\beta$ & 0.0 \\
+        $V_{\infty}$ & 50 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
 
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{root_chord_vary.png}
+    \caption{The effect of varying root chord length on the induced drag coefficient. The lowest point depicts where the most efficient wing would be holding the other two chord lengths constant}\label{fig:root_chrod}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{mid_chord_vary.png}
+    \caption{The effect of varying the midpoint chord length on the induced drag coefficient. The lowest point depicts where the most efficient wing would be holding the other two chord lengths constant}\label{fig:mid_chrod}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{tip_chord_vary.png}
+    \caption{The effect of varying tip chord length on the induced drag coefficient. The lowest point depicts where the most efficient wing would be holding the other two chord lengths constant}\label{fig:tip_chrod}
+\end{figure}
 
 
 % Consider also using the below as an alternate objective function to compare results. You could also change the RMS to just being an SSE difference of actual and target L' values
@@ -42,12 +86,6 @@ We can reasonably assume that a wing with geometry similar to an elliptic wing w
 % \begin{equation}
 %     J(x) = {\left(RMS_x - RMS_y\right)}^2
 % \end{equation}
-
-
-
-\section{Introduction and Methodology}
-
-
 
 
 

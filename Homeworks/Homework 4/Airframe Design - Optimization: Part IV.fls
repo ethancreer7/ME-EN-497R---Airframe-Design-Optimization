@@ -70,6 +70,10 @@ INPUT /usr/local/texlive/2025/texmf-dist/tex/latex/graphics-cfg/color.cfg
 INPUT /usr/local/texlive/2025/texmf-dist/tex/latex/graphics/mathcolor.ltx
 INPUT /usr/local/texlive/2025/texmf-dist/tex/latex/graphics/mathcolor.ltx
 INPUT /usr/local/texlive/2025/texmf-dist/tex/latex/graphics/mathcolor.ltx
+INPUT /usr/local/texlive/2025/texmf-dist/tex/latex/tools/array.sty
+INPUT /usr/local/texlive/2025/texmf-dist/tex/latex/tools/array.sty
+INPUT /usr/local/texlive/2025/texmf-dist/tex/latex/gensymb/gensymb.sty
+INPUT /usr/local/texlive/2025/texmf-dist/tex/latex/gensymb/gensymb.sty
 INPUT /usr/local/texlive/2025/texmf-dist/tex/latex/hyperref/hyperref.sty
 INPUT /usr/local/texlive/2025/texmf-dist/tex/latex/hyperref/hyperref.sty
 INPUT /usr/local/texlive/2025/texmf-dist/tex/generic/iftex/iftex.sty
@@ -170,13 +174,28 @@ INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/cm/cmr12.tfm
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/cm/cmbx12.tfm
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex7.tfm
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex7.tfm
+INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/cm/cmbx10.tfm
 INPUT /usr/local/texlive/2025/texmf-var/fonts/map/pdftex/updmap/pdftex.map
+INPUT ./figures/root_chord_vary.png
+INPUT ./figures/root_chord_vary.png
+INPUT ./figures/root_chord_vary.png
+INPUT ./figures/root_chord_vary.png
+INPUT ./figures/mid_chord_vary.png
+INPUT ./figures/mid_chord_vary.png
+INPUT ./figures/mid_chord_vary.png
+INPUT ./figures/mid_chord_vary.png
+INPUT ./figures/tip_chord_vary.png
+INPUT ./figures/tip_chord_vary.png
+INPUT ./figures/tip_chord_vary.png
+INPUT ./figures/tip_chord_vary.png
 INPUT Airframe Design - Optimization: Part IV.aux
 INPUT ./Airframe Design - Optimization: Part IV.out
 INPUT ./Airframe Design - Optimization: Part IV.out
+INPUT /usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb
+INPUT /usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb
