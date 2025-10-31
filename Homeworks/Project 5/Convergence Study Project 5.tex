@@ -18,25 +18,51 @@
     citecolor=linkblue
 }
 \usepackage{booktabs}
-\title{Airframe Design Optimization: Homework 4}
+\title{Convergence Study of a Simple Wing}
 \author{Ethan Creer}
 \date{1 November 2025}
 \begin{document}
 \maketitle
-\section{Preliminary Optimization}
+\begin{abstract}
+    A simple convergence study using FlowUnsteady.jl and FlowVLM.jl performed on a simple wing. Primary objective of finding variable values that provides sufficiently converged coefficient of lift and drag values.
+    For emphasis and further exploration on the actual convergence process, the tolerance was set particularly low --- a 0.1\% change from previous run.
+\end{abstract}
+\section{Problem Setup}
+
+Before performing a preliminary convergence study analysis, it is necessary to define the wing geometry and simulation parameters used in the study.
+These parameters are defined as found in Table~\ref{tab:geometry}
+
+\begin{table}[H]
+    \centering
+    \caption{Wing geometry and simulation parameters with their given values.}\label{tab:geometry}
+    \begin{tabular}{l l l}
+        \toprule
+        \textbf{Parameter} & \textbf{Meaning} & \textbf{Value} \\
+        \midrule
+        $\alpha$ & Angle of Attack & 4.2\degree \\
+        $V_{\infty}$ & Freestream Velocity & 49.7 m/s \\
+        $\rho$ & Air Density & 0.93 kg/$m^3$ \\
+        b & Span Length & 2.489 $m$ \\
+        AR & Aspect Ratio b/${c_{tip}}$ & 5.0 \\
+        TR & Taper Ratio ${c_{tip}}/{c_{root}}$ & 1.0 \\
+        $\lambda$ & Sweep Angle & 45.0\degree \\
+        $\gamma$ & Dihedral & 0.0\degree \\
+
+    \end{tabular}
+\end{table}
+
 
 
 
 \begin{table}[H]
     \centering
     \caption{A list of adjustable variables that alter the resolution of the output}\label{tab:adjustables}
-    \begin{tabular}{c c}
+    \begin{tabular}{c c c}
         \toprule
-        \textbf{Variable} & \textbf{Meaning} \\
+        \textbf{Variable} & \textbf{Meaning} & \textbf{Convergence Mode} \\
         \midrule
-        n & Number of Spanwise Elements per Side \\
-        r & Geometric Expansion of Elements \\
-        --- Insert --- & [0.0, 0.0, 0.0] \\
+        n & Number of Spanwise Elements per Side & Spatial \\
+        nsteps & Number of Time Steps & Temporal \\
         \bottomrule
     \end{tabular}
 \end{table}

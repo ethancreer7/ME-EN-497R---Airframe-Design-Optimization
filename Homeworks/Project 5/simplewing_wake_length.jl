@@ -36,11 +36,12 @@ function append_result!(df::DataFrame, tuple)
   push!(df, result)
 end
 
+mkpath(joinpath(@__DIR__, "wakelength"))
 
-for (count, i) in enumerate(range(10, 150, step = 10))
-  run_name        = "wing$(i)"            # Name of this simulation
+for (count, i) in enumerate(range(2.75, 6.5, step = 0.25))
+  run_name        = "wakelength$(round(i*2.489, digits=4))"            # Name of this simulation
 
-  save_path       = joinpath(@__DIR__, "wings", run_name)               # Where to save this simulation
+  save_path       = joinpath(@__DIR__, "wakelength", run_name)               # Where to save this simulation
   paraview        = true                                                # Whether to visualize with Paraview
 
 
@@ -63,7 +64,7 @@ for (count, i) in enumerate(range(10, 150, step = 10))
   gamma           = 0.0                       # (deg) dihedral
 
   # Discretization
-  n               = i                        # Number of spanwise elements per side
+  n               = 20                        # Number of spanwise elements per side
   r               = 10.0                      # Geometric expansion of elements
   central         = false                     # Whether expansion is central
 
@@ -73,12 +74,12 @@ for (count, i) in enumerate(range(10, 150, step = 10))
 
   # ----------------- SOLVER PARAMETERS ------------------------------------------
   # Time parameters
-  wakelength      = 2.75*b                    # (m) length of wake to be resolved
+  wakelength      = i*b                    # (m) length of wake to be resolved
   ttot            = wakelength/magVinf        # (s) total simulation time
   nsteps          = 20                         # Number of time steps
 
   # VLM and VPM parameters
-  p_per_step      = 1                         # Number of particle sheds per time step
+  p_per_step      = 2                         # Number of particle sheds per time step
 
   lambda_vpm      = 2.0                       # VPM core overlap
   sigma_vpm_overwrite = lambda_vpm * magVinf * (ttot/nsteps)/p_per_step # Smoothing core size
@@ -205,7 +206,7 @@ for (count, i) in enumerate(range(10, 150, step = 10))
                                               out_figaxs=figaxs,
                                               save_path=save_path,
                                               run_name=run_name,
-                                              disp_plot = false,
+                                              disp_plot = true,
                                               figname="wing monitor",
                                               );
 
@@ -233,7 +234,7 @@ for (count, i) in enumerate(range(10, 150, step = 10))
                       save_path=save_path,
                       run_name=run_name
                       );
-  path = joinpath(@__DIR__, "wings", run_name, run_name * "_convergence.csv")                    
+  path = joinpath(@__DIR__, "wakelength", run_name, run_name * "_convergence.csv")                    
   result_df = CSV.read(path, DataFrame)
   CL_mean = mean(result_df[end-3:end, :CL])
   CD_mean = mean(result_df[end-3:end, :CD])
@@ -247,8 +248,8 @@ for (count, i) in enumerate(range(10, 150, step = 10))
     println("Percent Change in CD = $(round(percent_change_CD*100, digits=5))%")
 
     if percent_change_CL < tolerance && percent_change_CD < tolerance
-      println("Converged at n = $n (Percent Change in CL = $(percent_change_CL*100)%, Percent Change in CD = $(percent_change_CD*100)%)")
-      println("Final averaged values: CL = $CL_mean, CD = $CD_mean at n = $n")
+      println("Converged at wakelength = $wakelength (Percent Change in CL = $(percent_change_CL*100)%, Percent Change in CD = $(percent_change_CD*100)%)")
+      println("Final averaged values: CL = $CL_mean, CD = $CD_mean at wakelength = $wakelength")
       break
     end
   end
@@ -259,7 +260,7 @@ convergence_plot = plot(results[!, "n_val"], results[!, "CL"], linewidth = 1.5, 
 plot!(twinx(), results[!, "n_val"], results[!, "CD"], linewidth = 1.5, linestyle = :solid, color = :purple, label = "CD Value", ylabel = "CD Value")
 display(convergence_plot)
 
-direct_path = joinpath(@__DIR__, "Figures")
+direct_path = joinpath(@__DIR__, "Figures", "wakeslength")
 mkpath(direct_path)
 save_path_fig = joinpath(direct_path, "convergence_plot.png")
 savefig(convergence_plot, save_path_fig)
