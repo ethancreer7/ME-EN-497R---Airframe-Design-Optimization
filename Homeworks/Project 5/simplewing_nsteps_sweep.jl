@@ -206,6 +206,7 @@ for (count, i) in enumerate(range(10, 150, step = 10))
                                               out_figaxs=figaxs,
                                               save_path=save_path,
                                               run_name=run_name,
+                                              disp_plot = false,
                                               figname="wing monitor",
                                               );
 
@@ -237,29 +238,4 @@ for (count, i) in enumerate(range(10, 150, step = 10))
   result_df = CSV.read(path, DataFrame)
   CL_mean = mean(result_df[end-3:end, :CL])
   CD_mean = mean(result_df[end-3:end, :CD])
-  tuple = [i, CL_mean, CD_mean]
-  append_result!(results, tuple)
-
-  if prev_CL !== nothing && prev_CD !== nothing
-    percent_change_CL = abs(CL_mean - prev_CL) / abs(prev_CL)
-    percent_change_CD = abs(CD_mean - prev_CD) / abs(prev_CD)
-    println("Percent Change in CL = $(round(percent_change_CL*100, digits=5))%")
-    println("Percent Change in CD = $(round(percent_change_CD*100, digits=5))%")
-
-    if percent_change_CL < tolerance && percent_change_CD < tolerance
-      println("Converged at nsteps = $nsteps (Percent Change in CL = $(percent_change_CL*100)%, Percent Change in CD = $(percent_change_CD*100)%)")
-      println("Final averaged values: CL = $CL_mean, CD = $CD_mean at nsteps = $nsteps")
-      break
-    end
-  end
-  prev_CL, prev_CD = CL_mean, CD_mean
 end
-
-convergence_plot = plot(results[!, "nsteps_val"], results[!, "CL"], linewidth = 1.5, linestyle=:solid, color = :orange, label = "CL Value", ylabel= "CL", xlabel = "nsteps_value")
-plot!(twinx(), results[!, "nsteps_val"], results[!, "CD"], linewidth = 1.5, linestyle = :solid, color = :purple, label = "CD Value", ylabel = "CD Value")
-display(convergence_plot)
-
-direct_path = joinpath(@__DIR__, "Figures")
-mkpath(direct_path)
-save_path_fig = joinpath(direct_path, "temporal_convergence_plot.png")
-savefig(convergence_plot, save_path_fig)

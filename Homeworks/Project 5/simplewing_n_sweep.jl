@@ -38,9 +38,9 @@ end
 
 
 for (count, i) in enumerate(range(10, 150, step = 10))
-  run_name        = "wing$(i)"            # Name of this simulation
+  run_name        = "n_sweep$(i)"            # Name of this simulation
 
-  save_path       = joinpath(@__DIR__, "wings", run_name)               # Where to save this simulation
+  save_path       = joinpath(@__DIR__, "n_sweep", run_name)               # Where to save this simulation
   paraview        = true                                                # Whether to visualize with Paraview
 
 
@@ -233,7 +233,7 @@ for (count, i) in enumerate(range(10, 150, step = 10))
                       save_path=save_path,
                       run_name=run_name
                       );
-  path = joinpath(@__DIR__, "wings", run_name, run_name * "_convergence.csv")                    
+  path = joinpath(@__DIR__, "n_sweep", run_name, run_name * "_convergence.csv")                    
   result_df = CSV.read(path, DataFrame)
   CL_mean = mean(result_df[end-3:end, :CL])
   CD_mean = mean(result_df[end-3:end, :CD])
