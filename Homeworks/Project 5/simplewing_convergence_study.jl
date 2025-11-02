@@ -106,10 +106,9 @@ end
 
 Does all of the heavy stuff that's called repetitively.
 """
-function set_parameters_run_study(study, run_name, n, wakelength, nsteps)
+function set_parameters_run_study(study, run_name, n, wakelength, nsteps; ttot = wakelength/magVinf,   p_per_step = Int(ceil((2 * n * lambda_vpm * magVinf * ttot) / (nsteps * b))))
 
   ttot = wakelength/magVinf
-  p_per_step = Int(ceil((2 * n * lambda_vpm * magVinf * ttot) / (nsteps * b)))
   sigma_vpm_overwrite = lambda_vpm * magVinf * (ttot/nsteps)/p_per_step
 
   Vinf(X, t) = magVinf*[cosd(AOA), 0.0, sind(AOA)]
@@ -220,12 +219,37 @@ function set_parameters_run_study(study, run_name, n, wakelength, nsteps)
 
 end
 
+"""
+  function verification_stats(verify_df::DataFrame)
+
+Calculates and prints verification confirmation stats
+"""
+function verification_stats(verify_df::DataFrame, variable::String)
+  cl_verify = mean(verify_df[end-2:end, :CL])
+  cd_verify = mean(verify_df[end-2:end, :CD])
+
+  println("Verification results:")
+  println("CL = $cl_verify , CD = $cd_verify")
+  println("Original converged CL = $cl_mean_converged, CD = $cd_mean_converged")
+
+  percent_change_cl = abs(cl_verify - cl_mean_converged) / abs(cl_mean_converged) * 100
+  percent_change_cd = abs(cd_verify - cd_mean_converged) / abs(cd_mean_converged) * 100
+
+  println("Percent Change CL = $(round(percent_change_cl, digits=4))%, Percent Change CD = $(round(percent_change_cd, digits=4))%")
+
+  if percent_change_cl < 0.5 && percent_change_cd < 0.5
+      println("Passed: Doubling $variable does not change CL or CD significantly")
+  else
+      println("Failed: CL/CD changed more than expected")
+  end
+  println("=======================================\n")
+end
 
 
 # --------------- Wakelength Convergence Study ----------------
 for (count, i) in enumerate(range(0.75, 6.5, step = 0.25))
   run_name        = "wakelength$(round(i*b, digits=3))"             # Name of this simulation
-  set_parameters_run_study("wakelength", run_name, 20, i*2.489, 20)
+  set_parameters_run_study("wakelength", run_name, 40, i*2.489, 20)
     
   path = joinpath(@__DIR__, "wakelength", run_name, run_name * "_convergence.csv")                    
   result_df = CSV.read(path, DataFrame)                    
@@ -290,7 +314,7 @@ for (count, i) in enumerate(range(10, 150, step = 10))
 end
 
 
-println("\n========= CONVERGENCE RESULTS =========")
+println("\n========= CONVERGENCE RESULTS: SUGGESTED PARAMETERS =========")
 println("Wake length converged: $(round(wakelength_converged, digits=3)) m")
 println("nsteps converged: $nsteps_converged")
 println("n converged: $n_converged")
@@ -299,42 +323,45 @@ println("=======================================\n")
 
 
 
-println("\n========== VERIFICATION =============")
+println("\n========== VERIFICATION OF SUGGESTED PARAMETERS =============")
 println("\n====== TEST 1: DOUBLING NSTEPS ======")
 nsteps_verify = nsteps_converged * 2
 run_name = "verification_nsteps$(nsteps_verify)"
-println("Running verification with nsteps = $nsteps_verify and adjusting for minimum p_per_step")
+println("Running verification with increased nsteps = $nsteps_verify and adjusting for minimum p_per_step")
 
 set_parameters_run_study("verification", run_name, n_converged, wakelength_converged, nsteps_verify)
 
 path = joinpath(@__DIR__, "verification", run_name, run_name * "_convergence.csv")
 verify_df = CSV.read(path, DataFrame)
 
-cl_verify = mean(verify_df[end-2:end, :CL])
-cd_verify = mean(verify_df[end-2:end, :CD])
-
-println("Verification results:")
-println("CL = $cl_verify , CD = $cd_verify")
-println("Original converged CL = $cl_mean_converged, CD = $cd_mean_converged")
-
-percent_change_cl = abs(cl_verify - cl_mean_converged) / abs(cl_mean_converged) * 100
-percent_change_cd = abs(cd_verify - cd_mean_converged) / abs(cd_mean_converged) * 100
-
-println("Percent Change CL = $(round(percent_change_cl, digits=4))%, Percent Change CD = $(round(percent_change_cd, digits=4))%")
-
-if percent_change_cl < 0.5 && percent_change_cd < 0.5
-    println("Passed: Doubling nsteps does not change CL or CD significantly")
-else
-    println("Failed: CL/CD changed more than expected")
-end
-println("=======================================\n")
+verification_stats(verify_df, "nsteps")
 
 
-cl_plot = plot(verify_df[:, :T], verify_df[:, :CL], linewidth = 1.5, xlabel = "Time (s)", ylabel = "Coefficient of Lift", grid = false)
-cd_plot = plot(verify_df[:, :T], verify_df[:, :CD], linewidth = 1.5, xlabel = "Time (s)", ylabel = "Coefficient of Drag", grid = false)
-
-
+cl_plot_v1 = plot(verify_df[:, :T], verify_df[:, :CL], linewidth = 1.5, xlabel = "Time (s)", ylabel = "Coefficient of Lift", grid = false)
+cd_plot_v1 = plot(verify_df[:, :T], verify_df[:, :CD], linewidth = 1.5, xlabel = "Time (s)", ylabel = "Coefficient of Drag", grid = false)
 save_path = joinpath(@__DIR__, "Figures", "CL_vs_time.png")
-savefig(cl_plot, save_path)
+savefig(cl_plot_v1, save_path)
 save_path = joinpath(@__DIR__, "Figures", "CD_vs_time.png")
-savefig(cd_plot, save_path)
+savefig(cd_plot_v1, save_path)
+
+
+
+println("\n====== TEST 2: INCREASING P_PER_STEP_MIN ======")
+p_per_step_verify = Int(ceil(p_per_step_min * 1.5))
+run_name = "verification_p_per_step$(p_per_step_verify)"
+println("Running verification with increased p_per_step = $p_per_step_verify")
+set_parameters_run_study("verification", run_name, n_converged, wakelength_converged, nsteps_converged; p_per_step = p_per_step_verify)
+path = joinpath(@__DIR__, "verification", run_name, run_name * "_convergence.csv")
+verify_df = CSV.read(path, DataFrame)
+verification_stats(verify_df, "p_per_step")
+
+
+
+println("\n======= Test 3: INCREASING WAKELENGTH ========")
+wakelength_verify = wakelength_converged * 2
+run_name = "verification_wakelength$(wakelength_verify)"
+println("Running verification with increased wakelength = $wakelength_verify")
+set_parameters_run_study("verification", run_name, n_converged, wakelength_verify, nsteps_converged)
+path = joinpath(@__DIR__, "verification", run_name, run_name * "_convergence.csv")
+verify_df = CSV.read(path, DataFrame)
+verification_stats(verify_df, "wakelength")
