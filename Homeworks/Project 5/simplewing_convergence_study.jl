@@ -114,9 +114,11 @@ for (count, i) in enumerate(range(0.75, 6.5, step = 0.25))
   nsteps          = 20                        # Number of time steps
 
   # VLM and VPM parameters
-  p_per_step      = 2                         # Number of particle sheds per time step
-
   lambda_vpm      = 2.0                       # VPM core overlap
+  # p_per_step      = 2                         # Number of particle sheds per time step
+
+  p_per_step = Int(ceil( (2 * n * lambda_vpm * magVinf * ttot) / (nsteps * b)))
+
   sigma_vpm_overwrite = lambda_vpm * magVinf * (ttot/nsteps)/p_per_step # Smoothing core size
   sigma_vlm_solver= -1                        # VLM-on-VLM smoothing radius (deactivated with <0)
   sigma_vlm_surf  = 0.05*b                    # VLM-on-VPM smoothing radius
@@ -275,7 +277,7 @@ for (count, i) in enumerate(range(0.75, 6.5, step = 0.25))
   result_df = CSV.read(path, DataFrame)                    
   cl_CV, cd_CV = get_cv(result_df)
 
-  if cl_CV < 0.001 && cd_CV < 0.001
+  if cl_CV < 0.002 && cd_CV < 0.002
     printstats(cl_CV, cd_CV, "Wakelength", wakelength)
     global wakelength_converged = wakelength
     break
@@ -322,9 +324,10 @@ for (count, i) in enumerate(range(10, 120, step = 10))
   nsteps          = i                         # Number of time steps
 
   # VLM and VPM parameters
-  p_per_step      = 1                         # Number of particle sheds per time step
-
   lambda_vpm      = 2.0                       # VPM core overlap
+  p_per_step = Int(ceil( (2 * n * lambda_vpm * magVinf * ttot) / (nsteps * b)))
+
+  
   sigma_vpm_overwrite = lambda_vpm * magVinf * (ttot/nsteps)/p_per_step # Smoothing core size
   sigma_vlm_solver= -1                        # VLM-on-VLM smoothing radius (deactivated with <0)
   sigma_vlm_surf  = 0.05*b                    # VLM-on-VPM smoothing radius
@@ -441,7 +444,7 @@ for (count, i) in enumerate(range(10, 120, step = 10))
   result_df = CSV.read(path, DataFrame)
   cl_CV, cd_CV = get_cv(result_df)
 
-  if cl_CV < 0.001 && cd_CV < 0.001
+  if cl_CV < 0.002 && cd_CV < 0.002
     printstats(cl_CV, cd_CV, "nsteps", nsteps)
     global nsteps_converged = nsteps
     break
@@ -488,9 +491,10 @@ for (count, i) in enumerate(range(10, 150, step = 10))
   nsteps          = nsteps_converged                        # Number of time steps
 
   # VLM and VPM parameters
-  global p_per_step      = 1                                # Number of particle sheds per time step
+   lambda_vpm      = 2.0                                     # VPM core overlap
+  p_per_step = Int(ceil( (2 * n * lambda_vpm * magVinf * ttot) / (nsteps_converged * b)))
 
-  lambda_vpm      = 2.0                                     # VPM core overlap
+
   sigma_vpm_overwrite = lambda_vpm * magVinf * (ttot/nsteps)/p_per_step # Smoothing core size
   sigma_vlm_solver= -1                                      # VLM-on-VLM smoothing radius (deactivated with <0)
   sigma_vlm_surf  = 0.05*b                                  # VLM-on-VPM smoothing radius
@@ -649,6 +653,7 @@ println("=======================================\n")
 
 
 println("\n========== VERIFICATION =============")
+println("\n====== TEST 1: DOUBLING NSTEPS ======")
 nsteps_verify = nsteps_converged * 2
 run_name = "verification_nsteps$(nsteps_verify)"
 save_path = joinpath(@__DIR__, "verification", run_name)
@@ -687,9 +692,10 @@ println("Running verification with nsteps = $nsteps_verify and adjusting for min
   nsteps          = nsteps_verify                           # Number of time steps
 
   # VLM and VPM parameters
-  p_per_step      = p_per_step_min                                # Number of particle sheds per time step
-
   lambda_vpm      = 2.0                                     # VPM core overlap
+  p_per_step = Int(ceil( (2 * n_converged * lambda_vpm * magVinf * ttot) / (nsteps_verify * b)))
+
+  
   sigma_vpm_overwrite = lambda_vpm * magVinf * (ttot/nsteps)/p_per_step # Smoothing core size
   sigma_vlm_solver= -1                                      # VLM-on-VLM smoothing radius (deactivated with <0)
   sigma_vlm_surf  = 0.05*b                                  # VLM-on-VPM smoothing radius
