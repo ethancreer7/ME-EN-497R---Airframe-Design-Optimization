@@ -7,7 +7,7 @@
 \usepackage{float}
 \usepackage{xcolor}
 \usepackage{array}
-\usepackage{gensymb}
+\usepackage{siunitx}
 \usepackage{caption}
 \definecolor{linkblue}{RGB}{6,125,233}
 \usepackage{hyperref}
@@ -20,7 +20,7 @@
 \usepackage{booktabs}
 \title{Convergence Study of a Simple Wing}
 \author{Ethan Creer}
-\date{1 November 2025}
+\date{4 November 2025}
 \begin{document}
 \maketitle
 \section{Problem Setup}
@@ -54,7 +54,8 @@ The convergence mode for each is listed in the same table giving us a preliminar
 \begin{table}[H]
     \centering
     \caption{A list of adjustable variables that alter the resolution of the output}\label{tab:adjustables}
-    \begin{tabular}{c c c}
+    \begin{adjustbox}{center}
+    \begin{tabular}{l l c}
         \toprule
         \textbf{Variable} & \textbf{Meaning} & \textbf{Convergence Mode} \\
         \midrule
@@ -64,9 +65,10 @@ The convergence mode for each is listed in the same table giving us a preliminar
         p\_per\_step & Particles shed per step & Spatial \\
         \bottomrule
     \end{tabular}
+    \end{adjustbox}
 \end{table}
 
-Our convergence study will follow a systemic approach, gradually iterating through variables to suggest final parameters such that the wing will be appropriately discretized and sufficiently converged.
+Our convergence study will follow a systematic approach, gradually iterating through variables to suggest final parameters such that the wing will be appropriately discretized and sufficiently converged.
 
 \section{Wakelength}
 The first run through of the program consists of varying the wakelength of the wing. Obtaining convergence via wakelength varying is important as the wing simulation needs to be run long enough for the wake to settle in and the furthest aft particles no longer significantly influence the lift and drag.
@@ -76,9 +78,9 @@ In our study, we vary the wakelength as a multiplicative factor of the span leng
 wakelength = i \times{} b
 \end{equation}
 
-We perform a sweep across the $i$ value from 0.75 to 5.0 in 0.25-step increments. However, to computational efficiency, once when the coefficients of lift and drag become sufficiently converged, we break from this loop.
+We perform a sweep across the $i$ value from 0.75 to 5.0 in 0.25-step increments. However, for computational efficiency, once when each of the coefficients of lift and drag become sufficiently converged, we break from this loop.
 Determining the metric used for convergence indication was also an important process. Here, we chose to use the coefficient of variation value for the 5 tail values of $C_L$ and $C_D$ at the end of each simulation.
-Once when each of these metrics fell below a threshold value (in this case 0.002 --- or 0.2\%), the simulation was considered converged, and this wakelength value was stored as a global variable to be referenced in subsequent convergence studies.
+When each of these metrics fell below a threshold value (in this case 0.002 --- or 0.2\%), the simulation was considered converged, and this wakelength value was stored as a global variable to be referenced in subsequent convergence studies.
 In our sweep, this converged value ended up being 3.11125.
 The coefficient of variation is essentially a normalized standard deviation by taking the standard deviation of the given subset and dividing by its associated mean. 
 The coefficient of variation is helpful in the analysis of multiple datasets, and because the variable sweep naturally produces a variety of different datasets, it is appropriate for this study.
@@ -86,16 +88,16 @@ The coefficient of variation is helpful in the analysis of multiple datasets, an
 Wakelength convergence is particularly important when it comes to temporal convergence. It is essentially testing for how long the wakelength needs to be for the $C_L$ and $C_D$ values to flatten out at the end of the simulation.
 This will be shown near the end of the study with the final proposed parameter values.
 
-\section{Number of Time Steps ($nsteps$)}
+\section{Number of Time Steps (\texorpdfstring{$nsteps$}{nsteps})}
 The second parameter of interest in our convergence study is that of $nsteps$. This value dictates the number of time steps that take place from the wakelength being its shortest to its longest length.
 Increasing $nsteps$ does not shorten or lengthen the wakelength, but it does increase the resolution of the wakelength, allowing for more accurate $C_L$ and $C_D$ calculations.
-For our study, we fix the wakelength to its converged value from the previous stem and then sweep $nsteps$ from 10 to 100, this time in increments of 10.
+For our study, we fix the wakelength to its converged value from the previous step and then sweep $nsteps$ from 10 to 100, this time in increments of 10.
 To determine convergence, we use the same metric used in the wakelength convergence test --- that is, we measure the coefficient of variation for the final 5 values of $C_L$ and $C_D$ for each run.
 Again, once when this coefficient falls below 0.002 --- or 0.2\%, we consider the study converged, store the variable in the global scope for future reference, and transition to the next test.
 In this sweep, the wing coefficients converged at a value of $nsteps = 20$.
 
 
-\section{Spanwise Elements per Side ($n$)}
+\section{Spanwise Elements per Side (\texorpdfstring{$n$}{n})}
 The next parameter of interest, $n$, is an important spatial convergence parameter. In essence, it is a measure of how finely the blade is discretized in spanwise panels.
 The greater the value of $n$, the greater the number of spanwise panels are present per side of the wing.
 With the wakelength and $nsteps$ values set from the previous sweeps, we now sweep the value of $n$ from 10 to 100, again in increments of 10.
@@ -124,30 +126,95 @@ In our study, we set the minimum p\_per\_step value to be the result of Equation
 
 Here, $\lambda_{vpm}$ is a particle overlap parameter and is fixed for the entire study. $ttot$ is also fixed, coming from the wakelength convergence study.
 
-The overriding principle inherit in this parameter, is that its value must change with each run, such that the true independent variable being swept can be isolated and analyzed.
+The overriding principle inherent in this parameter, is that its value must change with each run, such that the true independent variable being swept can be isolated and analyzed.
 The constraint here is that particles should not overlap each other (as good as possible), and because p\_per\_step is a function of $n$, $nsteps$, and (indirectly) wakelength, its value must be updated with each run.
 It's essentially its own dependent variable and a necessary constraint to insure uniformity across the variable sweep.
 
-As such, this variable, was updated with new variable configuration to provide the most accurate coefficient values.
-Though not a swept parameter in this study, it did serve a crucial role in the backround of the multitude of wing discretizations in this study.
+As such, this variable, was updated with each new variable configuration to provide the most accurate coefficient values.
+Though not an explicitly swept parameter in this study, it did require an understanding of its role in each wing discretization.
+
+\section{Proposed Values}
+
+With the above convergence studies performed, and an understanding of the meaning of p\_per\_step, we are now ready to present a list of parameter values that would provide adequate coefficient of lift and drag values in a study.
+Table~\ref{tab:proposed} presents these values below.
+
 
 
 \begin{table}[H]
     \centering
-    \caption{A final proposed list of parameter values that can be used with sufficient confidence for producing converged $C_L$ and $C_D$ values on a simple wing}\label{tab:proposed}
-    \begin{tabular}{c c}
+    \caption{A final proposed list of parameter values that can be used with sufficient confidence for producing converged \texorpdfstring{$C_L$}{CL} and \texorpdfstring{$C_D$}{CD} values on a simple wing}\label{tab:proposed}
+    \begin{tabular}{l c}
         \toprule
         \textbf{Variable} & \textbf{Proposed Value} \\
         \midrule
-        wakelength & 3.11125 \\
+        wakelength & 3.111 \\
         $nsteps$ & 20 \\
         $n$ & 40 \\
-        p\_per\_step & Value \\
+        p\_per\_step & 10 \\
         \bottomrule
     \end{tabular}
 \end{table}
 
 \section{Verification Tests}
+With this proposed set, we now set to gain greater confidence in these converged values by performing a series of verification tests.
+These tests involve individually increasing each variable by a certain factor (in our case by 1.5 or 2), re-running the solver, and analyzing whether the values for $C_L$ or $C_D$ changed significantly.
+
+
+\begin{table}[H]
+    \centering
+    \caption{Percent change values in \texorpdfstring{$C_L$}{CL} and \texorpdfstring{$C_D$}{CD} when varying an independent variable by a multiplicative factor}\label{tab:verification}
+    \begin{adjustbox}{center}
+    \begin{tabular}{c c c}
+        \toprule
+        \textbf{Variable (Multiplicative Factor)} & \textbf{\% Change in $C_L$} & \textbf{\% Change in $C_D$}\\
+        \midrule
+        $nsteps$ (2) & 0.3739 & 0.2078 \\
+        p\_per\_step (1.5) & 0.0307 & 0.0311 \\
+        wakelength (1.5) & 0.4477 & 0.4847 \\
+        \bottomrule
+    \end{tabular}
+    \end{adjustbox}
+\end{table}
+
+The data presented in Table~\ref{tab:verification} depicts the percent change in $C_L$ and $C_D$ when independently varying the listed parameters.
+With a tolerance of 0.5\%, we can see that each verification test succeeds in returning sufficiently converged values.
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{CL_vs_time_proposed.png}
+    \caption{A visual representation of temporal convergence for the coefficient of lift value. As the wake develops in time, the coefficient level off to become steady.}\label{fig:cl_plot}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{CD_vs_time_proposed.png}
+    \caption{A visual representation of temporal convergence for the coefficient of drag value. As the wake develops in time, the coefficient begins to levels off at a steady value. Note the y-axis scale here, which deals with very small numbers.}\label{fig:cd_plot}
+\end{figure}
+
+As one final visual confirmation of the converged values, we examine both a $C_L$ vs Time and $C_D$ vs Time plot to confirm temporal convergence for each.
+This is depicted in Figures~\ref{fig:cl_plot}~and~\ref{fig:cd_plot}. In the coefficient of lift vs time plot we can see that the coefficient of lift levels off as the wakelength fully develops in time.
+As such, we have further confirmation that these parameter settings provide sufficient resolution for convergence for coefficient of lift.
+
+For the coefficient of drag plot, we note some unique behavior towards the beginning of the simulation, with the coefficient of drag value shooting up, and then exponentially decaying in time. This plot does not have as defined of a leveling off for coefficient of drag value, but we note that the y-axis has a very small scale, that varies from $4.8 \times 10^{-3}$ to $4.9 \times 10^{-3}$.
+This small range could in part explain why the graph does not appear to level off. Our study relied on coefficient of variation values in addition to run over run percent change in values to determine convergence, and with such small magnitude in numbers, this could look as if it prematurely converged.
+
+If we examine the $nsteps$ verification test and its associated $C_D$ vs Time plot, seen in Figure~\ref{fig:cd_plot_verified}, we note that there is a more defined ``leveling-off'' of the coefficient of drag value.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{CD_vs_time_verification1.png}
+    \caption{A visual representation of temporal convergence for the coefficient of drag after doubling the $nsteps$ value from its converged proposal. As the wake develops in time, the coefficient begins to levels off at a steady value.}\label{fig:cd_plot_verified}
+\end{figure}
+
+Thus, if greater convergence is desired, one can use the doubled $nsteps$ value, which will provide more of a visual level off.
+However, for most applications, the proposed values provide sufficient convergence, and will only deviate from true coefficient values by a small amount.
+
+\section{Conclusion}
+Ultimately, a convergence study provides crucial analysis for the variety of parameters that come with aerodynamic studies.
+Without the convergence test just performed, one could unnecessarily use solver settings that directly lead to a more computationally expensive solve.
+Though this does not take significant time in the case of a simple wing, the computational time greatly increases as the wing and/or propeller system becomes more complicated.
+Thus, from an optimization standpoint, it is important that the right parameter settings are determined such that with some level of confidence we can treat the resulting $C_L$ and $C_D$ values as true to their respective conditions.
 
 
 

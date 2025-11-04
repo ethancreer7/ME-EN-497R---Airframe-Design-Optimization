@@ -105,7 +105,7 @@ end
 
 Does all of the heavy stuff that's called repetitively.
 """
-function set_parameters_run_study(study, run_name, n, wakelength, nsteps; ttot = wakelength/magVinf,   p_per_step = Int(ceil((2 * n * lambda_vpm * magVinf * ttot) / (nsteps * b))))
+function set_parameters_run_study(study, run_name, n, wakelength, nsteps; ttot = wakelength/magVinf, p_per_step = Int(ceil((2 * n * lambda_vpm * magVinf * ttot) / (nsteps * b))))
 
   ttot = wakelength/magVinf
   sigma_vpm_overwrite = lambda_vpm * magVinf * (ttot/nsteps)/p_per_step
@@ -306,6 +306,12 @@ for (count, i) in enumerate(range(10, 100, step = 10))
       ttot = wakelength_converged / magVinf
       global p_per_step_min = Int(ceil( (2 * n_converged * lambda_vpm * magVinf * ttot) / (nsteps_converged * b)))
       println("Minimum required p_per_step = $p_per_step_min to satisfy sigma < b/(2n)")
+      cl_plot = plot(result_df[:, :T], result_df[:, :CL], linewidth = 1.5, color = :orange, xlabel = "Time (s)", ylabel = "Coefficient of Lift", grid = false, legend = false)
+      cd_plot = plot(result_df[:, :T], result_df[:, :CD], linewidth = 1.5, color = :purple, xlabel = "Time (s)", ylabel = "Coefficient of Drag", grid = false, legend = false)
+      save_path = joinpath(@__DIR__, "Figures", "CL_vs_time_proposed.png")
+      savefig(cl_plot, save_path)
+      save_path = joinpath(@__DIR__, "Figures", "CD_vs_time_proposed.png")
+      savefig(cd_plot, save_path)
       break
     end
   end
@@ -336,11 +342,11 @@ verify_df = CSV.read(path, DataFrame)
 verification_stats(verify_df, "nsteps")
 
 
-cl_plot_v1 = plot(verify_df[:, :T], verify_df[:, :CL], linewidth = 1.5, xlabel = "Time (s)", ylabel = "Coefficient of Lift", grid = false)
-cd_plot_v1 = plot(verify_df[:, :T], verify_df[:, :CD], linewidth = 1.5, xlabel = "Time (s)", ylabel = "Coefficient of Drag", grid = false)
-save_path = joinpath(@__DIR__, "Figures", "CL_vs_time.png")
+cl_plot_v1 = plot(verify_df[:, :T], verify_df[:, :CL], linewidth = 1.5, color = :green, xlabel = "Time (s)", ylabel = "Coefficient of Lift", grid = false, legend = false)
+cd_plot_v1 = plot(verify_df[:, :T], verify_df[:, :CD], linewidth = 1.5, color = :brown, xlabel = "Time (s)", ylabel = "Coefficient of Drag", grid = false, legend = false)
+save_path = joinpath(@__DIR__, "Figures", "CL_vs_time_verification1.png")
 savefig(cl_plot_v1, save_path)
-save_path = joinpath(@__DIR__, "Figures", "CD_vs_time.png")
+save_path = joinpath(@__DIR__, "Figures", "CD_vs_time_verification1.png")
 savefig(cd_plot_v1, save_path)
 
 
