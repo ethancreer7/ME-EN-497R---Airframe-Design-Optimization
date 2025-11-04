@@ -37,7 +37,6 @@ global p_per_step = nothing
 mkpath(joinpath(@__DIR__, "wakelength"))
 mkpath(joinpath(@__DIR__, "nsteps"))
 mkpath(joinpath(@__DIR__, "n_sweep"))
-mkpath(joinpath(@__DIR__, "p_per_sweep"))
 mkpath(joinpath(@__DIR__, "verification"))
 mkpath(joinpath(@__DIR__, "Figures"))
 
@@ -247,9 +246,9 @@ end
 
 
 # --------------- Wakelength Convergence Study ----------------
-for (count, i) in enumerate(range(0.75, 6.5, step = 0.25))
+for (count, i) in enumerate(range(0.75, 5.0, step = 0.25))
   run_name        = "wakelength$(round(i*b, digits=3))"             # Name of this simulation
-  set_parameters_run_study("wakelength", run_name, 40, i*2.489, 20)
+  set_parameters_run_study("wakelength", run_name, 30, i*2.489, 20)
     
   path = joinpath(@__DIR__, "wakelength", run_name, run_name * "_convergence.csv")                    
   result_df = CSV.read(path, DataFrame)                    
@@ -264,7 +263,7 @@ end
 
 
 # --------------- nsteps Convergence Study --------------------
-for (count, i) in enumerate(range(10, 120, step = 10))
+for (count, i) in enumerate(range(10, 100, step = 10))
   run_name        = "nsteps$(i)"            # Name of this simulation
   set_parameters_run_study("nsteps", run_name, 70, wakelength_converged, i)
 
@@ -282,7 +281,7 @@ end
 
 
 # --------------- n Convergence Study -------------------------
-for (count, i) in enumerate(range(10, 150, step = 10))
+for (count, i) in enumerate(range(10, 100, step = 10))
   run_name = "n_sweep$(i)"
 
   set_parameters_run_study("n_sweep", run_name, i, wakelength_converged, nsteps_converged)
@@ -358,7 +357,7 @@ verification_stats(verify_df, "p_per_step")
 
 
 println("\n======= Test 3: INCREASING WAKELENGTH ========")
-wakelength_verify = wakelength_converged * 2
+wakelength_verify = wakelength_converged * 1.5
 run_name = "verification_wakelength$(wakelength_verify)"
 println("Running verification with increased wakelength = $wakelength_verify")
 set_parameters_run_study("verification", run_name, n_converged, wakelength_verify, nsteps_converged)

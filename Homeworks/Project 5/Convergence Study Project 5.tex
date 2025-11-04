@@ -23,10 +23,6 @@
 \date{1 November 2025}
 \begin{document}
 \maketitle
-\begin{abstract}
-    A simple convergence study using FlowUnsteady.jl and FlowVLM.jl performed on a simple wing. Primary objective of finding variable values that provides sufficiently converged coefficient of lift and drag values.
-    For emphasis and further exploration on the actual convergence process, the tolerance was set particularly low --- a 0.1\% change from previous run.
-\end{abstract}
 \section{Problem Setup}
 
 Before performing a preliminary convergence study analysis, it is necessary to define the wing geometry and simulation parameters used in the study.
@@ -51,7 +47,8 @@ These parameters are defined as found in Table~\ref{tab:geometry}
     \end{tabular}
 \end{table}
 
-
+With the wing now defined, we are now set to begin the convergence study. We are primarily interested in the variables listed in Table~\ref{tab:adjustables}.
+The convergence mode for each is listed in the same table giving us a preliminary idea of how each variable will affect the convergence of coefficient of lift and drag values.
 
 
 \begin{table}[H]
@@ -61,12 +58,96 @@ These parameters are defined as found in Table~\ref{tab:geometry}
         \toprule
         \textbf{Variable} & \textbf{Meaning} & \textbf{Convergence Mode} \\
         \midrule
-        n & Number of Spanwise Elements per Side & Spatial \\
+        wakelength & Length particles travel down the wake & Temporal \\
         nsteps & Number of Time Steps & Temporal \\
+        $n$ & Number of Spanwise Elements per Side & Spatial \\
+        p\_per\_step & Particles shed per step & Spatial \\
         \bottomrule
     \end{tabular}
 \end{table}
 
+Our convergence study will follow a systemic approach, gradually iterating through variables to suggest final parameters such that the wing will be appropriately discretized and sufficiently converged.
+
+\section{Wakelength}
+The first run through of the program consists of varying the wakelength of the wing. Obtaining convergence via wakelength varying is important as the wing simulation needs to be run long enough for the wake to settle in and the furthest aft particles no longer significantly influence the lift and drag.
+
+In our study, we vary the wakelength as a multiplicative factor of the span length given by Equation~\ref{eq:wakelength}. 
+\begin{equation}\label{eq:wakelength}
+wakelength = i \times{} b
+\end{equation}
+
+We perform a sweep across the $i$ value from 0.75 to 5.0 in 0.25-step increments. However, to computational efficiency, once when the coefficients of lift and drag become sufficiently converged, we break from this loop.
+Determining the metric used for convergence indication was also an important process. Here, we chose to use the coefficient of variation value for the 5 tail values of $C_L$ and $C_D$ at the end of each simulation.
+Once when each of these metrics fell below a threshold value (in this case 0.002 --- or 0.2\%), the simulation was considered converged, and this wakelength value was stored as a global variable to be referenced in subsequent convergence studies.
+In our sweep, this converged value ended up being 3.11125.
+The coefficient of variation is essentially a normalized standard deviation by taking the standard deviation of the given subset and dividing by its associated mean. 
+The coefficient of variation is helpful in the analysis of multiple datasets, and because the variable sweep naturally produces a variety of different datasets, it is appropriate for this study.
+
+Wakelength convergence is particularly important when it comes to temporal convergence. It is essentially testing for how long the wakelength needs to be for the $C_L$ and $C_D$ values to flatten out at the end of the simulation.
+This will be shown near the end of the study with the final proposed parameter values.
+
+\section{Number of Time Steps ($nsteps$)}
+The second parameter of interest in our convergence study is that of $nsteps$. This value dictates the number of time steps that take place from the wakelength being its shortest to its longest length.
+Increasing $nsteps$ does not shorten or lengthen the wakelength, but it does increase the resolution of the wakelength, allowing for more accurate $C_L$ and $C_D$ calculations.
+For our study, we fix the wakelength to its converged value from the previous stem and then sweep $nsteps$ from 10 to 100, this time in increments of 10.
+To determine convergence, we use the same metric used in the wakelength convergence test --- that is, we measure the coefficient of variation for the final 5 values of $C_L$ and $C_D$ for each run.
+Again, once when this coefficient falls below 0.002 --- or 0.2\%, we consider the study converged, store the variable in the global scope for future reference, and transition to the next test.
+In this sweep, the wing coefficients converged at a value of $nsteps = 20$.
+
+
+\section{Spanwise Elements per Side ($n$)}
+The next parameter of interest, $n$, is an important spatial convergence parameter. In essence, it is a measure of how finely the blade is discretized in spanwise panels.
+The greater the value of $n$, the greater the number of spanwise panels are present per side of the wing.
+With the wakelength and $nsteps$ values set from the previous sweeps, we now sweep the value of $n$ from 10 to 100, again in increments of 10.
+However, instead of using the coefficient of variation as the metric for convergence, we instead use a run over run percent change calculation.
+We do this because of the fundamental goal of this test. With temporal convergence already worked out we are now testing for spatial convergence --- which in this test means the final values of $C_L$ and $C_D$ not changing significantly from run to run.
+Instead of using the singular final value for both of these coefficients, we attempt to account for numerical noise by taking the average of the last 3 recorded values and then performing the percent change calculation according to Equation~\ref{eq:percent_change}.
+In effect, we take the difference between the current run's coefficient value and the previous run's coefficient value, divide it by the previous run's value, and multiply by 100\%.
+The tolerance for this study was set to be 0.25\%, and once the run over run percent change for both coefficient values fell below this tolerance, the for loop broke away, and the values were recorded as global variables for future analysis.
+For this study, the converged value for $n$ was 40 --- meaning 40 spanwise panels on each side of the simple wing.
+
+\begin{equation}\label{eq:percent_change}
+\% \text{ Change} = \frac{\text{Coeff}_{\text{curr}} - \text{Coeff}_{\text{prev}}}{\text{Coeff}_{\text{prev}}} \times{} 100\%
+\end{equation}
+
+
+\section{Particles Shed per Step (p\_per\_step)}
+A final parameter of interest necessitates discussion in this convergence study --- that of p\_per\_step.
+This parameter did not receive its own sweep, but rather was internally updated across each run of the studies various sweep.
+An understanding of what this parameter physically represents can shed light on its importance in this convergence study.
+p\_per\_step is best described as the number of particle shed per step, per spanwise panel and is a key parameter in limiting particle overlap on each spanwise panel.
+In our study, we set the minimum p\_per\_step value to be the result of Equation~\ref{eq:pperstep}, rounded up to the nearest integer.
+
+\begin{equation}\label{eq:pperstep}
+\frac{2 \cdot n \cdot \lambda_{vpm} \cdot V_\infty \cdot ttot}{nsteps \cdot b}
+\end{equation}
+
+Here, $\lambda_{vpm}$ is a particle overlap parameter and is fixed for the entire study. $ttot$ is also fixed, coming from the wakelength convergence study.
+
+The overriding principle inherit in this parameter, is that its value must change with each run, such that the true independent variable being swept can be isolated and analyzed.
+The constraint here is that particles should not overlap each other (as good as possible), and because p\_per\_step is a function of $n$, $nsteps$, and (indirectly) wakelength, its value must be updated with each run.
+It's essentially its own dependent variable and a necessary constraint to insure uniformity across the variable sweep.
+
+As such, this variable, was updated with new variable configuration to provide the most accurate coefficient values.
+Though not a swept parameter in this study, it did serve a crucial role in the backround of the multitude of wing discretizations in this study.
+
+
+\begin{table}[H]
+    \centering
+    \caption{A final proposed list of parameter values that can be used with sufficient confidence for producing converged $C_L$ and $C_D$ values on a simple wing}\label{tab:proposed}
+    \begin{tabular}{c c}
+        \toprule
+        \textbf{Variable} & \textbf{Proposed Value} \\
+        \midrule
+        wakelength & 3.11125 \\
+        $nsteps$ & 20 \\
+        $n$ & 40 \\
+        p\_per\_step & Value \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\section{Verification Tests}
 
 
 
