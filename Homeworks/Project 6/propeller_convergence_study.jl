@@ -117,7 +117,7 @@ rotor = uns.generate_rotor(rotor_file; pitch=pitch,
 Returns the coefficient of variation value for the given dataframe for coefficient of torque
 """
 function get_cv(df::DataFrame)
-  ct_tail_vals = df[end-4:end, :CT]
+  ct_tail_vals = df[end-4:end, :CT_1]
 
   ct_sigma = std(ct_tail_vals)
   ct_mean = mean(ct_tail_vals)
@@ -136,6 +136,32 @@ function printstats(ct_CV, variable_name, variable_val)
   println("$variable_name = $variable_val")
   println("Converged within .3% variation")
 end
+
+
+"""
+  function verification_stats(verify_df::DataFrame)
+
+Calculates and prints verification confirmation stats
+"""
+function verification_stats(verify_df::DataFrame, variable::String)
+  CT_verify = mean(verify_df[end-2:end, :CT_1])
+  
+  println("Verification results:")
+  println("CT = $CT_verify")
+  println("Original converged CT = $CT_mean_converged")
+
+  percent_change_CT = abs(CT_verify - CT_mean_converged) / abs(CT_mean_converged) * 100
+  
+  println("Percent Change CT = $(round(percent_change_CT, digits=4))%")
+
+  if percent_change_CT < 0.5
+      println("Passed: Increasing $variable does not change CT significantly")
+  else
+      println("Failed: CT changed more than expected")
+  end
+  println("=======================================\n")
+end
+
 
 
 """
@@ -265,7 +291,7 @@ end
 for i in range(2,8, step=1)
     run_name = "nrevs$(i)" # Name of Simulation
     solve_rotor("nrevs", run_name, i, 36)
-    path = joinpath(@__DIR__, "nrevs", run_name, run_name * "_converged.csv")
+    path = joinpath(@__DIR__, "nrevs", run_name, run_name * "_convergence.csv")
     result_df = CSV.read(path, DataFrame)
     ct_CV = get_cv(result_df)
     if ct_CV < 0.003
@@ -279,13 +305,14 @@ end
 for i in range(24, 50, step=2)
     run_name = "nsteps_per_rev$(i)" # Name of Simulation
     solve_rotor("nsteps_per_rev", run_name, nrevs_converged, i)
-    path = joinpath(@__DIR__, "nsteps_per_rev", run_name, run_name * "_converged.csv")
+    path = joinpath(@__DIR__, "nsteps_per_rev", run_name, run_name * "_convergence.csv")
     result_df = CSV.read(path, DataFrame)
     ct_CV = get_cv(result_df)
     if ct_CV < 0.003
         printstats(ct_CV, "nsteps_per_rev", i)
         global nsteps_per_rev_converged = i
         global p_per_step_min = Int(ceil(lambda_vpm * 2 * pi * R / (nsteps_per_rev * R/n)))
+        global CT_mean_converged = mean(result_df[end-3:end, :CT_1])
         break
     end
 end
@@ -296,3 +323,36 @@ println("nrevs converged: $nrevs_converged")
 println("nsteps_per_rev_converged: $nsteps_per_rev_converged")
 println("p_per_step_min: $p_per_step_min")
 println("==================================================================\n")
+
+
+
+println("\n=========== VERIFICATION OF SUGGESTED PARAMETERS ===============")
+println("\n=========== STEP 1: INCREASING NREVS ===========================")
+nrevs_verify = nrevs_converged * 1.5
+run_name = "verification_nrevs$(nrevs_verify)"
+println("Running verification with increased nrevs = $nrevs_verify and adjusting for p_per_step")
+solve_rotor("Verification", run_name, nrevs_verify, nsteps_per_rev_converged)
+path = joinpath(@__DIR__, "Verification", run_name, run_name * "_convergence.csv")
+verify_df = CSV.read(path, DataFrame)
+verification_stats(verify_df, "nrevs")
+
+
+println("\n=========== STEP 2: INCREASING NSTEPS_PER_REV ===========================")
+nsteps_per_rev_verify = nsteps_per_rev_converged * 1.5
+run_name = "verification_nsteps_per_rev$(nsteps_per_rev_verify)"
+println("Running verification with increased nsteps_per_rev = $nsteps_per_rev_verify and adjusting for p_per_step")
+solve_rotor("Verification", run_name, nrevs_converged, nsteps_per_rev_verify)
+path = joinpath(@__DIR__, "Verification", run_name, run_name * "_convergence.csv")
+verify_df = CSV.read(path, DataFrame)
+verification_stats(verify_df, "nsteps_per_rev")
+
+
+
+println("\n=========== STEP 3: INCREASING P_PER_STEP ===========================")
+p_per_step_verify = Int(ceil(p_per_step_min * 1.5))
+run_name = "verification_p_per_step$(p_per_step_verify)"
+println("Running verification with increased p_per_step = $p_per_step_verify")
+solve_rotor("Verification", run_name, nrevs_converged, nsteps_per_rev_converged; p_per_step = p_per_step_verify)
+path = joinpath(@__DIR__, "Verification", run_name, run_name * "_convergence.csv")
+verify_df = CSV.read(path, DataFrame)
+verification_stats(verify_df, "p_per_step")
