@@ -19,10 +19,11 @@ import FLOWUnsteady as uns
 import FLOWVLM as vlm
 import FLOWVPM as vpm
 
-run_name        = "propeller-example"       # Name of this simulation
+mkpath(joinpath(@__DIR__, "Examples"))
 
-save_path       = run_name                  # Where to save this simulation
-paraview        = true                      # Whether to visualize with Paraview
+run_name        = "propeller-example"       # Name of this simulation
+save_path       = joinpath(@__DIR__, "Examples", run_name)                  # Where to save this simulation
+
 
 
 # ----------------- GEOMETRY PARAMETERS ----------------------------------------
@@ -93,7 +94,7 @@ ttot            = nsteps/nsteps_per_rev / (RPM/60)       # (s) total simulation 
 
 # VPM particle shedding
 p_per_step      = 2                         # Sheds per time step
-shed_starting   = true                      # Whether to shed starting vortex
+shed_starting   = false                      # Whether to shed starting vortex
 shed_unsteady   = true                      # Whether to shed vorticity from unsteady loading
 max_particles   = ((2*n+1)*B)*nsteps*p_per_step + 1 # Maximum number of particles
 
@@ -216,6 +217,7 @@ monitor_rotor = uns.generate_monitor_rotors(rotors, J, rho, RPM, nsteps;
                                             t_lbl="Revolutions",   # Label for time axis
                                             out_figs=figs,
                                             out_figaxs=figaxs,
+                                            disp_conv=false,
                                             save_path=save_path,
                                             run_name=run_name,
                                             figname="rotor monitor",
@@ -245,24 +247,3 @@ uns.run_simulation(simulation, nsteps;
                     save_path=save_path,
                     run_name=run_name,
                     );
-
-
-
-
-# ----------------- 6) VISUALIZATION -------------------------------------------
-if paraview
-    println("Calling Paraview...")
-
-    # Files to open in Paraview
-    files = joinpath(save_path, run_name*"_pfield...xmf;")
-    for bi in 1:B
-        global files
-        files *= run_name*"_Rotor_Blade$(bi)_loft...vtk;"
-        files *= run_name*"_Rotor_Blade$(bi)_vlm...vtk;"
-    end
-
-    # Call Paraview
-    run(`paraview --data=$(files)`)
-
-end
-
