@@ -1,0 +1,12 @@
+Lab Notebook:
+
+
+
+11/7/2025 - Research Meeting
+
+- Consider comparing convergence values against databases
+- Richardson Extrapolation, look into it. This will make it so that you don't have to run so many simulations.
+
+Sam Research:
+- Neural network training... testing vs training sets
+
