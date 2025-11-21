@@ -137,7 +137,7 @@ rotor = uns.generate_rotor(rotor_file; pitch=pitch,
                                         data_path=data_path,
                                         verbose=true,
                                         verbose_xfoil=false,
-                                        plot_disc=true
+                                        plot_disc=false
                                         );
 
 println("Generating vehicle...")

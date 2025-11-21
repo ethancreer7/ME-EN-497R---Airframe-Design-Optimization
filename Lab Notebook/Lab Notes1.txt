@@ -1,0 +1,73 @@
+Lab Notebook:
+
+
+
+11/7/2025 - Research Meeting
+
+- Consider comparing convergence values against databases
+- Richardson Extrapolation, look into it. This will make it so that you don't have to run so many simulations.
+
+Sam Research:
+- Neural network training... testing vs training sets
+
+
+
+11/8/2025 - Research
+
+Richardson Extrapolation
+
+
+
+
+11/11/2025 - Stability Meeting
+vpm_viscous = vpm.CoreSpreading(mu/rho, sigma_vpm_overwrite, vpm.kernel_gaussianerf)
+vpm_SFS = vpm.SFS_Cd_twolevel_nobackscatter
+
+
+11/12/2025
+    Adding pylock around the generate_rotor call which will hopefully help with multi threading
+
+    Next Steps:
+    - run n convergence
+    - Re run nsteps_per rev with multi threading to compare outputs with pre stabilization in final file
+    - Tinker around with p_per_step
+    - Verification
+    - Report
+
+    Log of what we've done today - 
+    - Lots (and lots) of debugging segmentation faults and type errors
+    - Got the script to run with no segmentation faults!
+    - Final debugging to get all xmf files to output. Only getting the first and last time steps for some reason
+    - Running n convergence overnight, using nsteps_per_rev_converged = 120
+    - Mach reached 1.27 on inviscid model. Failed on n20 at time step 80. Mach reached 1.17 on viscous model. Failed on n20 at time step 80 as well.
+    - Overnight mach reached 2.9 on viscid model. Again n20 time step 80.
+
+11/13/2025
+ - Examined ParaView Files for mach 2.9 case. Revealed that particles blew up near the hub rather than the tip. Also initial sheds were a little large
+ - Accounting for both by running hubtiploss_correction = hubtiploss_correction_prandtl as a parameter.
+ - Currently running nsteps_per_rev to get potentially a better convergence value. Could perhaps help with stability in the n sweep.
+    - That ran about 30 minutes. So you could say multi threading makes a difference
+
+11/14/2025
+ - Found an experimental database for the propeller in use for this study. See experimental_prop_data.txt in Project 6
+ - The closest simulation parameters in this dataset are 9000 RPM and J = 0.3934 (to our 9200 RPM and J = 0.4). This gives a CT values of 0.0900, very close to what our Richardson Extrapolation gave of 0.087.
+ Especially considering increasing J, lowers the CT value, and our simulation parameters are slightly different.
+
+
+ 11/14/2025
+ - Ran an nsteps_per_rev_convergence study on wide range -- [20, 40, 80, 160, 320] -- Ran on 32 cores, 16 RAM in 1 hour 5 minutes - Note that 71% of RAM was used and only 39% of cores were used
+ - CT_inf came out to be 0.08717687674035962
+    - nsteps = 320 gave CT = 0.08629435954390076 with an error of approximately 1.01%
+    - nsteps = 160 gave CT = 0.08549578869647932 with an error of approximately 1.93%
+    - To obtain a roughly 1.5% convergence, we will move forward with nsteps = 240 (halfway between the two) for future reference
+
+
+11/17/2025
+ - Still struggling with segfaults and mach issues. Relaxing some parameters to see if anything changes. Reviewing source code for any other potential parameters that could be changed.
+ - Going to try looping through n = 25 instead - it seems n = 10 and n = 20 produce final CT vals within approximately 1 % of each other, which is probably good enough.
+ - Also going to adjust shed_starting to be true and see its affect on the simulation. Changed max p_per_step to 5 Filed as ntest directory.
+ - It Worked!! shed_starting = true, p_per_step_max = 5, rotor_surf = R/15, r = 1/3.
+
+
+ 11/19/2025
+ - Used SLURM arrays, and now it works perfectly!!!!! Even for much greater values of n. Going to submit a verification test, to see what happens.

@@ -1,358 +1,408 @@
 import FLOWUnsteady as uns
-import FlowVLM as vlm
-import FlowVPM as vpm
+import FLOWVLM as vlm
+import FLOWVPM as vpm
 using DataFrames, CSV, Statistics, Plots
-
-results = DataFrame(
-    ref_age_deg = Float64[], T = Float64[], DT = Float64[], RPM = Float64[], CT = Float64[], CQ = Float64[], Eta = Float64[]
-)
-
-prev_Ct, prev_Cq, prev_zeta = nothing, nothing, nothing
-
-global nrevs_converged = nothing
-global nsteps_per_rev_converged = nothing
-global p_per_step = nothing
-global p_per_step_min = nothing
-
-mkpath(joinpath(@__DIR__, "nrevs"))
-mkpath(joinpath(@__DIR__, "nsteps_per_rev"))
-mkpath(joinpath(@__DIR__, "Verification"))
-mkpath(joinpath(@__DIR__, "Figures"))
+using Richardson
 
 
-# ----------------- Global Geometry Parameters -----------------------
+function main()
+  results = DataFrame(
+      ref_age_deg = Float64[], T = Float64[], DT = Float64[], RPM = Float64[], CT = Float64[], CQ = Float64[], Eta = Float64[]
+  )
 
-# Rotor geometry
-rotor_file      = "apc10x7.csv"             # Rotor geometry
-data_path       = uns.def_data_path         # Path to rotor database
-pitch           = 0.0                       # (deg) collective pitch of blades
-CW              = false                     # Clock-wise rotation
-xfoil           = true                      # Whether to run XFOIL
-ncrit           = 9                         # Turbulence criterion for XFOIL
+  prev_Ct, prev_Cq, prev_zeta = nothing, nothing, nothing
 
+  nrevs_converged = nothing
+  nsteps_per_rev_converged = nothing
+  p_per_step = nothing
+  p_per_step_min = nothing
 
-# Discretization
-n               = 20                        # Number of blade elements per blade
-r               = 1/5                       # Geometric expansion of elements
-
-# NOTE: Here a geometric expansion of 1/5 means that the spacing between the
-#       tip elements is 1/5 of the spacing between the hub elements. Refine the
-#       discretization towards the blade tip like this in order to better
-#       resolve the tip vortex.
+  mkpath(joinpath(@__DIR__, "nrevs"))
+  mkpath(joinpath(@__DIR__, "nsteps_per_rev"))
+  mkpath(joinpath(@__DIR__, "n"))
+  mkpath(joinpath(@__DIR__, "Verification"))
+  mkpath(joinpath(@__DIR__, "Figures"))
 
 
-# Read radius of this rotor and number of blades
-R, B            = uns.read_rotor(rotor_file; data_path=data_path)[[1,3]]
+  # ----------------- Global Geometry Parameters -----------------------
 
-# ----------------- SIMULATION PARAMETERS --------------------------------------
-
-# Operating conditions
-RPM             = 9200                      # RPM
-J               = 0.4                       # Advance ratio Vinf/(nD)
-AOA             = 0                         # (deg) Angle of attack (incidence angle)
-
-rho             = 1.225                     # (kg/m^3) air density
-mu              = 1.81e-5                   # (kg/ms) air dynamic viscosity
-speedofsound    = 342.35                    # (m/s) speed of sound
-
-magVinf         = J*RPM/60*(2*R)
-Vinf(X, t)      = magVinf*[cosd(AOA), sind(AOA), 0] # (m/s) freestream velocity vector
-
-ReD             = 2*pi*RPM/60*R * rho/mu * 2*R      # Diameter-based Reynolds number
-Matip           = 2*pi*RPM/60*R / speedofsound      # Tip Mach number
-
-println("""
-    RPM:    $(RPM)
-    Vinf:   $(Vinf(zeros(3), 0)) m/s
-    Matip:  $(round(Matip, digits=3))
-    ReD:    $(round(ReD, digits=0))
-""")
-
-# ----------------- GLOBAL SOLVER PARAMETERS ------------------------------------------
-
-# Aerodynamic solver
-VehicleType     = uns.UVLMVehicle           # Unsteady solver
-# VehicleType   = uns.QVLMVehicle           # Quasi-steady solver
-const_solution  = VehicleType==uns.QVLMVehicle  # Whether to assume that the
-                                                # solution is constant or not
-
-shed_starting = false
-shed_unsteady = true
-sigma_rotor_surf = R/40                      # Rotor-on-VPM smoothing radius
-lambda_vpm      = 2.125                     # VPM core overlap
-                                            # VPM smoothing radius
-                                            # Rotor solver
-vlm_rlx         = 0.7                       # VLM relaxation <-- this also applied to rotors
-hubtiploss_correction = vlm.hubtiploss_nocorrection # Hub and tip loss correction
-
-# VPM solver
-vpm_viscous     = vpm.Inviscid()            # VPM viscous diffusion scheme
-
-if VehicleType == uns.QVLMVehicle
-    # NOTE: If the quasi-steady solver is used, this mutes warnings regarding
-    #       potential colinear vortex filaments. This is needed since the
-    #       quasi-steady solver will probe induced velocities at the lifting
-    #       line of the blade
-    uns.vlm.VLMSolver._mute_warning(true)
-end
-
-println("Generating geometry...")
-
-# Generate rotor
-rotor = uns.generate_rotor(rotor_file; pitch=pitch,
-                                        n=n, CW=CW, blade_r=r,
-                                        altReD=[RPM, J, mu/rho],
-                                        xfoil=xfoil,
-                                        ncrit=ncrit,
-                                        data_path=data_path,
-                                        verbose=true,
-                                        verbose_xfoil=false,
-                                        plot_disc=true
-                                        );
+  # Rotor geometry
+  rotor_file      = "apc10x7.csv"             # Rotor geometry
+  data_path       = uns.def_data_path         # Path to rotor database
+  pitch           = 0.0                       # (deg) collective pitch of blades
+  CW              = false                     # Clock-wise rotation
+  xfoil           = true                      # Whether to run XFOIL
+  ncrit           = 9                         # Turbulence criterion for XFOIL
 
 
-"""
-  function get_cv(df::DataFrame)
+  # Discretization
+  r               = 1/5                       # Geometric expansion of elements
 
-Returns the coefficient of variation value for the given dataframe for coefficient of torque
-"""
-function get_cv(df::DataFrame)
-  ct_tail_vals = df[end-4:end, :CT_1]
-
-  ct_sigma = std(ct_tail_vals)
-  ct_mean = mean(ct_tail_vals)
-  ct_CV = ct_sigma / ct_mean
-
-  return ct_CV
-end
-
-"""
-  function printstats(ct_CV, variable_name, variable_val)
-
-Returns print statements summarizing the convergence
-"""
-function printstats(ct_CV, variable_name, variable_val)
-  println("ct_CV = $ct_CV")
-  println("$variable_name = $variable_val")
-  println("Converged within .3% variation")
-end
+  # NOTE: Here a geometric expansion of 1/5 means that the spacing between the
+  #       tip elements is 1/5 of the spacing between the hub elements. Refine the
+  #       discretization towards the blade tip like this in order to better
+  #       resolve the tip vortex.
 
 
-"""
-  function verification_stats(verify_df::DataFrame)
+  # Read radius of this rotor and number of blades
+  R, B            = uns.read_rotor(rotor_file; data_path=data_path)[[1,3]]
 
-Calculates and prints verification confirmation stats
-"""
-function verification_stats(verify_df::DataFrame, variable::String)
-  CT_verify = mean(verify_df[end-2:end, :CT_1])
-  
-  println("Verification results:")
-  println("CT = $CT_verify")
-  println("Original converged CT = $CT_mean_converged")
+  # ----------------- SIMULATION PARAMETERS --------------------------------------
 
-  percent_change_CT = abs(CT_verify - CT_mean_converged) / abs(CT_mean_converged) * 100
-  
-  println("Percent Change CT = $(round(percent_change_CT, digits=4))%")
+  # Operating conditions
+  RPM             = 9200                      # RPM
+  J               = 0.4                       # Advance ratio Vinf/(nD)
+  AOA             = 0                         # (deg) Angle of attack (incidence angle)
 
-  if percent_change_CT < 0.5
-      println("Passed: Increasing $variable does not change CT significantly")
-  else
-      println("Failed: CT changed more than expected")
+  rho             = 1.225                     # (kg/m^3) air density
+  mu              = 1.81e-5                   # (kg/ms) air dynamic viscosity
+  speedofsound    = 342.35                    # (m/s) speed of sound
+
+  magVinf         = J*RPM/60*(2*R)
+  Vinf(X, t)      = magVinf*[cosd(AOA), sind(AOA), 0] # (m/s) freestream velocity vector
+
+  ReD             = 2*pi*RPM/60*R * rho/mu * 2*R      # Diameter-based Reynolds number
+  Matip           = 2*pi*RPM/60*R / speedofsound      # Tip Mach number
+
+  println("""
+      RPM:    $(RPM)
+      Vinf:   $(Vinf(zeros(3), 0)) m/s
+      Matip:  $(round(Matip, digits=3))
+      ReD:    $(round(ReD, digits=0))
+  """)
+
+  # ----------------- GLOBAL SOLVER PARAMETERS ------------------------------------------
+
+  # Aerodynamic solver
+  VehicleType     = uns.UVLMVehicle           # Unsteady solver
+  # VehicleType   = uns.QVLMVehicle           # Quasi-steady solver
+  const_solution  = VehicleType==uns.QVLMVehicle  # Whether to assume that the
+                                                  # solution is constant or not
+
+  shed_starting = false
+  shed_unsteady = true
+  sigma_rotor_surf = R/40                      # Rotor-on-VPM smoothing radius
+  lambda_vpm      = 2.125                     # VPM core overlap
+                                              # VPM smoothing radius
+                                              # Rotor solver
+  vlm_rlx         = 0.7                       # VLM relaxation <-- this also applied to rotors
+  hubtiploss_correction = vlm.hubtiploss_nocorrection # Hub and tip loss correction
+
+  # VPM solver
+  vpm_viscous     = vpm.Inviscid()            # VPM viscous diffusion scheme
+
+  if VehicleType == uns.QVLMVehicle
+      # NOTE: If the quasi-steady solver is used, this mutes warnings regarding
+      #       potential colinear vortex filaments. This is needed since the
+      #       quasi-steady solver will probe induced velocities at the lifting
+      #       line of the blade
+      uns.vlm.VLMSolver._mute_warning(true)
   end
-  println("=======================================\n")
-end
 
 
+  """
+    function get_cv(df::DataFrame)
 
-"""
-    function solve_rotor(study, run_name, nrevs, nsteps_per_rev; ttot = , p_per_step = )
+  Returns the coefficient of variation value for the given dataframe for coefficient of torque
+  """
+  function get_cv(df::DataFrame)
+    ct_tail_vals = df[end-4:end, :CT_1]
 
-Solves the provided propeller with the given simulation parameters
-"""
-function solve_rotor(study, run_name, nrevs, nsteps_per_rev; nsteps = const_solution ? 2 : nrevs*nsteps_per_rev , ttot = nsteps/nsteps_per_rev / (RPM/60), p_per_step = Int(ceil(lambda_vpm * 2 * pi * R / (nsteps_per_rev * R/n))))
+    ct_sigma = std(ct_tail_vals)
+    ct_mean = mean(ct_tail_vals)
+    ct_CV = ct_sigma / ct_mean
+
+    return ct_CV
+  end
+
+  """
+    function printstats(ct_CV, variable_name, variable_val)
+
+  Returns print statements summarizing the convergence
+  """
+  function printstats(ct_CV, variable_name, variable_val)
+    println("ct_CV = $ct_CV")
+    println("$variable_name = $variable_val")
+    println("Converged within .3% variation")
+  end
+
+
+  """
+    function verification_stats(verify_df::DataFrame)
+
+  Calculates and prints verification confirmation stats
+  """
+  function verification_stats(verify_df::DataFrame, variable::String, CT_mean_converged)
+    CT_verify = mean(verify_df[end-2:end, :CT_1])
     
-    save_path = joinpath(@__DIR__, study, run_name)    
-    max_particles   = ((2*n+1)*B)*nsteps*p_per_step + 1 # Maximum number of particles
-    sigma_vpm_overwrite = lambda_vpm * 2*pi*R/(nsteps_per_rev*p_per_step)
-    # ----------------- 1) VEHICLE DEFINITION --------------------------------------
+    println("Verification results:")
+    println("CT = $CT_verify")
+    println("Original converged CT = $CT_mean_converged")
 
-    println("Generating vehicle...")
+    percent_change_CT = abs(CT_verify - CT_mean_converged) / abs(CT_mean_converged) * 100
+    
+    println("Percent Change CT = $(round(percent_change_CT, digits=4))%")
 
-    # Generate vehicle
-    system = vlm.WingSystem()                   # System of all FLOWVLM objects
-    vlm.addwing(system, "Rotor", rotor)
-
-    rotors = [rotor];                           # Defining this rotor as its own system
-    rotor_systems = (rotors, );                 # All systems of rotors
-
-    wake_system = vlm.WingSystem()              # System that will shed a VPM wake
-                                                # NOTE: Do NOT include rotor when using the quasi-steady solver
-    if VehicleType != uns.QVLMVehicle
-        vlm.addwing(wake_system, "Rotor", rotor)
+    if percent_change_CT < 0.5
+        println("Passed: Increasing $variable does not change CT significantly")
+    else
+        println("Failed: CT changed more than expected")
     end
-
-    vehicle = VehicleType(   system;
-                                rotor_systems=rotor_systems,
-                                wake_system=wake_system
-                            );
-
-    # NOTE: Through the `rotor_systems` keyword argument to `uns.VLMVehicle` we
-    #       have declared any systems (groups) of rotors that share a common RPM.
-    #       We will later declare the control inputs to each rotor system when we
-    #       define the `uns.KinematicManeuver`.
-
-
-    # ------------- 2) MANEUVER DEFINITION -----------------------------------------
-    # Non-dimensional translational velocity of vehicle over time
-    Vvehicle(t) = zeros(3)
-
-    # Angle of the vehicle over time
-    anglevehicle(t) = zeros(3)
-
-    # RPM control input over time (RPM over `RPMref`)
-    RPMcontrol(t) = 1.0
-
-    angles = ()                                 # Angle of each tilting system (none)
-    RPMs = (RPMcontrol, )                       # RPM of each rotor system
-
-    maneuver = uns.KinematicManeuver(angles, RPMs, Vvehicle, anglevehicle)
-
-    # NOTE: `FLOWUnsteady.KinematicManeuver` defines a maneuver with prescribed
-    #       kinematics. `Vvehicle` defines the velocity of the vehicle (a vector)
-    #       over time. `anglevehicle` defines the attitude of the vehicle over time.
-    #       `angle` defines the tilting angle of each tilting system over time.
-    #       `RPM` defines the RPM of each rotor system over time.
-    #       Each of these functions receives a nondimensional time `t`, which is the
-    #       simulation time normalized by the total time `ttot`, from 0 to
-    #       1, beginning to end of simulation. They all return a nondimensional
-    #       output that is then scaled by either a reference velocity (`Vref`) or
-    #       a reference RPM (`RPMref`). Defining the kinematics and controls of the
-    #       maneuver in this way allows the user to have more control over how fast
-    #       to perform the maneuver, since the total time, reference velocity and
-    #       RPM are then defined in the simulation parameters shown below.
-
-
-    # ------------- 3) SIMULATION DEFINITION ---------------------------------------
-
-    Vref = 0.0                                  # Reference velocity to scale maneuver by
-    RPMref = RPM                                # Reference RPM to scale maneuver by
-
-    Vinit = Vref*Vvehicle(0)                    # Initial vehicle velocity
-    Winit = pi/180*(anglevehicle(1e-6) - anglevehicle(0))/(1e-6*ttot)  # Initial angular velocity
-
-    simulation = uns.Simulation(vehicle, maneuver, Vref, RPMref, ttot;
-                                                        Vinit=Vinit, Winit=Winit);
-
-
-    # ------------- 4) MONITORS DEFINITIONS ----------------------------------------
-    figs, figaxs = [], []                       # Figures generated by monitor
-
-    # Generate rotor monitor
-    monitor_rotor = uns.generate_monitor_rotors(rotors, J, rho, RPM, nsteps;
-                                                t_scale=RPM/60,        # Scaling factor for time in plots
-                                                t_lbl="Revolutions",   # Label for time axis
-                                                out_figs=figs,
-                                                out_figaxs=figaxs,
-                                                disp_conv=false,
-                                                save_path=save_path,
-                                                run_name=run_name,
-                                                figname="rotor monitor",
-                                                )
-
-
-    # ------------- 5) RUN SIMULATION ----------------------------------------------
-    println("Running simulation...")
-
-    uns.run_simulation(simulation, nsteps;
-                        # ----- SIMULATION OPTIONS -------------
-                        Vinf=Vinf,
-                        rho=rho, mu=mu, sound_spd=speedofsound,
-                        # ----- SOLVERS OPTIONS ----------------
-                        p_per_step=p_per_step,
-                        max_particles=max_particles,
-                        vpm_viscous=vpm_viscous,
-                        sigma_vlm_surf=sigma_rotor_surf,
-                        sigma_rotor_surf=sigma_rotor_surf,
-                        sigma_vpm_overwrite=sigma_vpm_overwrite,
-                        vlm_rlx=vlm_rlx,
-                        hubtiploss_correction=hubtiploss_correction,
-                        shed_unsteady=shed_unsteady,
-                        shed_starting=shed_starting,
-                        extra_runtime_function=monitor_rotor,
-                        # ----- OUTPUT OPTIONS ------------------
-                        save_path=save_path,
-                        run_name=run_name,
-                        );
-
-end
+    println("=======================================\n")
+  end
 
 
 
-for i in range(2,8, step=1)
-    run_name = "nrevs$(i)" # Name of Simulation
-    solve_rotor("nrevs", run_name, i, 36)
-    path = joinpath(@__DIR__, "nrevs", run_name, run_name * "_convergence.csv")
+  """
+      function solve_rotor(study, run_name, nrevs, nsteps_per_rev; ttot = , p_per_step = )
+
+  Solves the provided propeller with the given simulation parameters
+  """
+  function solve_rotor(study, run_name, nrevs, nsteps_per_rev; n=20, nsteps = nrevs*nsteps_per_rev , ttot = nsteps/nsteps_per_rev / (RPM/60), p_per_step = Int(ceil(lambda_vpm * 2 * pi * R / (nsteps_per_rev * R/n))))
+      
+      save_path = joinpath(@__DIR__, study, run_name)    
+      max_particles   = ((2*n+1)*B)*nsteps*p_per_step + 1 # Maximum number of particles
+      sigma_vpm_overwrite = lambda_vpm * 2*pi*R/(nsteps_per_rev*p_per_step)
+      
+      println("Generating geometry...")
+
+      # Generate rotor
+      rotor = uns.generate_rotor(rotor_file; pitch=pitch,
+                                              n=n, CW=CW, blade_r=r,
+                                              altReD=[RPM, J, mu/rho],
+                                              xfoil=xfoil,
+                                              ncrit=ncrit,
+                                              data_path=data_path,
+                                              verbose=true,
+                                              verbose_xfoil=false,
+                                              plot_disc=true
+                                              );
+      
+      # ----------------- 1) VEHICLE DEFINITION --------------------------------------
+
+      println("Generating vehicle...")
+
+      # Generate vehicle
+      system = vlm.WingSystem()                   # System of all FLOWVLM objects
+      vlm.addwing(system, "Rotor", rotor)
+
+      rotors = [rotor];                           # Defining this rotor as its own system
+      rotor_systems = (rotors, );                 # All systems of rotors
+
+      wake_system = vlm.WingSystem()              # System that will shed a VPM wake
+                                                  # NOTE: Do NOT include rotor when using the quasi-steady solver
+      if VehicleType != uns.QVLMVehicle
+          vlm.addwing(wake_system, "Rotor", rotor)
+      end
+
+      vehicle = VehicleType(   system;
+                                  rotor_systems=rotor_systems,
+                                  wake_system=wake_system
+                              );
+
+      # NOTE: Through the `rotor_systems` keyword argument to `uns.VLMVehicle` we
+      #       have declared any systems (groups) of rotors that share a common RPM.
+      #       We will later declare the control inputs to each rotor system when we
+      #       define the `uns.KinematicManeuver`.
+
+
+      # ------------- 2) MANEUVER DEFINITION -----------------------------------------
+      # Non-dimensional translational velocity of vehicle over time
+      Vvehicle(t) = zeros(3)
+
+      # Angle of the vehicle over time
+      anglevehicle(t) = zeros(3)
+
+      # RPM control input over time (RPM over `RPMref`)
+      RPMcontrol(t) = 1.0
+
+      angles = ()                                 # Angle of each tilting system (none)
+      RPMs = (RPMcontrol, )                       # RPM of each rotor system
+
+      maneuver = uns.KinematicManeuver(angles, RPMs, Vvehicle, anglevehicle)
+
+      # NOTE: `FLOWUnsteady.KinematicManeuver` defines a maneuver with prescribed
+      #       kinematics. `Vvehicle` defines the velocity of the vehicle (a vector)
+      #       over time. `anglevehicle` defines the attitude of the vehicle over time.
+      #       `angle` defines the tilting angle of each tilting system over time.
+      #       `RPM` defines the RPM of each rotor system over time.
+      #       Each of these functions receives a nondimensional time `t`, which is the
+      #       simulation time normalized by the total time `ttot`, from 0 to
+      #       1, beginning to end of simulation. They all return a nondimensional
+      #       output that is then scaled by either a reference velocity (`Vref`) or
+      #       a reference RPM (`RPMref`). Defining the kinematics and controls of the
+      #       maneuver in this way allows the user to have more control over how fast
+      #       to perform the maneuver, since the total time, reference velocity and
+      #       RPM are then defined in the simulation parameters shown below.
+
+
+      # ------------- 3) SIMULATION DEFINITION ---------------------------------------
+
+      Vref = 0.0                                  # Reference velocity to scale maneuver by
+      RPMref = RPM                                # Reference RPM to scale maneuver by
+
+      Vinit = Vref*Vvehicle(0)                    # Initial vehicle velocity
+      Winit = pi/180*(anglevehicle(1e-6) - anglevehicle(0))/(1e-6*ttot)  # Initial angular velocity
+
+      simulation = uns.Simulation(vehicle, maneuver, Vref, RPMref, ttot;
+                                                          Vinit=Vinit, Winit=Winit);
+
+
+      # ------------- 4) MONITORS DEFINITIONS ----------------------------------------
+      figs, figaxs = [], []                       # Figures generated by monitor
+
+      # Generate rotor monitor
+      monitor_rotor = uns.generate_monitor_rotors(rotors, J, rho, RPM, nsteps;
+                                                  t_scale=RPM/60,        # Scaling factor for time in plots
+                                                  t_lbl="Revolutions",   # Label for time axis
+                                                  out_figs=figs,
+                                                  out_figaxs=figaxs,
+                                                  disp_conv=false,
+                                                  save_path=save_path,
+                                                  run_name=run_name,
+                                                  figname="rotor monitor",
+                                                  )
+
+
+      # ------------- 5) RUN SIMULATION ----------------------------------------------
+      println("Running simulation...")
+
+      uns.run_simulation(simulation, nsteps;
+                          # ----- SIMULATION OPTIONS -------------
+                          Vinf=Vinf,
+                          rho=rho, mu=mu, sound_spd=speedofsound,
+                          # ----- SOLVERS OPTIONS ----------------
+                          p_per_step=p_per_step,
+                          max_particles=max_particles,
+                          vpm_viscous=vpm_viscous,
+                          sigma_vlm_surf=sigma_rotor_surf,
+                          sigma_rotor_surf=sigma_rotor_surf,
+                          sigma_vpm_overwrite=sigma_vpm_overwrite,
+                          vlm_rlx=vlm_rlx,
+                          hubtiploss_correction=hubtiploss_correction,
+                          shed_unsteady=shed_unsteady,
+                          shed_starting=shed_starting,
+                          extra_runtime_function=monitor_rotor,
+                          # ----- OUTPUT OPTIONS ------------------
+                          save_path=save_path,
+                          run_name=run_name,
+                          );
+
+  end
+
+
+  # # Set at artificially high nrev to manually examine where it converges
+  # run_name = "nrevs$(8)" # Name of Simulation
+  # solve_rotor("nrevs", run_name, 8, 36)
+  # path = joinpath(@__DIR__, "nrevs", run_name, run_name * "_convergence.csv")
+  # result_df = CSV.read(path, DataFrame)
+  # ct_CV = get_cv(result_df)
+  # println("ct_CV = " * ct_cV)
+  #     # if ct_CV < 0.003
+  #     # printstats(ct_CV, "nrevs", i)
+  #     # global nrevs_converged = i
+  #     # end
+
+  # # ======= Begin Plotting for Manual Inspection of converged nrevs value ===========
+  # CT_time_plot = plot(result_df[:, :T], result_df[:, :CT_1], linewidth = 1.5, color = :orange, xlabel = "Time (s)", ylabel = "Coefficient of Thrust", grid = false, legend = false)
+  # save_path = joinpath(@__DIR__, "Figures", "CT_vs_time.png")
+  # savefig(CT_time_plot, save_path)
+
+  # The above nrevs commented out code takes approximately 50 minutes to run on a MacBook Pro M1 computer. After Manual Inspection of its associated CT vs time plot, we can determine that CT converges at approximately 2 revolutions
+
+  nrevs_converged = 3
+
+  nsteps_per_rev_array = [20, 40, 80] # use this instead of for loop
+  CT_mean_richardson_array = Float64[]
+  for i in nsteps_per_rev_array
+      run_name = "nsteps_per_rev$(i)" # Name of Simulation
+      solve_rotor("nsteps_per_rev", run_name, nrevs_converged, i)
+      path = joinpath(@__DIR__, "nsteps_per_rev", run_name, run_name * "_convergence.csv")
+      result_df = CSV.read(path, DataFrame)
+      ct_CV = get_cv(result_df)
+      save_path = joinpath(@__DIR__, "Figures", "CT_vs_time_nsteps$i.png")
+      plot_nsteps = plot(result_df[:, :T], result_df[:, :CT_1], linewidth = 1.5, color = :orange, xlabel = "Time (s)", ylabel = "Coefficient of Thrust", grid = false, legend = false)
+      savefig(plot_nsteps, save_path)
+      CT_mean_richardson = mean(result_df[end-3:end, :CT_1])
+      push!(CT_mean_richardson_array, CT_mean_richardson)
+      # if ct_CV < 0.003
+      #     printstats(ct_CV, "nsteps_per_rev", i)
+      #     nsteps_per_rev_converged = i
+      #     p_per_step_min = Int(ceil(lambda_vpm * 2 * pi * R / (nsteps_per_rev * R/n)))
+      #     CT_mean_converged = mean(result_df[end-3:end, :CT_1])
+      #     break
+      # end
+  end
+
+  h = 1.0 ./ nsteps_per_rev_array
+  fh_iter = [(CT_mean_richardson_array[i], h[i]) for i in eachindex(h)]
+  CT_extrap, err = Richardson.extrapolate(fh_iter) 
+
+  println("\n========== RICHARDSON EXTRAPOLATION RESULTS ==========")
+  println("Extrapolated CT∞  = $(CT_extrap)")
+  println("Remaining Uncertainty in extrapolation: $(round(err * 100, digits=3))%")
+  println("=====================================================")
+
+  # n convergence study
+  n_array = [10, 20, 40]
+  CT_n_Richardson = Float64[]
+  for i in n_array
+    run_name = "n$(i)" # Name of Simulation
+    solve_rotor("n", run_name, nrevs_converged, nsteps_per_rev_array[end]; n=i)
+    path = joinpath(@__DIR__, "n", run_name, run_name * "_convergence.csv")
     result_df = CSV.read(path, DataFrame)
-    ct_CV = get_cv(result_df)
-    if ct_CV < 0.003
-        printstats(ct_CV, "nrevs", i)
-        global nrevs_converged = i
-        break
-    end
+    CT_mean_n_richardson = mean(result_df[end-3:end, :CT_1])
+    push!(CT_n_Richardson, CT_mean_n_richardson)
+  end
+
+  h_n = 1.0 ./ n_array
+  fh_iter_n = [(CT_n_Richardson[i], h_n[i]) for i in eachindex(h_n)]
+  CT_extrap_n, err_n = Richardson.extrapolate(fh_iter_n)
+
+  println("\n========== RICHARDSON EXTRAPOLATION RESULTS ==========")
+  println("Extrapolated CT∞  = $(CT_extrap_n)")
+  println("Remaining Uncertainty in extrapolation: $(round(err_n * 100, digits=3))%")
+  println("=====================================================")
+
+  # println("\n========== CONVERGENCE RESULTS: SUGGESTED PARAMETERS ============")
+  # println("nrevs converged: $nrevs_converged")
+  # println("nsteps_per_rev_converged: $nsteps_per_rev_converged")
+  # println("p_per_step_min: $p_per_step_min")
+  # println("==================================================================\n")
+
+
+
+  # println("\n=========== VERIFICATION OF SUGGESTED PARAMETERS ===============")
+  # println("\n=========== STEP 1: INCREASING NREVS ===========================")
+  # nrevs_verify = nrevs_converged * 1.5
+  # run_name = "verification_nrevs$(nrevs_verify)"
+  # println("Running verification with increased nrevs = $nrevs_verify and adjusting for p_per_step")
+  # solve_rotor("Verification", run_name, nrevs_verify, nsteps_per_rev_converged)
+  # path = joinpath(@__DIR__, "Verification", run_name, run_name * "_convergence.csv")
+  # verify_df = CSV.read(path, DataFrame)
+  # verification_stats(verify_df, "nrevs", CT_mean_converged)
+
+
+  # println("\n=========== STEP 2: INCREASING NSTEPS_PER_REV ===========================")
+  # nsteps_per_rev_verify = nsteps_per_rev_converged * 1.5
+  # run_name = "verification_nsteps_per_rev$(nsteps_per_rev_verify)"
+  # println("Running verification with increased nsteps_per_rev = $nsteps_per_rev_verify and adjusting for p_per_step")
+  # solve_rotor("Verification", run_name, nrevs_converged, nsteps_per_rev_verify)
+  # path = joinpath(@__DIR__, "Verification", run_name, run_name * "_convergence.csv")
+  # verify_df = CSV.read(path, DataFrame)
+  # verification_stats(verify_df, "nsteps_per_rev", CT_mean_converged)
+
+
+
+  # println("\n=========== STEP 3: INCREASING P_PER_STEP ===========================")
+  # p_per_step_verify = Int(ceil(p_per_step_min * 1.5))
+  # run_name = "verification_p_per_step$(p_per_step_verify)"
+  # println("Running verification with increased p_per_step = $p_per_step_verify")
+  # solve_rotor("Verification", run_name, nrevs_converged, nsteps_per_rev_converged; p_per_step = p_per_step_verify)
+  # path = joinpath(@__DIR__, "Verification", run_name, run_name * "_convergence.csv")
+  # verify_df = CSV.read(path, DataFrame)
+  # verification_stats(verify_df, "p_per_step", CT_mean_converged)
 end
 
 
-for i in range(24, 50, step=2)
-    run_name = "nsteps_per_rev$(i)" # Name of Simulation
-    solve_rotor("nsteps_per_rev", run_name, nrevs_converged, i)
-    path = joinpath(@__DIR__, "nsteps_per_rev", run_name, run_name * "_convergence.csv")
-    result_df = CSV.read(path, DataFrame)
-    ct_CV = get_cv(result_df)
-    if ct_CV < 0.003
-        printstats(ct_CV, "nsteps_per_rev", i)
-        global nsteps_per_rev_converged = i
-        global p_per_step_min = Int(ceil(lambda_vpm * 2 * pi * R / (nsteps_per_rev * R/n)))
-        global CT_mean_converged = mean(result_df[end-3:end, :CT_1])
-        break
-    end
-end
-
-
-println("\n========== CONVERGENCE RESULTS: SUGGESTED PARAMETERS ============")
-println("nrevs converged: $nrevs_converged")
-println("nsteps_per_rev_converged: $nsteps_per_rev_converged")
-println("p_per_step_min: $p_per_step_min")
-println("==================================================================\n")
-
-
-
-println("\n=========== VERIFICATION OF SUGGESTED PARAMETERS ===============")
-println("\n=========== STEP 1: INCREASING NREVS ===========================")
-nrevs_verify = nrevs_converged * 1.5
-run_name = "verification_nrevs$(nrevs_verify)"
-println("Running verification with increased nrevs = $nrevs_verify and adjusting for p_per_step")
-solve_rotor("Verification", run_name, nrevs_verify, nsteps_per_rev_converged)
-path = joinpath(@__DIR__, "Verification", run_name, run_name * "_convergence.csv")
-verify_df = CSV.read(path, DataFrame)
-verification_stats(verify_df, "nrevs")
-
-
-println("\n=========== STEP 2: INCREASING NSTEPS_PER_REV ===========================")
-nsteps_per_rev_verify = nsteps_per_rev_converged * 1.5
-run_name = "verification_nsteps_per_rev$(nsteps_per_rev_verify)"
-println("Running verification with increased nsteps_per_rev = $nsteps_per_rev_verify and adjusting for p_per_step")
-solve_rotor("Verification", run_name, nrevs_converged, nsteps_per_rev_verify)
-path = joinpath(@__DIR__, "Verification", run_name, run_name * "_convergence.csv")
-verify_df = CSV.read(path, DataFrame)
-verification_stats(verify_df, "nsteps_per_rev")
-
-
-
-println("\n=========== STEP 3: INCREASING P_PER_STEP ===========================")
-p_per_step_verify = Int(ceil(p_per_step_min * 1.5))
-run_name = "verification_p_per_step$(p_per_step_verify)"
-println("Running verification with increased p_per_step = $p_per_step_verify")
-solve_rotor("Verification", run_name, nrevs_converged, nsteps_per_rev_converged; p_per_step = p_per_step_verify)
-path = joinpath(@__DIR__, "Verification", run_name, run_name * "_convergence.csv")
-verify_df = CSV.read(path, DataFrame)
-verification_stats(verify_df, "p_per_step")
+main()

@@ -1,0 +1,128 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\graphicspath{{figures/}}
+\usepackage{subcaption}
+\usepackage{adjustbox}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{array}
+\usepackage{siunitx}
+\usepackage{caption}
+\definecolor{linkblue}{RGB}{6,125,233}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=linkblue,
+    urlcolor=linkblue,
+    citecolor=linkblue
+}
+\usepackage{booktabs}
+\title{Convergence Study of a Propeller}
+\author{Ethan Creer}
+\date{15 November 2025}
+\begin{document}
+
+
+Before performing a preliminary convergence study analysis, it is necessary to define the propeller geometry and simulation parameters used in the study.
+These parameters are defined as found in Table~\ref{tab:geometry}
+
+\begin{table}[H]
+    \centering
+    \caption{Propeller geometry and simulation parameters with their given values. For simplicity, only the overall rotor is defined and reference. The blade geometry is dictated by its model (an APC 10$\times$7 rotor) with relevant geometry found on the BYU Flow Lab \href{https://github.com/byuflowlab/FLOWUnsteady/tree/master/database/rotors}{github}.}\label{tab:geometry}
+    \begin{tabular}{l l l}
+        \toprule
+        \textbf{Parameter} & \textbf{Description} & \textbf{Value} \\
+        \midrule
+        $R_{tip}$ & Radius of Blade Tip (m) & 0.127 \\
+        $R_{hub}$ & Radius of Hub (m) & 0.0095325 \\
+        $B$ & Number of Blades & 2 \\
+    \end{tabular}
+\end{table}
+
+
+With the wing now defined, we are now set to begin the convergence study. We are primarily interested in the variables listed in Table~\ref{tab:adjustables}.
+The convergence mode for each is listed in the same table giving us a preliminary idea of how each variable will affect the convergence of the coefficient of thrust.
+
+
+\begin{table}[H]
+    \centering
+    \caption{A list of adjustable variables that alter the resolution of the output coefficient of thrust}\label{tab:adjustables}
+    \begin{adjustbox}{center}
+    \begin{tabular}{l l c}
+        \toprule
+        \textbf{Variable} & \textbf{Meaning} & \textbf{Convergence Mode} \\
+        \midrule
+        nrevs & Number of Propeller Revolutions & Temporal \\
+        nsteps\_per\_rev & Number of Time Steps per Propeller Revolution & Temporal \\
+        $n$ & Number of Spanwise Elements per Propeller Blade & Spatial \\
+        p\_per\_step & Particles shed per step & Spatial \\
+        \bottomrule
+    \end{tabular}
+    \end{adjustbox}
+\end{table}
+
+Our convergence study will follow a systematic approach, gradually iterating through variables to suggest final parameters such that the propeller will be appropriately discretized and sufficiently converged.
+
+\section{Number of Revolutions $\left(nrevs\right)$}
+The study to determine how many revolutions of the propeller are needed before the value for the coefficient of thrust is sufficiently converged is a relatively simple one.
+This study can be done via a visual inspection of a CT vs time plot, like the one shown in Figure~\ref{fig:ct_vs_time_init.png}
+What we are looking for in this plot is at what point the coefficient of thrust begins to level off. We can then estimate the number of revolutions $\left(to the nearest whole number\right)$ before the coefficient levels off.
+The simulation results depicted in Figure~\ref{fig:ct_vs_time_init} ran for a total of 8 revolutions, and we see that the plot begins to level off about a third of the way through the simulation time.
+We thus take a third of 8 revolutions, round to the nearest whole number of the 3 revolutions, and take that to be our converged number of revolutions.
+This value will be confirmed again in our verification study of our converged recommended values.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{CT_vs_time_nrevs8.png}
+    \caption{A plot representing the temporal convergence of the coefficient of thrust. Convergence depicted by the plot leveling off}\label{fig:ct_vs_time_init}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{lofts.png}
+    \caption{A 3D representation of the rotor blade geometry}\label{fig:lofts}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{verified_color_adjust_glyphs.png}
+    \caption{A paraview depiction of 120,000 randomly selected particles (approximately an eigth of the total particle count) with gamma coloring set based off of points near the rotors}\label{fig:verified_color_adjust_glyphs}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{verified_true_glyphs.png}
+    \caption{A paraview depiction of 120,000 randomly selected particles (approximately an eigth of the total particle count) with gamma coloring set based off of points at the tail end of the wake}\label{fig:verified_true_glyphs}
+\end{figure}
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{verified_color_adjust_pfield.png}
+    \caption{A surface paraview representation of the full particle field with associated gamma coloring set based on the particles near the rotor}\label{fig:verified_pfield}
+\end{figure}
+
+
+
+\begin{table}[H]
+    \centering
+    \caption{A list of recommended parameter values to produce a converged simulation}\label{tab:suggested}
+    \begin{adjustbox}{center}
+    \begin{tabular}{l c}
+        \toprule
+        \textbf{Parameter} & \textbf{Value} \\
+        \midrule
+        nrevs & 3  \\
+        nsteps\_per\_rev & 240 \\
+        $n$ & 40 \\
+        \bottomrule
+    \end{tabular}
+    \end{adjustbox}
+\end{table}
+
+
+
+\end{document}
+
+
