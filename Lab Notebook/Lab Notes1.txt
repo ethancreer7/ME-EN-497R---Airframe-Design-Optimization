@@ -71,3 +71,32 @@ vpm_SFS = vpm.SFS_Cd_twolevel_nobackscatter
 
  11/19/2025
  - Used SLURM arrays, and now it works perfectly!!!!! Even for much greater values of n. Going to submit a verification test, to see what happens.
+
+
+
+
+ 11/21/2025
+Lab Meeting:
+- 3D Panel Method
+
+
+
+
+
+12/1/2025
+- Currently re-running some finer n values to see if I can get a better richardson convergence compared to the jank 4 dot cluster one.
+- These runs are under ntest 48 +
+- I reran ntest55 with the spline_s = 0.02 to see if it deviates significantly from spline_s = 0.01 on the normal ntest55 run
+- Use this information in conjunction with the test_for_richardson.jl and richardson_percent_error_stats.jl scripts to find statistics and richardson extrapolation. Probably only use n = 40 and up. Ignore what's below that.
+- Made significant progress on report. nsteps_per_rev is done. Discussed software debugging present in n convergence study.
+- Still working on debugging and finetuning convergence study. Potentially will need re-run of verification.
+- In terms of wake convergence, the wake is pretty much converged as evidenced by the wake plots that are made in teh wake_convergence folder and FDOM Figures folder.
+- Visualize in paraview for more info, but other than that next steps below.
+
+NEXT STEPS:
+- Finalize n convergence. This may take a few hours or so
+- Write n convergence section of report
+- Discuss p_per_step
+- Add Verification Section? Before p_per_step section?
+- Begin working on final presentation.
+- Good work, and lots more to come.

@@ -22,10 +22,11 @@
 \author{Ethan Creer}
 \date{15 November 2025}
 \begin{document}
-
+\maketitle
+\section{Problem Setup}
 
 Before performing a preliminary convergence study analysis, it is necessary to define the propeller geometry and simulation parameters used in the study.
-These parameters are defined as found in Table~\ref{tab:geometry}
+These parameters are defined in Table~\ref{tab:geometry}, and a 3D loft of the rotors are visualized in Figure~\ref{fig:lofts}.
 
 \begin{table}[H]
     \centering
@@ -40,6 +41,11 @@ These parameters are defined as found in Table~\ref{tab:geometry}
     \end{tabular}
 \end{table}
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{lofts.png}
+    \caption{A 3D representation of the rotor blade geometry}\label{fig:lofts}
+\end{figure}
 
 With the wing now defined, we are now set to begin the convergence study. We are primarily interested in the variables listed in Table~\ref{tab:adjustables}.
 The convergence mode for each is listed in the same table giving us a preliminary idea of how each variable will affect the convergence of the coefficient of thrust.
@@ -53,10 +59,10 @@ The convergence mode for each is listed in the same table giving us a preliminar
         \toprule
         \textbf{Variable} & \textbf{Meaning} & \textbf{Convergence Mode} \\
         \midrule
-        nrevs & Number of Propeller Revolutions & Temporal \\
-        nsteps\_per\_rev & Number of Time Steps per Propeller Revolution & Temporal \\
-        $n$ & Number of Spanwise Elements per Propeller Blade & Spatial \\
-        p\_per\_step & Particles shed per step & Spatial \\
+        \texttt{nrevs} & Number of Propeller Revolutions & Temporal \\
+        \texttt{nsteps\_per\_rev} & Number of Time Steps per Propeller Revolution & Temporal \\
+        \texttt{n} & Number of Spanwise Elements per Propeller Blade & Spatial \\
+        \texttt{p\_per\_step} & Particles shed per step & Spatial \\
         \bottomrule
     \end{tabular}
     \end{adjustbox}
@@ -64,12 +70,12 @@ The convergence mode for each is listed in the same table giving us a preliminar
 
 Our convergence study will follow a systematic approach, gradually iterating through variables to suggest final parameters such that the propeller will be appropriately discretized and sufficiently converged.
 
-\section{Number of Revolutions $\left(nrevs\right)$}
+\section{Number of Revolutions (\texttt{nrevs})}
 The study to determine how many revolutions of the propeller are needed before the value for the coefficient of thrust is sufficiently converged is a relatively simple one.
-This study can be done via a visual inspection of a CT vs time plot, like the one shown in Figure~\ref{fig:ct_vs_time_init.png}
-What we are looking for in this plot is at what point the coefficient of thrust begins to level off. We can then estimate the number of revolutions $\left(to the nearest whole number\right)$ before the coefficient levels off.
+This study can be done via a visual inspection of a CT vs time plot, like the one shown in Figure~\ref{fig:ct_vs_time_init}
+What we are looking for in this plot is at what point the coefficient of thrust begins to level off. We can then estimate the number of revolutions (to the nearest whole number) before the coefficient levels off.
 The simulation results depicted in Figure~\ref{fig:ct_vs_time_init} ran for a total of 8 revolutions, and we see that the plot begins to level off about a third of the way through the simulation time.
-We thus take a third of 8 revolutions, round to the nearest whole number of the 3 revolutions, and take that to be our converged number of revolutions.
+We thus take a third of 8 revolutions and round to the nearest whole number to give us 3 revolutions as our converged number of revolutions.
 This value will be confirmed again in our verification study of our converged recommended values.
 
 \begin{figure}
@@ -78,31 +84,106 @@ This value will be confirmed again in our verification study of our converged re
     \caption{A plot representing the temporal convergence of the coefficient of thrust. Convergence depicted by the plot leveling off}\label{fig:ct_vs_time_init}
 \end{figure}
 
+
+\section[Number of Time Steps per Revolution]{Number of Time Steps per Revolution \\ \normalfont(\texttt{nsteps\_per\_rev}, hereafter referred to as \texttt{nsteps})}
+With the number of revolutions sufficiently converged, we finalize our temporal convergence with a study on the number of time steps per revolution.
+This parameter directly influences the resolution of the simulation and has a strong effect on the final coefficient values.
+
+Our approach to converging this parameter involves leveraging the principle of Richardson extrapolation. This technique requires at least 2 data points from preliminary runs, but increases in accuracy the more data points supplied. 
+Its goal is to extrapolate beyond a given dataset's range and provide an estimated value for the dependent variable (in this case the coefficient of thrust) as the independent variable approaches its continuum limit (in this case, as $\Delta t \rightarrow 0$).
+Using this extrapolated value, we can then estimate what value of \texttt{nsteps} gives us a sufficiently converged coefficient of thrust value.
+
+This process is best illustrated in Figure~\ref{fig:nsteps_per_rev_richardson} where the red dashed line represents the Richardson extrapolated $C_T$ value as \texttt{nsteps} approaches $\infty$.
 \begin{figure}
     \centering
-    \includegraphics[width=0.9\textwidth]{lofts.png}
-    \caption{A 3D representation of the rotor blade geometry}\label{fig:lofts}
+    \includegraphics[width=0.9\textwidth]{FINAL320_nsteps_richardson.png}
+    \caption{A visual representation of a Richardson extrapolation to estimate $C_T$ and determine a converged value for \texttt{nsteps}}\label{fig:nsteps_per_rev_richardson}
 \end{figure}
+
+For this study, we used the following values for \texttt{nsteps}: 20, 40, 80, 160, and 320. Using the extrapolated value of 0.087177, we can tabulate the data from each run's final $C_T$ value to gain insight into the converged value of \texttt{nsteps}.
+This tabulated data is seen in Table~\ref{tab:nsteps_per_rev_richardson} where the converged $C_T$ value is taken as an average of the final 5 values of $C_T$. This is done to account for the slight oscillations present in the data near the end of the simulation.
+
+\begin{table}[H]
+    \centering
+    \caption{Tabulated data from Richardson extrapolation of $C_T$ with varying \texttt{nsteps}}\label{tab:nsteps_per_rev_richardson}
+    \begin{adjustbox}{center}
+    \begin{tabular}{c c c}
+        \toprule
+        \textbf{\texttt{nsteps}} & \textbf{Time Averaged $C_T$} & \textbf{Percent Error from Extrapolated $C_T$ (\%)} \\
+        \midrule
+        20 & 0.08117 & 6.8931 \\
+        40 & 0.08273 & 5.0965 \\
+        80 & 0.08417 & 3.4537 \\
+        160 & 0.08549 & 1.9303 \\
+        320 & 0.08629 & 1.0132 \\
+        \bottomrule
+    \end{tabular}
+    \end{adjustbox}
+\end{table}
+
+For our study, we set a target percent error of 1.5\% and use simple interpolation to yield a converged value for the \texttt{nsteps} parameter of 235.07.
+For simplicity, we round up to the nearest 10, and settle on a converged value of 240 for \texttt{nsteps}.
+
+
+\section{Number of Spanwise Elements per Propeller Blade (\texttt{n})}
+With parameter settings for temporal convergence known, we can now move on to spatial convergence by first addressing the number of spanwise elements per blade, \texttt{n}.
+Knowing that the aerodynamic forces vary across the span of the propeller, it is important to capture the varying particle vorticity with a sufficiently discretized blade.
+
+Managing and running these simulations prove to be highly involved and technically difficult. Due to the \texttt{FLOWUnsteady} library generating plots via the \texttt{PyCall} library in the background, we regularly ran into segmentation faults that caused premature failure of the program.
+These segmentation faults proved to be a byproduct of Python's inability to handle thread based Julia runs. This is because Python's memory management is inherently unsafe for threads. 
+Because single threaded runs significantly increase the runtime for the simulation to complete, we need a solution to address these segmentation faults and allow parallel processing to occur.
+The key is to manually control the memory management of the functions calling Python libraries in the background, in addition to manually clearing memory at critical points in the script's run.
+
+First, we use a \texttt{ReentrantLock()} to address thread safety. This essentially prevents race conditions from occuring as the program runs. In other words, it forces our primarily parallel processing script to become serial for the brief moments it generates Python plots in the background.
+Second, the memory needs to be managed by periodically calling the Garbage Collector from the Julia base code. This is done by using the \texttt{GC.gc()} command at the end of looped commands, to ensure memory leaks do not occur (or running out of memory).
+
+\bigskip
+
+With debugging out of the way, we are now able to focus on converging the number of spanwise panels per blade.
+We approach this in the same way we did previously with \texttt{nsteps}. We set up our script to reference our converged \texttt{nsteps} value of 240, and use a job array to run multiple iterations on different supercomputer nodes.
+
+In reference to the Richardson extrapolation, this portion of the study had some complications in terms of particle overlap and rotor generation for the \texttt{FLOWUnsteady} library.
+It was determined that 
+
+\begin{table}[H]
+    \centering
+    \caption{Tabulated data from Richardson extrapolation of $C_T$ with varying \texttt{n}}\label{tab:n_richardson_percent_error}
+    \begin{adjustbox}{center}
+    \begin{tabular}{c c c}
+        \toprule
+        \textbf{\texttt{nsteps}} & \textbf{Time Averaged $C_T$} & \textbf{Percent Error from Extrapolated $C_T$ (\%)} \\
+        \midrule
+        40 & 0.08503 & 0 \\
+        42 & 0.08444 & 0 \\
+        44 & 0.08411 & 0 \\
+        46 & 0.08395 & 0 \\
+        48 & 0 & 0 \\
+        50 & 0 & 0 \\
+        55 & 0 & 0 \\
+        60 & 0 & 0 \\
+        65 & 0 & 0 \\
+        70 & 0 & 0 \\
+        75 & 0 & 0 \\
+        80 & 0 & 0 \\
+        \bottomrule
+    \end{tabular}
+    \end{adjustbox}
+\end{table}
+
+
+\section{Note on Particles Shed per Step (\texttt{p\_per\_step})}
 
 \begin{figure}
     \centering
     \includegraphics[width=0.9\textwidth]{verified_color_adjust_glyphs.png}
-    \caption{A paraview depiction of 120,000 randomly selected particles (approximately an eigth of the total particle count) with gamma coloring set based off of points near the rotors}\label{fig:verified_color_adjust_glyphs}
+    \caption{A paraview depiction of 120,000 randomly selected particles (approximately an eigth of the total particle count) with gamma coloring scale based off of points near the rotors}\label{fig:verified_color_adjust_glyphs}
 \end{figure}
 
 \begin{figure}
     \centering
     \includegraphics[width=0.9\textwidth]{verified_true_glyphs.png}
-    \caption{A paraview depiction of 120,000 randomly selected particles (approximately an eigth of the total particle count) with gamma coloring set based off of points at the tail end of the wake}\label{fig:verified_true_glyphs}
+    \caption{A paraview depiction of 120,000 randomly selected particles (approximately an eigth of the total particle count) with gamma coloring scale based off of points at the tail end of the wake}\label{fig:verified_true_glyphs}
 \end{figure}
-
-
-\begin{figure}
-    \centering
-    \includegraphics[width=0.9\textwidth]{verified_color_adjust_pfield.png}
-    \caption{A surface paraview representation of the full particle field with associated gamma coloring set based on the particles near the rotor}\label{fig:verified_pfield}
-\end{figure}
-
 
 
 \begin{table}[H]
@@ -113,9 +194,9 @@ This value will be confirmed again in our verification study of our converged re
         \toprule
         \textbf{Parameter} & \textbf{Value} \\
         \midrule
-        nrevs & 3  \\
-        nsteps\_per\_rev & 240 \\
-        $n$ & 40 \\
+        \texttt{nrevs} & 3  \\
+        \texttt{nsteps} & 240 \\
+        \texttt{n} & 40 \\
         \bottomrule
     \end{tabular}
     \end{adjustbox}
