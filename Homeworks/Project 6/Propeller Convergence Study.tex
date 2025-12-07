@@ -9,6 +9,10 @@
 \usepackage{array}
 \usepackage{siunitx}
 \usepackage{caption}
+\usepackage{threeparttable}
+\usepackage[toc,page]{appendix}
+\renewcommand{\appendixtocname}{Appendix}  % Changes "Appendices" to "Appendix" in ToC
+\renewcommand{\appendixpagename}{Appendix} % Changes "Appendices" to "Appendix" in the document header
 \definecolor{linkblue}{RGB}{6,125,233}
 \usepackage{hyperref}
 \hypersetup{
@@ -20,40 +24,49 @@
 \usepackage{booktabs}
 \title{Convergence Study of a Propeller}
 \author{Ethan Creer}
-\date{15 November 2025}
+\date{10 December 2025}
 \begin{document}
 \maketitle
+
+\begin{abstract}
+    This study presents a mathematical and pragmatic convergence analysis on an APC 10$\times$7E propeller via the \texttt{FLOWUnsteady} simulation package. The objective was to find optimal discretization parameters that use an efficient computational cost and allocation of supercomputer resources to determine the converged thrust coefficient. Temporal convergence was established via Richardson extrapolation, with 240 time steps per revolution over 3 revolutions as the converged result. Spatial convergence, constrained by numerical and geometric instability, was limited by a numerical stability ceiling. As such, the number of spanwise elements per blade was limited to \texttt{n} = 46 and further convergence was not possible. Analyzing the number of particles shed per step revealed that limiting \texttt{p\_per\_step} to 3 provided adequate thrust coefficient convergence and effectively reduced computation time. A verification simulation, with increased parameter values, determined that computational time was reduced by 85\%, from approximately 8 hours to 1 hour, with a thrust coefficient difference of only 0.27\%. The significant drop in computational time and cost demonstrates that the suggested parameters provide high-fidelity thrust coefficient convergence for this rotor geometry.
+\end{abstract}
+
+
 \section{Problem Setup}
 
-Before performing a preliminary convergence study analysis, it is necessary to define the propeller geometry and simulation parameters used in the study.
-These parameters are defined in Table~\ref{tab:geometry}, and a 3D loft of the rotors are visualized in Figure~\ref{fig:lofts}.
+To begin our convergence study analysis, it is necessary to define the propeller geometry and simulation parameters used in the study.
+These parameters are defined in Table~\ref{tab:geometry}, and a 3D loft of the rotors is visualized in Figure~\ref{fig:lofts}.
 
 \begin{table}[H]
     \centering
-    \caption{Propeller geometry and simulation parameters with their given values. For simplicity, only the overall rotor is defined and reference. The blade geometry is dictated by its model (an APC 10$\times$7 rotor) with relevant geometry found on the BYU Flow Lab \href{https://github.com/byuflowlab/FLOWUnsteady/tree/master/database/rotors}{github}.}\label{tab:geometry}
+    \caption{Propeller geometry parameters with their given values. For simplicity, only the overall rotor is defined and referenced. The blade geometry is dictated by its model (an APC 10$\times$7E rotor) with relevant geometry found on the BYU Flow Lab \href{https://github.com/byuflowlab/FLOWUnsteady/tree/master/database/rotors}{GitHub}.}\label{tab:geometry}
     \begin{tabular}{l l l}
         \toprule
         \textbf{Parameter} & \textbf{Description} & \textbf{Value} \\
         \midrule
         $R_{tip}$ & Radius of Blade Tip (m) & 0.127 \\
-        $R_{hub}$ & Radius of Hub (m) & 0.0095325 \\
+        $R_{hub}$ & Radius of Hub (m) & 0.00953 \\
         $B$ & Number of Blades & 2 \\
     \end{tabular}
 \end{table}
 
+As will be discussed further in Section~\ref{future}, we discovered a discrepancy between the rotor geometry linked on the manufacturer's website and what is described in the GitHub files. As such, this report will focus on the theoretical convergence using the parameters provided on GitHub. Further research will be needed to compare experimental data with our converged results.
+
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.9\textwidth]{lofts.png}
-    \caption{A 3D representation of the rotor blade geometry}\label{fig:lofts}
+    \caption{A 3D representation of the rotor blade geometry.}\label{fig:lofts}
 \end{figure}
 
-With the wing now defined, we are now set to begin the convergence study. We are primarily interested in the variables listed in Table~\ref{tab:adjustables}.
-The convergence mode for each is listed in the same table giving us a preliminary idea of how each variable will affect the convergence of the coefficient of thrust.
+
+With the rotor geometry defined, we can take the initial steps in our convergence study. We are primarily interested in the variables listed in Table~\ref{tab:adjustables}.
+The convergence mode for each is listed in the same table giving us a preliminary idea of how each variable will affect the convergence of the thrust coefficient.
 
 
 \begin{table}[H]
     \centering
-    \caption{A list of adjustable variables that alter the resolution of the output coefficient of thrust}\label{tab:adjustables}
+    \caption{A list of adjustable variables that alter the resolution of the output thrust coefficient.}\label{tab:adjustables}
     \begin{adjustbox}{center}
     \begin{tabular}{l l c}
         \toprule
@@ -68,36 +81,69 @@ The convergence mode for each is listed in the same table giving us a preliminar
     \end{adjustbox}
 \end{table}
 
-Our convergence study will follow a systematic approach, gradually iterating through variables to suggest final parameters such that the propeller will be appropriately discretized and sufficiently converged.
+These variables will be the focus of our convergence study, and we will follow a systematic approach, gradually iterating through each. We will eventually suggest final parameters that can be used to sufficiently discretize the propeller blades and converge the thrust coefficient. Whether these parameters work on any blade and its respective geometry is another question that further research will be done on in the future. However, the core processes and principles presented in our report can be adapted and applied to any propeller.
 
 \section{Number of Revolutions (\texttt{nrevs})}
-The study to determine how many revolutions of the propeller are needed before the value for the coefficient of thrust is sufficiently converged is a relatively simple one.
-This study can be done via a visual inspection of a CT vs time plot, like the one shown in Figure~\ref{fig:ct_vs_time_init}
-What we are looking for in this plot is at what point the coefficient of thrust begins to level off. We can then estimate the number of revolutions (to the nearest whole number) before the coefficient levels off.
-The simulation results depicted in Figure~\ref{fig:ct_vs_time_init} ran for a total of 8 revolutions, and we see that the plot begins to level off about a third of the way through the simulation time.
-We thus take a third of 8 revolutions and round to the nearest whole number to give us 3 revolutions as our converged number of revolutions.
-This value will be confirmed again in our verification study of our converged recommended values.
+The convergence of propeller revolutions was initially evaluated with a visual inspection of a $C_T$ vs time plot, seen in Figure~\ref{fig:ct_vs_time_init}.
+We examine the plot for the point where the thrust coefficient reaches a steady state (or begins to level off). We can then estimate the number of revolutions (to the nearest whole number, as required by the code documentation) before the coefficient levels off in time.
 
-\begin{figure}
+The simulation results depicted in Figure~\ref{fig:ct_vs_time_init} ran for a total of 8 revolutions, and we see that the plot begins to level off about a third of the way into the simulation time. From a mathematical standpoint, Table~\ref{tab:ct_vs_time_percent} presents the revolution on revolution percent change in the thrust coefficient.
+
+\begin{table}[H]
+    \centering
+    \caption{A decline in revolution on revolution percent change with increasing number of revolutions.}\label{tab:ct_vs_time_percent}
+    \begin{adjustbox}{center}
+    \begin{tabular}{c c}
+        \toprule
+        \textbf{Revolution Number} & \textbf{Percent Change (\%)} \\
+        \midrule
+        1 & N/A \\
+        2 &  -9.8827 \\
+        3 &  -0.6778 \\
+        4 &  -0.2286 \\
+        5 &  -0.0974 \\
+        6 &  -0.0564 \\
+        7 &  -0.0345 \\
+        8 &  -0.0134 \\
+        \bottomrule
+    \end{tabular}
+    \end{adjustbox}
+\end{table}
+
+Noting that revolution 3 is accompanied by only a 0.6778\% change in thrust coefficient, we will take that to be our converged parameter value.
+Though this parameter study was done on relatively low discretization settings, the value will be confirmed again in the verification study of our converged recommended values presented in Section~\ref{Verification}.
+
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.9\textwidth]{CT_vs_time_nrevs8.png}
-    \caption{A plot representing the temporal convergence of the coefficient of thrust. Convergence depicted by the plot leveling off}\label{fig:ct_vs_time_init}
+    \caption{A plot representing the temporal convergence of the thrust coefficient. Convergence depicted by the plot leveling off.}\label{fig:ct_vs_time_init}
 \end{figure}
 
 
-\section[Number of Time Steps per Revolution]{Number of Time Steps per Revolution \\ \normalfont(\texttt{nsteps\_per\_rev}, hereafter referred to as \texttt{nsteps})}
+\section[Number of Time Steps per Revolution]{Number of Time Steps per Revolution \\ \normalfont(\texttt{nsteps\_per\_rev}, hereafter referenced as \texttt{nsteps})}
 With the number of revolutions sufficiently converged, we finalize our temporal convergence with a study on the number of time steps per revolution.
-This parameter directly influences the resolution of the simulation and has a strong effect on the final coefficient values.
+This parameter directly influences the resolution of the simulation and has a strong effect on the final coefficient values. It essentially defines the degrees each step the rotor blades traverse.
 
-Our approach to converging this parameter involves leveraging the principle of Richardson extrapolation. This technique requires at least 2 data points from preliminary runs, but increases in accuracy the more data points supplied. 
-Its goal is to extrapolate beyond a given dataset's range and provide an estimated value for the dependent variable (in this case the coefficient of thrust) as the independent variable approaches its continuum limit (in this case, as $\Delta t \rightarrow 0$).
-Using this extrapolated value, we can then estimate what value of \texttt{nsteps} gives us a sufficiently converged coefficient of thrust value.
+Our approach to converging this parameter involves leveraging the principle of Richardson extrapolation. This technique requires at least 2 data points from preliminary runs and increases in accuracy with the more data points supplied. 
+Its purpose is to extrapolate beyond a given dataset's range and provide an estimated value for the dependent variable (in this case the thrust coefficient) as the independent variable approaches its continuum limit (in this case, as $\Delta t \rightarrow 0$). Additionally, this extrapolation theory is based on the assumption that changing the time step between runs introduces a different error from the true value. Equations~\ref{eq:richardson1} and~\ref{eq:richardson2} begin to illustrate this concept:
 
-This process is best illustrated in Figure~\ref{fig:nsteps_per_rev_richardson} where the red dashed line represents the Richardson extrapolated $C_T$ value as \texttt{nsteps} approaches $\infty$.
+\begin{equation}\label{eq:richardson1}
+f_{\Delta t} = f_{exact} + C(\Delta t)^p
+\end{equation}
+\begin{equation}\label{eq:richardson2}
+f_{\Delta t/2} = f_{\text{exact}} + C\left(\frac{\Delta t}{2}\right)^{p}
+\end{equation}
+
+where $f_{\Delta t}$ is the estimated value from the simulation run, $f_{exact}$ is the true value, $C$ is some constant, and $p$ is the order of accuracy from the numerical method. Because we used more than 3 data points, an observed order of accuracy can be calculated through the additional $f_{\Delta t}$ equations generated.
+These two equations can be algebraically manipulated to eliminate C and solve for $f_{exact}$. Essentially, it takes advantage of the fact that a smaller time step results in a smaller error to extrapolate for the true value.
+
+Once the Richardson extrapolation is complete, the extrapolated $C_T$ value can then be used to estimate what value of \texttt{nsteps} would give us a sufficiently converged thrust coefficient value.
+
+This Richardson extrapolation process is visualized for our case in Figure~\ref{fig:nsteps_per_rev_richardson}, where the red dashed line represents the Richardson extrapolated $C_T$ value as \texttt{nsteps} approaches $\infty$.
 \begin{figure}
     \centering
     \includegraphics[width=0.9\textwidth]{FINAL320_nsteps_richardson.png}
-    \caption{A visual representation of a Richardson extrapolation to estimate $C_T$ and determine a converged value for \texttt{nsteps}}\label{fig:nsteps_per_rev_richardson}
+    \caption{Richardson extrapolation of $C_T$ as \texttt{nsteps} $\rightarrow \infty$.}\label{fig:nsteps_per_rev_richardson}
 \end{figure}
 
 For this study, we used the following values for \texttt{nsteps}: 20, 40, 80, 160, and 320. Using the extrapolated value of 0.087177, we can tabulate the data from each run's final $C_T$ value to gain insight into the converged value of \texttt{nsteps}.
@@ -105,7 +151,7 @@ This tabulated data is seen in Table~\ref{tab:nsteps_per_rev_richardson} where t
 
 \begin{table}[H]
     \centering
-    \caption{Tabulated data from Richardson extrapolation of $C_T$ with varying \texttt{nsteps}}\label{tab:nsteps_per_rev_richardson}
+    \caption{Tabulated data from Richardson extrapolation of $C_T$ with varying \texttt{nsteps}.}\label{tab:nsteps_per_rev_richardson}
     \begin{adjustbox}{center}
     \begin{tabular}{c c c}
         \toprule
@@ -121,88 +167,174 @@ This tabulated data is seen in Table~\ref{tab:nsteps_per_rev_richardson} where t
     \end{adjustbox}
 \end{table}
 
-For our study, we set a target percent error of 1.5\% and use simple interpolation to yield a converged value for the \texttt{nsteps} parameter of 235.07.
-For simplicity, we round up to the nearest 10, and settle on a converged value of 240 for \texttt{nsteps}.
+For this parameter, we set a target percent error of 1.5\% and use simple interpolation to yield a converged value for the \texttt{nsteps} parameter of approximately 235.
+For simplicity, we round up to the nearest 10, and settle on a converged value of 240 for \texttt{nsteps}. This too will be verified later in our verification run.
 
 
-\section{Number of Spanwise Elements per Propeller Blade (\texttt{n})}
-With parameter settings for temporal convergence known, we can now move on to spatial convergence by first addressing the number of spanwise elements per blade, \texttt{n}.
+\section{Number of Spanwise Elements per Propeller Blade (\texttt{n})}\label{n_convergence}
+With the parameter settings for temporal convergence known, we then transitioned to spatial convergence by first addressing the number of spanwise elements per blade, \texttt{n}.
 Knowing that the aerodynamic forces vary across the span of the propeller, it is important to capture the varying particle vorticity with a sufficiently discretized blade.
-
-Managing and running these simulations prove to be highly involved and technically difficult. Due to the \texttt{FLOWUnsteady} library generating plots via the \texttt{PyCall} library in the background, we regularly ran into segmentation faults that caused premature failure of the program.
-These segmentation faults proved to be a byproduct of Python's inability to handle thread based Julia runs. This is because Python's memory management is inherently unsafe for threads. 
-Because single threaded runs significantly increase the runtime for the simulation to complete, we need a solution to address these segmentation faults and allow parallel processing to occur.
-The key is to manually control the memory management of the functions calling Python libraries in the background, in addition to manually clearing memory at critical points in the script's run.
-
-First, we use a \texttt{ReentrantLock()} to address thread safety. This essentially prevents race conditions from occuring as the program runs. In other words, it forces our primarily parallel processing script to become serial for the brief moments it generates Python plots in the background.
-Second, the memory needs to be managed by periodically calling the Garbage Collector from the Julia base code. This is done by using the \texttt{GC.gc()} command at the end of looped commands, to ensure memory leaks do not occur (or running out of memory).
+The process to adequately capture this distributed particle vorticity involved significant debugging, of which more information can be found in Appendix~\ref{app:debugging}.
 
 \bigskip
 
-With debugging out of the way, we are now able to focus on converging the number of spanwise panels per blade.
-We approach this in the same way we did previously with \texttt{nsteps}. We set up our script to reference our converged \texttt{nsteps} value of 240, and use a job array to run multiple iterations on different supercomputer nodes.
+After the debugging process, converging the number of spanwise panels per blade can occur.
+This is done similarly to the manner in which \texttt{nsteps} was converged. The script was configured to reference the converged \texttt{nsteps} value of 240, and used a job array to run multiple iterations on different supercomputer nodes.
 
-In reference to the Richardson extrapolation, this portion of the study had some complications in terms of particle overlap and rotor generation for the \texttt{FLOWUnsteady} library.
-It was determined that 
+In reference to the Richardson extrapolation, this portion of the study had complications in terms of rotor generation from the \texttt{FLOWVLM} functions and numerical stability in the \texttt{FLOWUnsteady} library.
+To counteract these issues, fine-tuning parameters such as the geometric expansion factor, \texttt{r}, the Rotor on VPM (vortex particle method) smoothing radius, \texttt{sigma\_rotor\_surf}, and the VLM (vortex lattice method) relaxation, \texttt{vlm\_rlx}, were implemented.
 
-\begin{table}[H]
-    \centering
-    \caption{Tabulated data from Richardson extrapolation of $C_T$ with varying \texttt{n}}\label{tab:n_richardson_percent_error}
-    \begin{adjustbox}{center}
-    \begin{tabular}{c c c}
-        \toprule
-        \textbf{\texttt{nsteps}} & \textbf{Time Averaged $C_T$} & \textbf{Percent Error from Extrapolated $C_T$ (\%)} \\
-        \midrule
-        40 & 0.08503 & 0 \\
-        42 & 0.08444 & 0 \\
-        44 & 0.08411 & 0 \\
-        46 & 0.08395 & 0 \\
-        48 & 0 & 0 \\
-        50 & 0 & 0 \\
-        55 & 0 & 0 \\
-        60 & 0 & 0 \\
-        65 & 0 & 0 \\
-        70 & 0 & 0 \\
-        75 & 0 & 0 \\
-        80 & 0 & 0 \\
-        \bottomrule
-    \end{tabular}
-    \end{adjustbox}
-\end{table}
+Further, an RPM ramp up scheme was imposed on the propeller to replace the instantaneous jump from 0 to 9200 RPM\@. This was done to mitigate the effects of the initial particle sheds that were difficult for the simulation to model.
+These particles typically had much stronger vortex strengths compared to particles shed later in the run. We also attempted to mitigate these adverse effects by adjusting the \texttt{vlm\_init} argument to be true in the \texttt{run\_simulation ()} function call.
 
-
-\section{Note on Particles Shed per Step (\texttt{p\_per\_step})}
+These fine-tuning adjustments required significant computational time and yielded inconclusive results in some instances. However, after a significant number of iterations and careful analysis, we propose that \texttt{n=46} is a strong candidate for thrust coefficient convergence.
+This decision involved the careful analysis of Figure~\ref{fig:defense_of_n46} and Table~\ref{tab:n_richardson_percent_error} described below.
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.9\textwidth]{verified_color_adjust_glyphs.png}
-    \caption{A paraview depiction of 120,000 randomly selected particles (approximately an eigth of the total particle count) with gamma coloring scale based off of points near the rotors}\label{fig:verified_color_adjust_glyphs}
-\end{figure}
-
-\begin{figure}
-    \centering
-    \includegraphics[width=0.9\textwidth]{verified_true_glyphs.png}
-    \caption{A paraview depiction of 120,000 randomly selected particles (approximately an eigth of the total particle count) with gamma coloring scale based off of points at the tail end of the wake}\label{fig:verified_true_glyphs}
+    \includegraphics[width=0.9\textwidth]{defense_of_n46.png}
+    \caption{$C_T$ simulations with varying number of spanwise panels. A ±1.5\% convergence band is overlayed to aid in convergence analysis. Purple data points, representing the simulations with adjusted spline parameters are also present illustrating the induced geometric error and numerical stability ceiling.}\label{fig:defense_of_n46}
 \end{figure}
 
 
 \begin{table}[H]
     \centering
-    \caption{A list of recommended parameter values to produce a converged simulation}\label{tab:suggested}
+    \caption{Tabulated data from the spatial convergence study of $C_T$ by varying \texttt{n}.}\label{tab:n_richardson_percent_error}
+    \begin{threeparttable}
+        % Using tabular* with \textwidth and \extracolsep{\fill} pushes columns apart to fill the page
+        \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} c c c}
+            \toprule
+            \textbf{\texttt{n}} & \textbf{Time Averaged $C_T$} & \textbf{Percent Error from n=46 (\%)} \\
+            \midrule
+            30 & 0.08498 & 1.2263 \\
+            32 & 0.08509 & 1.3572 \\
+            36 & 0.08526 & 1.5633 \\
+            38 & 0.08528 & 1.5817 \\
+            40 & 0.08503 & 1.2942 \\
+            42 & 0.08444 & 0.5825 \\
+            44 & 0.08411 & 0.1966 \\
+            46 & 0.08395 & (Reference) \\
+            48\tnote{a} & 0.08374 & 0.2515 \\
+            50\tnote{a} & 0.08412 & 0.2086 \\
+            55\tnote{a} & 0.08593 & 2.3559 \\
+            60\tnote{a} & 0.08552 & 1.8716 \\
+            65\tnote{a} & 0.08475 & 0.9523 \\
+            70\tnote{b} & 0.08449 & 0.6468 \\
+            75\tnote{b} & 0.08429 & 0.4119 \\
+            80\tnote{b} & 0.08392 & 0.039 \\
+
+            \bottomrule
+        \end{tabular*}
+        \begin{tablenotes}
+            \small
+            \item [a] Generated using Cubic Spline ($k=3$) with relaxed smoothing ($s=0.01$) to prevent solver failure
+            \item [b] Generated using Cubic Spline ($k=3$) with loose smoothing ($s=0.02$)
+        \end{tablenotes}
+    \end{threeparttable}
+\end{table}
+
+Examining the superscripts of Table~\ref{tab:n_richardson_percent_error}, it should be noted that the VLM package had trouble defining a mathematical spline to generate the blade rotors for high values of \texttt{n}.
+The default spline parameters for the \texttt{generate\_rotors()} function were to use a 5th order spline and a smoothing factor of $s = 0.0001$. For highly discretized blades, these strict constraints, were incompatible with the mathematical spline solver. As such, we needed to relax the parameters to allow the solver to successfully define the blade geometry.
+This, of course, introduced error into the data because some true rotor geometry was lost by the smoothing factor. This can partially explain the atypical behavior present in Figure~\ref{fig:defense_of_n46}.
+The lack of exponential decay (or any macroscopic trend) in the data rendered a Richardson extrapolation effectively useless.
+Because the experimental $C_T$ values are scattered throughout the green region of Figure~\ref{fig:defense_of_n46}, careful analysis is needed to describe what value of \texttt{n} should be considered ``converged.''
+
+The original convergence criterion was defined by running a verification run --- multiplying the converged value by 1.5 to prove convergence.
+However, knowing the problems described earlier that the code experienced with high values of \texttt{n}, the multiplicative factor would not be possible without introducing geometric and thrust coefficient errors.
+Because of the spline smoothing factor constraints imposed by the VLM software, the maximum discretization we can achieve is using $\texttt{n} = 46$ as the converged value. Though this may not represent a mathematically converged value, it does represent the highest fidelity possible due to the numerical stability ceiling.
+Because of this upper limit on the value for \texttt{n}, of necessity, the multiplicative factor on this parameter will be dropped in the verification study, noting the limitations of the software.
+
+
+\section{Particles Shed per Step (\texttt{p\_per\_step})}
+An important note should be added on how the \texttt{p\_per\_step}, particles shed per step, parameter was handled throughout this convergence study.
+Equation~\ref{eq:p_per_step} represents the mathematical description of \texttt{p\_per\_step}:
+
+
+\begin{equation}\label{eq:p_per_step}
+\texttt{p\_per\_step} = \frac{2 \pi \texttt{n} (\lambda_{vpm})}{\texttt{nsteps}}
+% p_per_step = Int(ceil(lambda_vpm * 2 * pi * R / (nsteps_per_rev * R/n
+\end{equation}
+
+Here, the $\frac{2 \pi}{\texttt{nsteps}}$ expression in the equation represents the angle the propeller traverses in one timestep.
+$\lambda_{vpm}$ represents a particle overlap condition. Essentially the particles must overlap to some degree such that an entire sheet of vorticity can mathematically represent the wake in the software.
+In our convergence study, $\lambda_{vpm}$ was set to 2.125, which roughly equates to the particle edges touching the center of their adjacent particles.
+Finally, \texttt{n} represents the number of spanwise elements per blade, as discussed in Section~\ref{n_convergence}.
+
+While Equation~\ref{eq:p_per_step} calculates the ideal value for \texttt{p\_per\_step}, to prevent a computationally expensive number of particles shed per step, a limit of 3 was put on the parameter.
+For the verification run, discussed in Section~\ref{Verification}, the cap was raised to 6 to prove a converged value. 
+
+\section{Recommended Parameter Values and Verification}\label{Verification}
+With each of the mentioned parameters sufficiently converged, we present in Table~\ref{tab:suggested} the recommended parameter values that sufficiently converge the value for $C_T$.
+This takes into account the VLM package limitations described in Section~\ref{n_convergence}. It represents a sufficient simulation fidelity using an efficient allocation of resources while also prioritizing computation time.
+\begin{table}[H]
+    \centering
+    \caption{A list of recommended parameter values to produce a converged simulation along with the values used to verify said parameter values.}\label{tab:suggested}
     \begin{adjustbox}{center}
-    \begin{tabular}{l c}
+    \begin{tabular}{l c c}
         \toprule
-        \textbf{Parameter} & \textbf{Value} \\
+        \textbf{Parameter} & \textbf{Suggested Value} & \textbf{Verification Value} \\
         \midrule
-        \texttt{nrevs} & 3  \\
-        \texttt{nsteps} & 240 \\
-        \texttt{n} & 40 \\
+        \texttt{nrevs} & 3 &  5 \\
+        \texttt{nsteps} & 240 & 360 \\
+        \texttt{n} & 46  & 46 \\
+        \texttt{p\_per\_step} Max & 3 & 6 \\
         \bottomrule
     \end{tabular}
     \end{adjustbox}
 \end{table}
 
+Running the simulation with the verification parameters took significant time (approximately 8 hours while allocating 128 cores and 256 GB of RAM).
+When running with our suggested parameters, the simulation took only about an hour to run (with only 64 cores and 64 GB of memory).
+Thus, the proposed converged parameters yielded an 85\% reduction in computation time while only a 0.27\% change in the thrust coefficient as seen in Table~\ref{tab:verified_stats}.
 
+\begin{table}[H]
+    \centering
+    \caption{A side by side comparison of the thrust coefficient obtained via the recommended and verification parameters.}\label{tab:verified_stats}
+    \begin{adjustbox}{center}
+    \begin{tabular}{l c c}
+        \toprule
+        \textbf{Parameters Used} & \textbf{Thrust Coefficient Obtained} & \textbf{Percent Error (\%)} \\
+        \midrule
+        Suggested & 0.083948 & 0.2732 \\
+        Verification & 0.084177 & (Reference) \\
+        \bottomrule
+    \end{tabular}
+    \end{adjustbox}
+\end{table}
+
+This thrust coefficient difference of merely 0.2732\% more than justifies the computation time reduction of nearly 7 hours.
+As a final visual representation of our convergence study, Figure~\ref{fig:verified_color_adjust_glyphs} should be referenced. The circulation strength (Gamma Magnitude) color scale reveals that the stronger particle interactions take place at the tips of the rotor blades. This helps to justify the geometric expansion factor of $\texttt{r} = \frac{1}{5}$. In effect, this sets the particle spacing near the tips to be one fifth that of the particle spacing near the hub. More particles near the rotor tips allowed the simulation to capture more of the wake data near the complex interactions that take place there.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{n46_glyphs.png}
+    \caption{A paraview depiction of the rotor wake for the recommended convergence parameters. Color scale is based on particles closest to the blade.}\label{fig:verified_color_adjust_glyphs}
+\end{figure}
+
+
+\section{Future Applications}\label{future}
+Going forward, there are several questions yet to be answered. Further research comparing the simulation data to experimental data on the physical propeller is of key interest. However, further research resolving the geometry discrepancy from earlier will be needed before experimental validation can occur.
+
+It will also be interesting to look more into if advance ratio, \texttt{J}, affects the parameter values we suggest for thrust coefficient convergence.
+Preliminary findings revealed that adjusting the advance ratio led to a divergence from the experimental results. Again though, we discovered that the experimental data may not necessarily correspond to the actual rotor used in the simulation.
+As such, more research would be needed.
+
+Future work will also examine the convergence of the wake's average velocity field. This will aid in the analysis of multiple propellers (and larger wind turbines) lined in series and will lead to fascinating insights.
+
+The convergence study of wind turbines is another goal we have. The same principles from this study can be used on the wind turbines. This will be important as the wind turbines have much larger diameters and as such will be accompanied by a significant increase in computation time and data generation. This makes finding the most efficient parameters all the more important. If we adjust solver parameters without a significant decrease in simulation fidelity, we will be able to save significant computation time and as such be able to run more complex simulations.
+
+
+
+\begin{appendices}
+\section{Computational Stability and Dual Language Management}\label{app:debugging}
+Core to the \texttt{FLOWUnsteady} library, is the interplay between multiple coding languages. In particular, the primary numerical solver was executed in a Julia environment, while the background visualization plotting was executed in Python via the \texttt{PyCall} package.
+Because Python's memory management system is incompatible with threaded runs, we encountered frequent segmentation faults and race conditions associated with the non-serial execution on supercomputer nodes.
+Single threaded runs significantly increased the runtime for the simulation, and so, it was necessary to find a solution that addressed segmentation faults and race conditions while still allowing for parallel processing.
+This was accomplished through manual control of memory management in the \texttt{FLOWUnsteady} library. 
+
+A \texttt{ReentrantLock} was implemented on Python function calls to address thread safety, preventing race conditions from occuring while the program ran. It effectively serialized Python plot generation calls in the primarily parallel processing based script.
+Further, effective memory management was accomplished by periodically calling the Garbage Collector from the Julia base code. This was done by using the \texttt{GC.gc()} command at the end of looped commands to ensure that memory leaks did not occur.
+\end{appendices}
 
 \end{document}
 

@@ -100,3 +100,35 @@ NEXT STEPS:
 - Add Verification Section? Before p_per_step section?
 - Begin working on final presentation.
 - Good work, and lots more to come.
+
+
+Relaxation Run Parameters:
+Based on our troubleshooting history, here is the breakdown of which runs used which settings.
+
+### 1. The Short Answer
+* **The last run that worked with "Perfect" (Default) settings:** **$n = 46$**.
+* **The first run that crashed (needing relaxation):** **$n = 48$**.
+* **The runs that used relaxed settings:** **$n = 48$ to $80$**.
+
+---
+
+### 2. The Detailed Breakdown (For your understanding)
+
+**Batch A: The "Strict" Runs ($n=30$ to $46$)**
+* **Settings:** Default (`spline_k=5`, `spline_s=0.001`).
+* **Status:** These worked perfectly out of the box.
+* **Last Success:** **$n=46$**.
+
+**Batch B: The "Cubic" Runs ($n=48$ to $65$)**
+* **The Issue:** At **$n=48$**, the default solver crashed ("s too small").
+* **The Fix:** We switched to **Cubic Splines** (`spline_k=3`) and likely relaxed `s` slightly to `0.01`.
+* **Result:** These runs ($48, 50, 55, 60, 65$) completed successfully.
+* *Note:* Even though $48$ and $50$ used modified settings, their $C_T$ values matched the "Strict" trend, so we grouped them with the left side in your report.
+
+**Batch C: The "Extra Relaxed" Runs ($n=70$ to $80$)**
+* **The Issue:** Even the settings from Batch B failed at **$n=70$**.
+* **The Fix:** We relaxed the smoothing further to **`spline_s=0.02`**.
+* **Result:** The simulation finally ran, but these are the points that are "smoothed" the most.
+
+### Summary for your Report
+Technically, **$n=46$** was the cutoff for "pure defaults." However, for your narrative, you are safe drawing the line at **$n=50$** because the physics results for 48 and 50 aligned perfectly with the strict data.
