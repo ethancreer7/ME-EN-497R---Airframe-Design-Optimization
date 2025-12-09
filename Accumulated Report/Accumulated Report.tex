@@ -1,0 +1,1689 @@
+\documentclass{report}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\graphicspath{{figures/}}
+\usepackage{subcaption}
+\usepackage{adjustbox}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{array}
+\usepackage{siunitx}
+\usepackage{caption}
+\usepackage{gensymb}
+\usepackage{threeparttable}
+\usepackage[toc,page]{appendix}
+\renewcommand{\appendixtocname}{Appendix}  % Changes "Appendices" to "Appendix" in ToC
+\renewcommand{\appendixpagename}{Appendix} % Changes "Appendices" to "Appendix" in the document header
+\definecolor{linkblue}{RGB}{6,125,233}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=linkblue,
+    urlcolor=linkblue,
+    citecolor=linkblue
+}
+\usepackage{booktabs}
+\title{497R Culminating Report}
+\author{Ethan Creer}
+\date{Fall 2025}
+\begin{document}
+
+\maketitle
+
+
+\begin{abstract}
+    Collection of all homework assignments and project work for Dr. Ning's 497R Airframe Design Optimization Course 
+\end{abstract}
+
+\tableofcontents
+
+\chapter{Introduction to Wing Geometry}
+\section{Aeronautical Glossary}
+
+
+\begin{itemize}
+    \item[] \textbf{Wing Area:} There are several ways to define the wing area, S, with the specific definition 
+    required depending on the individual use case. One common use of wing area is the 2D projection as viewed from above. 
+    This type of wing area is known as the \textit{planform area}, $S$ and is used in several equations as 
+    discussed later in this glossary. The \textit{exposed area}, $S_{exposed}$, is this 2D projection less any portion
+    mounted within the fuselage.
+    The \textit{wetted area}, $S_{wet}$ of a wing is what is defined as the surface area of the wing that would be covered if
+    dipped in a fluid. It can be approximated by
+    \begin{equation}
+    S_{wet} \approx 2\left(1+0.2 \frac{t}{c}\right)S_{exposed}
+    \end{equation}
+    where $t$ is the airfoil thickness, and $c$ is the chord length (defined later).
+    The \textit{reference area}, $S_{ref}$ of the wing is also important. 
+    Though several ways to calculate the $S_{ref}$ exist, the most common is the trapezoidal reference
+    area (taking a simple trapezoid approximation of the wing from the aircraft centerline to the wing tips). 
+    This calculation is easier than others and produces accurate enough results that it is usually preferred.
+
+    The wing area is an important parameter as it affects the fundamental parameters of flight, 
+    including lift, drag, and stall speed. As a result, an important understanding regarding the 
+    wing area geometry is important so that correct area definitions are used in conjunction with
+    correct applications.
+    \item[] \textbf{Chord:} The chord of a wing is an important wing parameter that describes the length 
+    from the leading edge of the airfoil to the trailing edge. As expected, most wing designs have 
+    varying chord length to fine tune aerodynamic properties. As a result, several definitions of the wing
+    chord emerge. The root chord and tip chord are the most basic of definitions; the former 
+    representing the chord length of the airfoil closest to (or on) the centerline of the aircraft, 
+    and the latter representing the chord length of the airfoil furthest from the centerline.
+    The \textit{camber line} is also sometimes referenced and is defined as the line from leading to trailing edge that traverses the center of the airfoil. 
+    Occasionally the term \textit{quarter-chord} is used which represents not a chord length, but rather the point
+    on the chord a quarter distance down from the leading edge. This point is used in calculating the \textit{sweep}
+    of the wing, as defined later. Because of the varying chord lengths along the \textit{span} (see below) of the wing,
+    a single length value, representative of the entire wing, is often desired. 2 of such chord lengths are commonly
+    used as defined below.
+    \begin{itemize}
+        \item The \textbf{\textit{Mean Geometric Chord}} is defined as $\bar{c} = \frac{S}{b}$, or the \textit{planform area} divided
+        by the span of the wings. This definition is rudimentary in nature and as such is not often used.
+        \item A more useful and accurate representation of the wing chord is the \textbf{\textit{Mean Aerodynamic Chord}}.
+        This is defined by the following
+        \begin{equation}
+        c_{mac} = \frac{2}{S} \int_{0}^{\frac{b}{2}} c^2 dy
+        \end{equation}
+        where S again represents the planform wing area, b as the span, and c as the function representing the varying chord.
+        As expected, this integral is done over the limits 0 to $\frac{b}{2}$ (or one wing of the aircraft). If the wing is 
+        linearly tapered, an integral is not necessary, and the general solution is described by
+        \begin{equation}
+        c_{mac} = \frac{2}{3}\left(c_r + c_t - \frac{c_r c_t}{c_r + c_t}\right)
+        \end{equation}
+    \end{itemize}
+    \item[] \textbf{Taper Ratio:} The \textit{taper ratio}, $\lambda$, is defined as the ratio between the tip chord
+    length and the root chord length: $\lambda = \frac{c_t}{c_r}$. The lift over the wing area ($S_{exposed}$) is distributed in
+    a way that is closely linked to this ratio.
+
+    \item[] \textbf{Span:} The \textit{span} of the airplane is another crucial parameter used in a variety of 
+    aerodynamic applications, perhaps most notably the computation of drag. In its simplistic form, span is defined
+    as the length from wingtip to wingtip of an aircraft when viewed from above (its 2D projection). Wings are designed to
+    bend under various loading conditions, and with this flexion, the span may slightly change.
+
+    Span notably affects a number of aircraft properties. It affects the induced drag (as defined below) by a factor
+    of $\frac{1}{b^2}$, the overall structural weight fo the wing, the wing area, etc. These relationships
+    should be accounted for when designing wings for their desired aerodynamic properties.
+
+    \item[] \textbf{Aspect Ratio:} The \textit{aspect ratio} parameter is defined simply as
+    \begin{equation}
+    AR = \frac{b^2}{S}
+    \end{equation}
+    or the ratio of span squared to wing area. It is used frequently in induced drag calculations
+    and also appears in a variety of other parameters including the angle of attack, $\alpha$, (defined below).
+    This and other variables are crucial to a variety of lift and drag calculations. For example, wings with high aspect ratios create
+    less induced drag while wings with low aspect ratios have more induced drag, but are more maneuverable and have a higher angle of attack for stall.
+
+    \item[] \textbf{Sweep:} \textit{Wing sweep} is primarily designed to reduce drag when an aircraft is traveling
+    close to the speed of sound (or Mach 1). It is defined as the angle at which the wing is swept back from horizontal
+    line perpendicular to the fuselage. The angle is typically measured from the quarter-chord point, as defined earlier. The reason
+    wing sweep reduces drag is because the incoming air flow over the wing is broken up into two components: a normal and tangential piece.
+    The spanwise flow (the tangential component of air flow tangent to the leading edge) does not contribute to 
+    wing drag or lift, while chordwise flow (the normal component) is responsible for lift and drag. The greater the wing sweep, the greater
+    the tangential flow component is, overall resulting in less experienced drag.
+
+    \item[] \textbf{Dihedral:} The \textit{dihedral} angle, $\phi$, is a measure of wing angle from the horizontal. This angle can be constant over the length of the span
+    or can vary throughout the span to achieve specific aerodynamic properties. One of the main purposes of wing dihedral is to adjust an airframe's
+    roll stability. Positive wing dihedral, meaning the wing angle is positive from the horizontal, increases an aircraft's roll stability. Negative wing dihedral (or anhedral), 
+    decreases roll stability.
+
+    \item[] \textbf{Twist:} The \textit{twist}, $\theta$, is defined as the varying angle of attack along the span of the wing. The twist distribution can be linear, or some other
+    varying function, but ultimately aids in aircraft stability and safety by ensuring the root of the wing stalls before the wing tips (where the ailerons are), allowing a pilot
+    to control roll before a complete stall.
+    
+    \item[] \textbf{Washout:} Wing \textit{Washout} is a form of wing twist that affects the lift distribution. Specifically, it is where the wing tips are twisted down (wing \textit{wash-in}
+    is when the wing tips are twisted up). The wing washout insures that the root of the wing stalls before the wing tips, which is where the ailerons are. This allows the pilot to continue
+    controlling roll at the beginning of a stall.
+    
+    \item[] \textbf{Lift:} \textit{Lift} is one of the primary forces acting on an airframe. The lift characterizes an aircraft's ability to accelerate vertically and gain altitude.
+    Lift is caused by a difference in pressure over the wing. When air flows faster over the top of the wing than the bottom, a difference in pressure develops and creates a difference
+    in forces. A higher pressure on the bottom side of the wing results in the lifting force. This pressure difference occurs because of a wing's airfoil profile --- which is carefully
+    designed to achieve this result. It would be important to note that lift is perpendicular to the freestream velocity.
+    
+    \item[] \textbf{Drag:}
+    A comprehensive definition of \textit{drag} will not be able to be covered in this glossary, but  introductions will be given to each type of drag 
+    with some relevant equations. Drag is parallel to the freestream velocity, of which there are three primary types --- induced, parasitic, and compressibility --- are listed below and each must be considered in the design of an airframe.
+    
+        \begin{itemize}
+            \item \textbf{Induced Drag:} \textit{Induced drag} is a direct consequence of the lift of an aircraft. By Newton's Third Law, because energy is used to lift
+            the aircraft, energy must also be used to push the air flow downward. This energy does not contribute useful work to the airframe and is the source of induced drag.
+            One can get a sense for the induced drag by considering the aircraft wake. When the high air pressure airflow is pushed downward, it circulates to the top side of the wing
+            where low pressure airflow is present. This circulation results in a trail of airflow vortices sometimes known as wake turbulence. It can be easy to see how this would 
+            in effect take energy away from the aircraft. Several equations exist for the calculation of induced drag, but just a few are listed below with appropriate definitions for included variable.
+            It would be important to note that these formulas apply to viscous fluid flow.
+            \begin{equation}
+            D_i = \frac{L^2}{q_{\infty}\pi b^2 e}
+            \end{equation}
+            \begin{equation}
+            C_{Di} = \frac{C_L^2}{\pi ARe}\label{eq:drag_eq}
+            \end{equation}
+
+            These two equations represent the total induced drag and coefficient of induced drag respectively,
+            and use several key variables (i.e. $q_{\infty}$, $AR$, and $e$) which in and of themselves are derived through
+            various formulas:
+
+            \begin{align*}
+            q_{\infty} = \frac{1}{2} \rho V_{\infty}^2 && C_L = \frac{L}{q_{\infty} S_{ref}}
+            \end{align*}
+
+            \begin{align*}
+            e = \frac{1}{\displaystyle \frac{1}{e_{inv}}+KC_{D_P}\pi AR}  && e_{inv} = 0.98\left[1-2\left(\frac{d_f}{b}^2  \right) \right]
+            \end{align*}
+            
+            These equations, though seemingly complex, are ultimately just numerical expressions of wing design characteristics and
+            flow conditions that govern the induced drag experienced.
+
+            \item \textbf{Parasitic Drag:} While induced drag is a non-escapable side effect of lift, \textit{parasitic drag}
+            is characterized as an adverse drag effect. Airframes are designed to keep this type of drag at a minimum. Two
+            types of parasitic drag are discussed below.
+            
+                \begin{itemize}
+                    \item \textbf{\textit{Skin Friction Drag}} can be thought of as the effect of viscous fluid flow
+                    over the wing. It's essentially the effect friction has between the inviscid flow and the boundary layer formed on
+                    the outer surface of the wing. Formulas for the skin friction drag and coefficient of skin friction drag are described with the following:
+                    \begin{equation}
+                    D' = \int_{0}^{L} \tau_w dx
+                    \end{equation}
+                    \begin{equation}
+                    C_f = \frac{D'}{q_{\infty}L} = \frac{1}{q_{\infty}} \int_{0}^{1} \tau_w d \left(\frac{x}{L}\right)
+                    \end{equation}
+
+                    Here, $\tau_d$ represents the wall shear stress. A few simplistic solutions to this integral are
+                    available for fully laminar or fully turbulent flow with an incompressible boundary layer. They are listed below:
+
+                    \begin{align*}
+                    C_{f_{inc}} = \frac{1.328}{\sqrt{Re}} \text{ (laminar)} && C_{f_{inc}} = \frac{0.074}{Re^{0.2}} \text{ (turbulent)}
+                    \end{align*}
+                    where $Re = \dfrac{\rho V c}{\mu}$ with $\rho$ and $\mu$ as the fluid's density and dynamic viscosity respectively.
+                    These formulas are crucial in design of wing airfoils to limit this form of parasitic drag.
+                    
+                    \item \textbf{\textit{Pressure Drag}} is the other type of parasitic drag, and is best thought of as the effect of
+                    imperfect efficiency and wake (an effect of a velocity differential over the wing). Streamlining the shape of an airfoil
+                    can greatly help in reducing pressure drag, and as such it is natural to see how the form factor of the airfoil, k, is
+                    numerically represented in the equations for pressure drag. In fact, for our purposes, we estimate the pressure drag by 
+                    multiplying the above listed skin friction drag by the form factor k as defined below.
+                    
+                    \begin{equation}
+                    k = 1 + Z \frac{t}{c} + 100{\left(\frac{t}{c}\right)}^4                    
+                    \end{equation}
+                    with
+                    \begin{equation}
+                    Z = \frac{\left(2-M_{\infty}^2\right)\cos{\Lambda}}{\sqrt{1-M_{\infty}^2\cos^2{\Lambda}}}
+                    \end{equation}
+                    
+                    Here, $\Lambda$ represents the quarter-chord sweep angle. 
+
+
+
+
+                \end{itemize}
+            
+            Combining both skin friction and pressure drag we get a formula for total parasitic drag:
+            \begin{equation}
+            D_p = kC_f q_{\infty}S_{wet}
+            \end{equation}
+            Where $S_{wet} \approx 2\left(1 + 0.2 \frac{t}{c}\right)S_{exposed}$ of the lifting surface. Finally, in order to normalize this total parasitic drag, the following coefficient is computed:
+            \begin{equation}
+            C_{D_p} = k C_f \frac{S_{wet}}{S_{ref}}
+            \end{equation}
+            
+
+            \item \textbf{Compressibility Drag:} The final component of drag discussed here is \textit{compressibility drag} or sometimes referred to as \textit{wave drag}. This is the drag
+            experienced by an aircraft at transonic (0.7 --- 1.0 Mach) or supersonic speeds. In the former case an estimated compressibility drag coefficient is presented in the piecewise function below. Note that
+            $M_{\infty}$ is the freestream Mach number, $M_{cc}$ is the crest critical Mach number --- when airflow over the top of the wing begins to be supersonic, and $M_{dd}$ is the point just before significantly
+            compressibility drag increase.
+            \begin{equation}
+            C_{D_c} = \begin{cases}
+            0 & \text{for } M_{\infty} <  M_{cc},\\
+            20{(M_{\infty} - M_{cc})}^4  & \text{for } M_{cc} < M_{\infty} < 1\\
+            \end{cases}
+            \end{equation}
+
+            The equations for compressibility drag at supersonic speed are significantly more complicated, involving components related to volume, lift, and fuselage volume. It is recommended to consult an aeronautical textbook 
+            for these equations. However, the basic idea of these equations is that wave drag is reduced by decreasing volume and elongating the body. In fact, it is shown that the volume component of wave drag
+            is proportional according to the following relation:
+            \begin{equation}
+            D_w \propto \frac{volume^2}{l^4}
+            \end{equation}
+            Further efforts to reduce this drag can be made by reducing the fuselage volume near the wings and ensuring a smooth area distribution and minimal sharp changes. Wings are also swept back --- 
+            which introduces a normal and tangential component of airflow as discussed earlier in our wing sweep definition. 
+
+        \end{itemize}
+        
+
+
+    \item[] \textbf{Pitching Moment:} As the name suggests, the \textit{pitching moment} is the 2D moment exerted on the airfoil as a result of the lift and drag forces about the aerodynamic center of the wing.
+    A negative pitching moment causes the plane to tilt downward, and a positive pitching moment causes the plane to pitch upwards. It would be important to note that this variable is taken strictly in a 2D plane and
+    disregards the 3D flow around a wing.
+    
+    \item[] \textbf{Lift Curves and Drag Polars:} The \textit{lift curves and drag polars} of an airfoil are the variation of lift coefficients and drag coefficients with the angle of attack. Analyzing these
+    curves are fundamental to understanding the stall point of an airfoil as well as the best angle of attack for aircraft climb. 
+    
+        \begin{itemize}
+            \item The \textbf{\textit{Angle of Attack}} of the aircraft is an important consideration especially in the climbing and descending phase of flight. It is defined as the angle between the chord line
+            and the freestream velocity vector, $V_{\infty}$
+            
+            \item As the name suggests, the \textbf{\textit{Zero Lift angle of attack}}, $\alpha_0$, is the angle of attack at which zero lift occurs, This angle is negative, and serves as the angle where there is no airflow pressure difference
+            over the top and bottom of the wing.
+            
+            \item The \textbf{\textit{Lift Curve Slope}} is the graphical representation of the relationship between coefficient of lift angle of attack. On this graph, one can see the zero lift angle of attack, $\alpha_0$, and the 
+            maximum lift coefficient before stall $c_{l_{\max}}$ (in 2D) or $C_{L_{\max}}$ (in 3D).
+            
+            \item \textbf{\textit{Stall}} occurs when an angle of attack is too steep resulting in the breaking away of airflow from the wing and significant drag increase and lift decrease. There exist many tradeoffs
+            in the designing for stall speed, such as runway takeoff speed and runway length required. References to stall have been made in several of the
+            above definitions, giving weight to its importance in aerodynamic design considerations.
+            
+        \end{itemize}
+
+\end{itemize}
+
+
+\section{A Preliminary Exploration of the Vortex Lattice Method}
+Below we begin to work with the VortexLattice.jl file for a basic wing to gain an initial understanding and application of the above definitions.
+Here we set our wing parameters as follows:
+\begin{flalign*}
+x_{le} &= [0.0, 0.4] & y_{le} &= [0.0, 7.5] & z_{le} &= [0.0, 0.0]
+\end{flalign*}
+\begin{flalign*}
+c &= [2.2,1.8] & \theta &= [\pi/90, \pi/90] & \phi &= [0.0, 0.0]
+\end{flalign*}
+With $x_{le}$, $y_{le}$, and $z_{le}$ representing the leading edge positions in the x, y, and z directions and $c$, $\theta$, and $\phi$ representing the chord length, twist (in radians), and section rotation about the x axis respectively at the root and tip of the wing.
+
+Under these wing parameters, the surface was discretized into 12 spanwise panels and 6 chordwise panels with a sine based distribution for the former and a uniform (or even) based distribution for the latter.
+Here, a sine based distribution is represented by closely packed panels at the wing tips, and more spread out panels at the wing root.
+
+A series of reference dimensions are also given for the wing as follows,
+\begin{flalign*}
+S_{ref} &= 30.0 & c_{ref} &= 2.0 & b_{ref} &= 15.0 & r_{ref} &= [0.50,0.0,0.0] & V_{\infty} &= 1.0
+\end{flalign*}
+representing the reference area, reference chord length, reference span length, reference location for rotations and moments, and the reference velocity magnitude, respectively
+
+With a varying angle of attack, $\alpha$, from $-\pi/12$ to $\pi/4$ radians, a constant sideslip angle, $\beta$, of zero, rotational velocity values, $\omega$, about the reference locations of zero, the wing system is ready to be analyzed for forces, moments, and coefficients of lift and drag.
+
+The first graph of interest in our analysis is examining the coefficient of lift, $C_L$ as a function of angle of attack.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{lift_Aoa.png}
+    \caption{Lift coefficient, $C_L$, as a function of angle of attack from $\alpha = -\pi/12$ to $\pi/4$ radians}\label{fig:lift_Aoa}
+\end{figure}
+As seen in Figure~\ref{fig:lift_Aoa}, we can identify a somewhat linear relationship between the two, with $C_L$ leveling off slightly at higher angles of attack.
+
+Examining the slope of the lift curve reveals an initial slope of 4.620 per radian. This is taken directly from the VortexLattice.jl file and its variable CLa, quantifying how $C_L$ varies with $\alpha$. This value of 4.620 is interesting in comparison to the thin airfoil theory which gives a lift curve slope of $2\pi \approx 6.283$.
+This discrepancy between the two slopes (as the vortex lattice method is based on the thin airfoil theory) represents an error of 1.663 or approximately $26.5\%$.
+This begs the question of where this error comes from, and an understanding of how the vortex lattice method and thin airfoil theory work is critical to its answer. 
+At its core, the thin airfoil theory assumes an infinite span wing --- which is obviously not the case in our finite wing. The vortex lattice method is employed on finite wings
+and as a result experiences downwash. As discussed in the glossary, downwash can be thought of as a product of Newton's third law and adversely affects the lift of a wing. This is a major contributor to the difference in lift curve slope between the thin airfoil theory and the vortex lattice method implementation.
+
+In order to decrease the error inherent in this model, we would need to increase the wing span (which effectively makes the wing's span closer to infinity in length). By increasing the span, we more closely approximate the thin airfoil theory and as a result we more closely approach the theoretical maximum of $2\pi$ for the lift curve slope.
+For our code, we would need to increase the span, $b$, and then update the reference surface area, $S_{ref}$ to see the appropriate reduction in error
+
+As a final examination of Figure~\ref{fig:lift_Aoa}, it should be noted the difference between the theoretical data (which in this case neglects the stall point) and typical experimental data, which has an associated stall angle of attack.
+Though the produced lift curve is typical of that of an experimental wing for low angles of attack, it would be important to note the inaccuracy of the curve past the stall point of the wing. This stall point typically occurs between 15 and 20 degrees (about $\pi/12$ radians), but this plot examines angles of attack up to 45 degrees (or $\pi/4$ radians).
+Fundamental to the vortex lattice model is its assumption of steady flow over the wing. It neglects the presence of turbulent flow --- which occurs during stall and various angles of attack. 
+Because of this, Figure~\ref{fig:lift_Aoa} does not exhibit a sharp drop in $C_L$ at the typical stall point, but instead continues with a steady increase in $C_L$ with $\alpha$. So even though the curve may be accurate for steady flow at low angles of attack, the veracity of Figure~\ref{fig:lift_Aoa} decreases with angles of attack beyond the stall point.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{near_far_drag_Aoa.png}
+    \caption{Near and far field drag coefficients, $C_D$, as a function of angle of attack from $\alpha = -\pi/12$ to $\pi/4$ radians}\label{fig:near_far_drag_Aoa}
+\end{figure}
+
+Figure~\ref{fig:near_far_drag_Aoa} is an excellent depiction of the differences between a near and far field analysis of drag on an airframe. As noted in the VortexLattice.jl documentation,
+the coefficient of drag, $C_D$ is often corrupted by numerical noise in the near-field frame. This noise is amplified with continued increase in angle of attack, and as such the accuracy of $C_D$ diminishes as $\alpha$ increases.
+To account for this, a far-field analysis can be performed on the wing. This far-field analysis produces less numerical noise and as such results in more accurate values for $C_D$. As seen in the near-field analysis portion of Figure~\ref{fig:near_far_drag_Aoa},
+the drag coefficient begins to level off as the wing approaches an angle of attack of $\pi/4$ radians. If the graph were extended to $\pi/2$ radians, it would report a value of 0 for $C_D$, which would obviously not be the case. A more accurate representation of the
+drag is seen in the far-field analysis portion of the plot. Here is shown a steady increase in $C_D$ with $\alpha$ which doesn't level off. This interesting relationship is important to note and depending on the context should be leveraged to produce more accurate results.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{drag_polar.png}
+    \caption{Drag polar presented as the drag coefficient, $C_D$, vs lift coefficient, $C_L$}\label{fig:drag_polar}
+\end{figure}
+The drag polar seen in Figure~\ref{fig:drag_polar} is one of the most important graphs to consider in analyzing the information provided from the vortex lattice method. This graph
+is a direct indicator of wing efficiency, depicting how much induced drag is associated with a particular amount of lift. In our wing we see a parabolic relationship between the two.
+In particular, near the minimum of Figure~\ref{fig:drag_polar}, we see that changes in $C_L$ is associated with only small changes in $C_D$. However, for larger magnitudes of $C_L$, small changes result in much larger
+changes in $C_D$ compared to near the plot vertex. This would make sense when we consider all of the plots presented so far. Even though higher angles of attack are associated with higher lift, the trade off is that they result in increasing rate of induced drag. Thus, when the information from Figure~\ref{fig:lift_Aoa} and Figure~\ref{fig:near_far_drag_Aoa} are put together, we see the relationship presented in Figure~\ref{fig:drag_polar}.
+
+
+\begin{figure}[H]
+    \begin{adjustbox}{width=1.25\textwidth, center}
+        \begin{minipage}{\textwidth}
+            \begin{center}
+                \begin{subfigure}[b]{.47\linewidth}
+                    \centering
+                    \includegraphics[width=\linewidth]{roll_Aoa.png}
+                    \caption{Rolling moment coefficient as a function of angle of attack from $\alpha = -\pi/12$ to $\pi/4$ radians}\label{fig:roll_Aoa}
+                \end{subfigure}
+                \hfill
+                \begin{subfigure}[b]{.47\linewidth}
+                    \centering
+                    \includegraphics[width=\linewidth]{pitch_Aoa.png}
+                    \caption{Pitching moment coefficient as a function of angle of attack from $\alpha = -\pi/12$ to $\pi/4$ radians}\label{fig:pitch_Aoa}
+                \end{subfigure}
+
+                \vspace{0.5em}
+
+                \begin{subfigure}[b]{.48\linewidth}
+                    \centering
+                    \includegraphics[width=\linewidth]{yaw_Aoa.png}
+                    \caption{Yaw moment coefficient as a function of angle of attack from $\alpha = -\pi/12$ to $\pi/4$ radians}\label{fig:yaw_Aoa}
+                \end{subfigure}
+            \end{center}
+        \end{minipage}
+    \end{adjustbox}
+    \centering
+    \caption{A measure of moment coefficients across 3 axes as a function of angle of attack}\label{fig:moments}
+
+\end{figure}
+Associated with our vortex lattice analysis is various moment coefficients (roll, pitch, and yaw). As seen in Figure~\ref{fig:moments}\ref{sub@fig:roll_Aoa} and~\ref{fig:moments}\ref{sub@fig:yaw_Aoa}, these coefficients are very small, and do not contribute much to forces exhibited on the airframe. This would be expected from steady flow as there are not many moments in these respective directions.
+Of more interest is Figure~\ref{fig:moments}\ref{sub@fig:pitch_Aoa}. A pitching moment would cause the plane to tilt upwards or downwards depending on its sign.
+What's interesting in this plot is the pitching stability inherent in the data. As the angle of attack increases, the pitching moment becomes more negative, causing the plane to tilt downward and return to a coefficient of 0. The opposite applies as the angle of attack becomes more negative.
+On the plot we see that the point of pitching stability is actually not associated with $\alpha = 0$, but rather less than zero by a few degrees. This means that the airframe's angle of attack needs to be slightly negative to keep its pitching moment stable at zero.
+Though this result may be somewhat counterintuitive, its implication is important for aircraft design. Specifically, the aircraft tail will need to be designed to create a balancing moment such that the plane can fly with a positive angle of attack (and subsequently produce lift).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{lift_drag_Aoa.png}
+    \caption{Ratio of lift coefficient to drag coefficient as a function of angle of attack from $\alpha = 0$ to $\pi/4$ radians}\label{fig:lift_drag_Aoa}
+\end{figure}
+
+The final figure presented in this exploration is Figure~\ref{fig:lift_drag_Aoa} depicting the ratio of lift coefficient to drag coefficient as a function of angle of attack.
+An interesting relationship is observed here, particularly near $\alpha = 0$. As we can see, as angle of attack approaches zero, the ratio of coefficients approaches what appears to be a vertical asymptote. This means that the
+coefficient of drag is approaching zero faster than the coefficient of lift is. This makes sense as we know from Equation~\eqref{eq:drag_eq} that $C_{Di} \propto C_L^2$, which clearly demonstrates that as $C_L$ gets closer to zero, $C_{Di}$ approaches it even faster.
+This ratio is important as it is a measure of wing efficiency in creating lift. The greater the ratio the more efficient the wing is (meaning more lift for less drag). 
+
+\chapter{Airframe Design, Theory, and Exploration}
+\section{Wing Design Glossary}
+
+\textbf{Non-dimensional Numbers:}
+\begin{itemize}
+    \item[] \textbf{Reynolds Number:} An important parameter in the field of aerodynamics is that of the \textit{Reynolds number}. It is defined by the following equation:
+        \begin{equation}
+            \frac{\rho V c}{\mu}
+        \end{equation}
+        where $\rho$ is the fluid density, $V$ is the freestream speed, $c$ is a relevant length scale for normalization (for example the mean geometric chord length), and $\mu$ representing the fluid's dynamic viscosity.
+        This ratio is a representation of the inertial to viscous forces and is typically on the order of millions to tens of millions for airplanes at cruising speed. From this, we can conclude that viscous forces are extraordinarily low compared to the inertial forces.
+        It's also insightful to consider the typical flow patterns observed at high and low values for the Reynolds number. At high values, instabilities in the fluid are amplified causing turbulent flow. On the low end, instabilities in the fluid are damped and laminar flow occurs.
+    \item[] \textbf{Mach Number:} The \textit{Mach number} is also an important parameter in aerodynamics, especially when it comes to the study of drag --- most notably compressibility drag.
+    It is given by the following equation:
+    \begin{equation}
+    M = \frac{V}{a}
+    \end{equation}
+    where $V$ is the freestream or local speed and $a$ is the speed of sound. At Mach Number > 1, the local flow speed is greater than the speed of sound. This Mach barrier is difficult to cross as it requires immense energy
+    and is often achieved with afterburners. 
+
+    Note that the Mach number is only dependent on an aircraft's true airspeed. Thus, if the plane is traveling in a jet stream, the only relevant speed is the speed at which the airplane moves through the air. For example, if a plane is traveling with a ground speed of 450 knots through a jet stream headwind of 100 knots, the aircraft is moving through the air at 450 + 100 = 550 knots, and this would be the value of $V$ in our mach number calculation. 
+
+    Another important consideration in Mach number is the speed of the air molecules over the top of the wings. As a consequence of lift (pressure differential between the top and bottom of the wings), air moves faster over the top of the wing. Because of this, the local Mach number over the upper surface will be greater than the above calculated Mach number for the airplane.
+    As a consequence of this, in order for the aircraft to avoid the adverse affects of compressibility drag, it will need to travel at a lower Mach number to prevent the air speed over the wings to be less than the speed of sound. Typical jet airliners cruise at a Mach number around 0.75 to reduce the risk of compressibility drag.
+    \item[] \textbf{Coefficients:} Aerodynamic analysis involves the determining of a variety of coefficients to gain a full picture of the forces and moments acting on the aircraft as it moves through the air. 3 of the more important coefficients are described below.
+    \begin{itemize}
+        \item[] \textbf{Lift Coefficient:} The \textit{lift coefficient}, denoted as $C_L$, is the primary indicator of the pressure differential over the wing surfaces that cause the plane to \textit{lift} into the air.
+        It is given by the following:
+        \begin{equation}
+            C_L = \frac{L}{q_{\infty} S_{ref}}\label{lift_coefficient}
+        \end{equation}
+        This formula gives the normalization of the lifting force, $L$ by dividing it by the quantity $q_{\infty} S_{ref}$. In this quantity, $S_{ref}$ is the wing's reference area and $q_{\infty}$ is known as the dynamic pressure, which is calculated by the following:
+        \begin{equation}
+        q_{\infty} = \frac{1}{2} \rho_{\infty} V_{\infty}^2\label{dynamic_pressure}
+        \end{equation}
+        where $\rho$ is the air density and $V_{\infty}$ is the freestream speed.
+
+        One might wonder why a normalization factor is necessary when we really care about the lifting forces on the wing. The power in normalization is that it allows the engineer to compare the lift of a variety of wing shapes and sizes (with varying angle of attack, sweep, twist, dihedral, etc.). In the normalization formula, we divide the lifting force by the dynamic pressure (which would be the same for any wing traveling at the same speed through the same fluid).
+        Then we divide by the wing reference area. This is important as it normalizes the absolute magnitude of lift across wing sizes. It's obvious to see how the lift generated by a large airliner and a small propeller plane are vastly different.
+        Because of this, we factor out the wing area to compare the true efficiencies of wings of any size.
+        \item[] \textbf{Drag Coefficient:} The \textit{drag coefficient}, denoted as $C_D$, is the primary indicator of the forces acting against the airplanes motion.
+        Similar to the lift coefficient, the drag coefficient is given by the following:
+        \begin{equation}
+            C_D = \frac{D}{q_{\infty} S_{ref}}\label{drag_coefficient}
+        \end{equation}
+        One can clearly see the minor changes made between Equations~\eqref{lift_coefficient} and~\eqref{drag_coefficient}. Simply put, the lift variables were replaced with respective drag variables.
+        The drag variable in this context is the sum of all types of drag (induced, parasitic, and compressibility drag). Definitions for each of these types of drag were given previously in homework 1, and one can refer to that document for the associated equations for each type of drag.
+        Needless to say, the total drag coefficient, $C_D$, is equal to the sum of all other drag coefficients. Thus, 2 paths can be taken to calculate $C_D$; the total drag force can be calculated and then divided by the quantity $q_{\infty} S_{ref}$, or if individual component drag coefficients are known, they can be summed together for the overall drag coefficient.
+        
+        \item[] \textbf{Moment Coefficient:}
+        The moment coefficient is calculated in the same manner as the lift and drag coefficients with one small adjustment. It is given by:
+        \begin{equation}
+            C_m = \frac{M}{q_{\infty} S_{ref} c}\label{moment_coefficient}
+        \end{equation}
+        This equation introduces an additional $c$ term, representing the wings reference length (usually chord). This raises an important point with regard to all the above parameters being dimensionless. The dimensionless nature allows the coefficient to be easily compared with other airframes and is one of the main reasons we normalize the Moment in the first place. Unlike the lift and drag forces (units of Newtons), a moment is a force multiplied by a distance (i.e.\ units of Newton-meters).
+        Because this moment is in the numerator, the units of length need to be cancelled by a reference length in the denominator. This explains the presence of the $c$ in Equation~\eqref{moment_coefficient}.
+
+       It should also be noted the axes about which this moment is computed. In most situations, the moment of particular interest is the pitching moment, or its moment arm about the aircraft's y-axis (out the right wing). This moment is fundamental to the aircraft's stability. Other moments are also present on the aircraft, as seen in Figure~\ref{fig:airframe_axes}. However, these moments more primarily deal with maneuverability and can more easily be corrected by the pilot.
+        \begin{figure}[H]
+            \hspace*{\dimexpr\labelsep+\labelwidth}
+            \begin{minipage}{0.915\linewidth}
+                \centering
+                \includegraphics[width=\linewidth]{airframe_axes.png}
+                \captionsetup{width=\linewidth}
+                \caption{A depiction of the 3 principal body axes of an aircraft. Image from 
+                \href{https://commons.wikimedia.org/wiki/File:Yaw_Axis_Corrected.svg}{Jrvz}, Wikimedia, CC BY-SA 3.0}\label{fig:airframe_axes}
+            \end{minipage}
+        \end{figure}
+
+    \end{itemize}
+    It would be important to note that all the above coefficient definitions are for a 3D frame. If the 2D coefficient expressions are desired, simply replace the capital letter coefficient and lift/drag/moment variables with lowercase letters. That indicates that the coefficients and relevant variables are taken in the 2D frame.
+\end{itemize}
+\textbf{Airframe Performance:} The following two definitions are brief introductions to the concepts that they present. They are expounded upon in the subsequent Section~\ref{sec:theory} on vortex lattice method theory.
+\begin{itemize}
+    \item[] \textbf{Lift Distribution:}
+    Of fundamental importance in aerodynamic analysis is the concept of the lift distribution over an airframe's body. Various methods are used to approximate this lift distribution, but they all revolve around the idea that lift is mathematically related to the circulation of airflow around the wing via the Kutta-Joukowski theorem:
+    \begin{equation}\label{eq:kutta_Joukowski} 
+        L' = \rho V \Gamma
+    \end{equation}
+    Here, $L'$ is the lift per unit span, $\rho$ is the air density, $V$ is the freestream speed, and $\Gamma$ is the circulation.
+    In other words, changing circulation across the wing span results in a changing lift per unit span. Two of the best ways to calculate this lift distribution are with the lifting line theory and the vortex lattice method. The former will be briefly discussed in this section, while the latter (which is in part based off of the lifting line theory) will be discussed more depth in Section~\ref{sec:theory}.
+        \begin{figure}[H]
+            \hspace*{\dimexpr\labelsep+\labelwidth}
+            \begin{minipage}{0.915\linewidth}
+                \centering
+                \includegraphics[width=\linewidth]{lift_distribution.png}
+                \captionsetup{width=\linewidth}
+                \caption{A crude model of lift distribution over one wing on the span of an aircraft. Image from 
+                \href{https://commons.wikimedia.org/wiki/File:Lift\_distribution\_over\_a\_three-dimensional\_wing\_\%281\%29.svg}{Oliver Cleynen}, Wikimedia, CC BY-SA 3.0}\label{fig:lift_distribution}
+            \end{minipage}
+        \end{figure}
+    Lifting line theory is a simplified method of analyzing lift distribution and assumes a number of characteristics about the wing --- particularly that the wing is long and thin. It produces a lift distribution similar to the ones depicted in Figures~\ref{fig:lift_distribution} and~\ref{fig:elliptic_distribution} and helps an aerodynamicist make design decisions for a particular aircraft and its applications.
+    The lift distribution in Figure~\ref{fig:elliptic_distribution} is of particular importance for the applications of lifting line theory. It can be proven that an elliptical lift distribution produces the most efficient wing design --- meaning it minimizes induced drag for a maximum lift. This distribution can be produced by an elliptically shaped wing with no twist, but due to the difficulty in manufacturing of said wings, a different wing shapes with other features (like twist, washout, dihedral, etc.) are usually produced instead.
+
+        \begin{figure}[H]
+            \hspace*{\dimexpr\labelsep+\labelwidth}
+            \begin{minipage}{0.915\linewidth}
+                \centering
+                \includegraphics[width=\linewidth]{elliptical_distribution.png}
+                \captionsetup{width=\linewidth}
+                \caption{An example elliptic lift distribution --- the most efficient lift distribution that minimizes induced drag for maximum lift. Image from 
+                \href{https://www.researchgate.net/publication/358085076_LARGE_DEFLECTION_ANALYSIS_OF_AN_AIRCRAFT_WING_WITH_ELLIPTICAL_LIFT_DISTRIBUTION_AT_DIFFERENT_FLIGHT_CONDITIONS}{Md Golam Sarwar}, ResearchGate, 2017}\label{fig:elliptic_distribution}
+            \end{minipage}
+        \end{figure}
+
+    \item[] \textbf{Stall Speed:} The stall speed of an aircraft is crucial in the design of an airframe. In its simplest form it dictates the minimum speed an aircraft must travel to generate the required lifting force.
+    At speeds below the stall speed, an aircraft does not have enough air moving over its wings to generate lift that overcomes the downward force of gravity. If an aircraft does not have enough altitude, recovering from a stall can be nearly impossible and a catastrophic crash can occur.
+
+
+\end{itemize}
+
+
+
+\section{Vortex Lattice Method Theory}\label{sec:theory}
+\begin{itemize}
+\item[] \textbf{Potential Flow Theory:} At its core, potential flow theory is an idealized fluid flow model that describes a steady, incompressible, and irrotational flow. It operates under the three following independent assumptions: that the divergence of the associated velocity field is zero, the curl of the velocity field is zero, and that the velocity field does not change with time. That is,
+\begin{align}\label{eq:flow_assumptions}
+\nabla \cdot \vec{V} = 0 && \boldsymbol{\omega} \equiv \nabla \times \vec{V} = \boldsymbol{\vec{0}} && \frac{\partial \vec{V}}{\partial t} = \boldsymbol{\vec{0}}
+\end{align} 
+
+Each of these equations are, respectively, the divergence of the velocity field, the curl of the velocity field, and the partial derivative of the velocity field with respect to time. On the curl equation, an extra term is added, $\boldsymbol{\omega}$, which represents the vorticity field. This too is also equivalent to the zero vector. On a technical note, the potential flow theory does not necessarily require steady flow, but for the purposes of simplification and our application with the vortex lattice method, we will assume steady flow.
+
+Another important concept in the realm of potential flow is that of the velocity potential function, $\phi(x,y,z,t)$. The gradient of said scalar potential function represents the velocity field, and is defined with the following equation:
+
+\begin{equation}\label{eq:velocity_potential}
+\vec{V} = \nabla \phi
+\end{equation}
+
+This important function leads us to the ultimate governing equation of potential, which is the Laplace Equation:
+\begin{equation}\label{eq:laplace}
+\nabla^2 \phi = 0
+\end{equation}
+
+To explain, we note that the divergence of our velocity field function is zero (see Equation~\ref{eq:flow_assumptions}). When we take the divergence of this velocity function (substituting in Equation~\ref{eq:velocity_potential}) we get the following:
+
+\begin{equation}\label{eq:solution_proof}
+\nabla \cdot \vec{V} \equiv \nabla \cdot \nabla \phi \equiv \nabla^2\phi
+\end{equation}
+
+Thus, we see that the velocity potential satisfies the Laplace Equation, which can also be written in its component form:
+\begin{equation}\label{eq:component_laplace}
+\frac{\partial^2 \phi}{\partial x^2} + \frac{\partial^2 \phi}{\partial y^2} + \frac{\partial^2 \phi}{\partial z^2} = 0
+\end{equation}
+
+With all this in mind, we begin the application of potential flow to the Vortex Lattice Method (VLM). In addition to the above assumptions, it is important to remember that boundary conditions apply,
+to this equation, especially in the context of a wing through space. In a physical sense, flow cannot pass through these solid boundaries (think of an airfoil traversing through space --- air does not move through the airfoil, but rather around it). Also, potential flow is built on the idea of superposition, that is, multiple flow paths can be `added' together to form an effective flow path.
+Figure~\ref{fig:superposition}, depicts 2 flow fields that can be superposed to create a potential flow --- in this case, when the `A' and `B' elementary flows are superposed, they model the flow around a cylinder.
+        
+\begin{figure}[H]
+    \hspace*{\dimexpr\labelsep+\labelwidth}
+        \begin{minipage}{0.915\linewidth}
+            \centering
+            \includegraphics[width=\linewidth]{superposition.png}
+            \captionsetup{width=\linewidth}
+            \caption{Potential flow illustrated with the superposition of elementary flows: combining both of the above flows produces the flow around a cylinder.  Image from 
+            \href{https://commons.wikimedia.org/wiki/File:Construction_of_a_potential_flow.svg}{Oliver Cleynen}, Wikimedia, CC BY-SA 3.0}\label{fig:superposition}
+        \end{minipage}
+\end{figure}
+
+This is how the VLM theory works --- similar to the superposition of elementary flows in Figure~\ref{fig:superposition}, VLM uses series of superposed horseshoe vortices on the wing to model the air flow around the wing. 
+\item[] \textbf{Vortex Filament and Horseshoe Vortices:} With a knowledge of potential flow theory and a brief introduction to VLM, we now consider a more in-depth look at the details of vortex lattice method. We begin with the concept of a \textit{vortex filament}.
+Consider a whirlpool in a draining bathtub --- the water circulating around the epicenter of the vortex, downwards into the drain. Now imagine an infinitely thin curve 
+extending from the drain vertically, directly along the center of the vortex. Now imagine the entire effect of the whirlpool condensed onto that infinitely thin curve. 
+This is the basic notion of what a vortex filament is, and it has powerful applications for the VLM.\@
+With a mental picture of a vortex filament in mind, we can consider the various properties associated with the filament.
+The vorticity, $\omega = \nabla \times V$, for example, is effectively infinite as the vorticity is concentrated on the infinitesimally thin line.
+The circulation, $\Gamma$, however, is defined as the integral of the vorticity over a surface:
+\begin{equation}\label{eq:filament_Gamma}
+\Gamma = \int_{S}^{}\boldsymbol{\omega}\cdot d\boldsymbol{S}
+\end{equation}
+What's interesting about $\Gamma$, is if we take a closed control volume cylinder around a portion of the vortex filament, the circulation will sum to zero. This is a consequence of the Biot-Savart Law and Helmholtz's vortex theorems --- both of which can be read about more in a computational aerodynamics textbook. 
+For our purposes, we note that the circulation must be constant throughout the entire filament. 
+
+\textit{Horseshoe Vortices} are effectively vortex filaments that form in a shape similar to the one seen in Figure~\ref{fig:horseshoe_vortex}. 
+\begin{figure}[H]
+    \hspace*{\dimexpr\labelsep+\labelwidth}
+        \begin{minipage}{0.915\linewidth}
+            \centering
+            \includegraphics[width=\linewidth]{horseshoe2.png}
+            \captionsetup{width=\linewidth}
+            \caption{A simplified macroscopic representation of a horseshoe vortex over an entire airframe body --- includes the bound vortex on the wings leading edge, the trailing vortices extending along the aircraft's x-axis, and the starting vortex (which is typically disregarded in analysis).  Image from 
+            \href{https://commons.wikimedia.org/wiki/File:Aircraft_wing_lift_distribution_showing_trailing_vortices_(1).svg}{Oliver Cleynen}, Wikimedia, CC BY-SA 3.0}\label{fig:horseshoe_vortex}
+        \end{minipage}
+\end{figure}
+Here we see a singular finite horseshoe vortex surrounding an airframe. It is clear that the circulation along this filament is constant. In an actual aircraft, the trailing vortices of the horseshoe vortex will extend infinitely behind the aircraft. 
+This idea of a horseshoe vortex is fundamental to the VLM theory and is the basis for the evaluation of lift distributions over the span of a wing. 
+A singular horseshoe vortex is not enough however to model the lift distribution over a wing, and as such, a lattice is used, as described below.
+
+\item[] \textbf{Modeling a Lifting Surface with Horseshoe Vortices:} A significant application of the aforementioned potential flow theory and horseshoe vortices, is modeling the lift distribution over the span of a wing.
+This application is one of the primary purposes of aerodynamic analysis and allows the engineer to design an effective wing with an efficient lift distribution.
+
+As mentioned, the Vortex Lattice Method is a well-used approach to modeling this lift, and to do so requires effectively modeling a lifting surface using horseshoe vortices.
+Essentially, the wing is divided into panels (either chordwise, spanwise, or both) and a horseshoe vortex is place on each of these panels. When both chordwise and spanwise panels are used, a more 3D wing shape can be formed; if only spanwise panels are used, the method has a special name known as the Weissinger formulation.
+We have already established that each horseshoe vortex has a constant strength, but its magnitude is unknown. In the present application, we also re-consider the concept of boundary conditions, and recognize that no flow can occur through the panel. This rule is applied at a singular fixed control point on each panel.
+In practice, this control point is placed at three-quarters chord length down the panel. Further, the distributed vorticity is typically lumped into a single vortex located a quarter chord length down the panel. 
+In a mathematical context, the boundary condition here is specified as the flow tangency boundary condition and is satisfied when the following is true:
+\begin{equation}\label{boundary_condition}
+{\left[\left(\vec{V}_{\infty} - \vec{\Omega} \times \vec{r}_b + \vec{V}_{ind} + \vec{V}_{other}\right) \cdot \hat{n}\right]}_{cp} = 0 
+\end{equation}
+
+Here, the variables listed are (in order of appearance) the freestream velocity, the rotational velocity, a vector from the aircraft center of gravity to a point of interest, the self-induced velocity from vortices, and other velocity sources like wind gusts or wakes. This somewhat complicated looking formula is essentially saying that the flow over the wing must be tangent to the wing.
+In addition, this equation can frequently be simplified, as the rotational velocity is often negligible (especially for rudimentary analysis) and assuming no strong wind gusts, $\vec{V}_{other} = 0$. 
+
+Essentially what the vortex lattice method does is create a large system of linear equations, and linear algebra is employed to obtain a solution. Thus, matrix of linear algebra solver will be needed to find the solution.
+
+This system of linear equations can be represented by the following matrix equation:
+\begin{equation}\label{eq:AIC_matrix}
+\left[AIC\right]\Gamma = b
+\end{equation}
+
+Where the $AIC$ matrix is known as the aerodynamic influence coefficient matrix, $\Gamma$ is the circulation vector, and $b$ is a vector representing the projected freestream velocity vector onto the surface's normal vector.
+The $AIC$ matrix is of dimension $N \times N$ where $N$ represents the number of panels employed in the particular VLM application. Further, the $\Gamma$ and $b$ vectors are of dimension $N \times 1$, representing a vector for the circulation on each panel and the normal component of freestream velocity.
+
+To explain each component more, the $ij$th entry of the $AIC$ matrix is defined as the induced normal velocity at the $i$th control point, caused by the unit-strength horseshoe vortex on the $j$th panel. 
+This $ij$th value is given by complex calculations using the Biot-Savart Law and can be studied more in depth in an aerodynamics textbook.
+
+Solving this equation using a linear system of equations solvers, yields the $\Gamma$, or circulation, vector. Knowing the circulation matrix gives rise to calculation of the given wing's lift distribution, and a host of other coefficients and forces (drag, moments, x/y/z forces, etc.). The lift, in particular, is given by the Kutta-Joukowski Theorem, or Equation~\ref{eq:kutta_Joukowski}, 
+while the other coefficients and forces are derived from similar formulas.
+
+\item[] \textbf{External Drag and Stall:} An important caution should be given with regard to the above theory and its relation to aircraft stall. All the above calculations and theory are based on potential flow theory, with its associated inviscid flow. This idealized model is insufficient for stall calculations, as stall is based on
+a fundamentally different flow model. Stall occurs as a direct consequence of viscous flow behavior and occurs when the flow separates before the trailing edge of the airfoil. This is caused by the characteristics of a viscous fluid, and causes a sudden drop in lift. The lift and drag information obtained from VLM calculations are insufficient for
+predicting stall behavior because of its inviscid flow assumptions. As such, an external drag model is necessary for stall exploration.
+
+\end{itemize}
+With these fundamental principles as the backbone to the VLM theory, we are now ready to begin an exploration on various lift distributions and wing efficiency.
+
+\section{Exploration: Lift Distributions and Wing Efficiency}
+Consider three planform wings, discretized into an appropriate grid for vortex lattice method analysis. Each wing with the same fundamental parameters ($S_{ref}$, $V_{\infty}$, panel distribution spacing, etc.), but differentiated by their chord lengths. The first
+consists of a constant chord; the second, a tapered chord, and the third an elliptically distributed chord. We recall our prior claim that an elliptic lift distribution is the most efficient for a wing as it minimizes induced drag for a maximum lift. Our exploration intends
+to empirically show the truth in that claim. 
+
+The exploration begins by developing the chord equation for each wing. We recognize the getting started guide for the Vortex Lattice Method Julia package already contains a tapered wing, so we use the provided chord parameters varying from 2.2 m to 1.8 m for this wing.
+The constant chord wing is simple, in that we create a new system that has an invariant chord at 2.0 m. 
+The elliptic wing, is a little more tricky, but it's based on the fundamental ellipse equation of:
+
+\begin{equation}\label{eq:ellipse}
+\frac{x^2}{a^2} + \frac{y^2}{b^2} = 1
+\end{equation}
+where $a$ represents the ellipse's root radius along the x-axis, and $b$ represents the ellipse's root radius along the y-axis. To further simplify the process of creating this wing, we will take the wing's leading edge to be straight, and allow the chord to vary elliptically. This is known as a semi-elliptical wing and can still have the same properties and aerodynamic effects as that of a true elliptical wing.
+
+Knowing that the planform area of a full elliptic wing is given by:
+\begin{equation}\label{eq:elliptic_area}
+S_{ref} = \frac{\pi}{4} b_{ref}  c_{root}
+\end{equation}
+with $b_{ref}$ as the wing's full span and $c_{root}$ as the wing's root chord length, we can solve for the necessary root chord that gives the same reference area and span as the other 2 wings.
+
+This root chord formula, rearranged from Equation~\ref{eq:elliptic_area} is:
+\begin{equation}\label{c_root}
+c_{root} = \frac{4  S_{ref}}{\pi  b_{ref}}
+\end{equation}
+The root chord is important to know, as in our ellipse equation, it represents the minor radius of the wing. The major radius on the other hand is just simply the half span of the wing.
+
+With an understanding of the nature of an ellipse and Equations~\ref{eq:ellipse}~and~\ref{eq:elliptic_area} we can derive the chord formula as a function of y (or position along the span).
+Replacing $a$, $b$, and $x$ in Equation~\ref{eq:ellipse} with $c_{root}$, $\frac{b}{2}$, and $c(y)$, respectively, we rearrange for:
+\begin{equation}\label{chord_formula}
+c(y) = c_{root} \sqrt{1 - {\left(\frac{y}{b/2}\right)}^2}
+\end{equation}
+
+Now that we have functions for each wing's chord, we can visualize each wing as seen in Figure~\ref{fig:cumulative_planform} and begin our lift analysis.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{cumulative_planform.png}
+    \caption{Visual representation of the 3 described wings: tapered wing, constant chord wing, and elliptic chord wing}\label{fig:cumulative_planform}
+\end{figure}
+
+Putting all of our learned knowledge on potential flow theory and the vortex lattice method allows implementation using these three described wings.
+Using the outlined wings as a guide, the VLM software discretizes the outline in to a grid like pattern according to a Sine based distribution in the span direction and a uniform based distribution in the chord direction.
+
+A few other parameters need to be defined before running the software, including, twist, section rotation, camber line, reference area, etc.,\ but once the basics are defined, the code is run and a series of coefficients and forces are returned to the file.
+Interpreting all the returned values from this data requires a careful analysis, but once correct formulas are defined, the code runs smoothly and calculates the necessary values.
+
+For reference, one of the more important functions of the Julia VLM used for this particular application is the \texttt{lifting\_line\_coefficients()} function. % chktex 36
+This function directly computes the x, y, and z direction force coefficients per unit span for each spanwise segment and allows us to further compute the lift.
+It would be important to note, that we use the keyword argument \texttt{frame=Wind()} in our function call as this gives the lifting force perpendicular to the freestream direction. If the standard \texttt{frame=Body()} is used, we would need to use trigonometry to account for any difference in the freestream direction and the longitudinal x-axis of the aircraft. % chktex 36
+Using the wind frame simply does those calculations for us.
+
+Before we begin to calculate the lift distribution, for reference we plot the coefficient of lift distribution as seen in Figure~\ref{fig:cumulative_cl}
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=\textwidth]{cumulative_cl.png}
+    \caption{Visual representation of the 3 wings and their respective coefficient of lift distribution. Plotted in conjunction with the ideal coefficient of lift (a constant value across the length of the span)}\label{fig:cumulative_cl}
+\end{figure}
+
+Several important observations can be made from Figure~\ref{fig:cumulative_cl}.
+Examining each wing's $c_l$ distribution reveals unique insight into its respective efficiency. It's clear that the elliptic wing most closely approximates the constant ideal coefficient of lift depicted. What's interesting about the elliptic wing though, is its $c_l$ values near its wing tips.
+We notice that they begin to spike up. This can be explained in part by the numerical methods used to discretize the wing into its elliptic shape. From simple inspection of Figure~\ref{fig:cumulative_planform}, we can see that the chord length goes to zero at the wing tips.
+The VLM code is not adequately equipped to handle panel reference areas approaching zero, and as such we see the $c_l$ spike as a numerical artifact in our plot. To give a better picture in the overall cumulative plot, a few end points were taken off of each side of the wing to allow for proper scaling.
+Overall though, the principle is evident from this plot that the elliptic wing most closely approximates the ideal coefficient of lift distribution.
+The value chosen for the ideal elliptic coefficient of lift was determined from the VLM analysis on the elliptic wing and used its \texttt{elliptic\_CL} variable value, or the total lift coefficient for the wing.
+
+To examine why the ideal coefficient of lift distribution is a constant value across the length of the span, we note the definition of ``ideal' in our context. Ideal, in our analysis, means that induced drag is minimized across the wing for the maximum amount of lift, in other words, the wing is performing as efficiently as possible. Recalling that induced drag is caused by the air being deflected downwards (and the associated energy with that process), it would make sense that the less air deflected downwards, the less induced drag.
+Minimizing the induced angle of attack results in the least air deflection and its associated induced drag. Applying these concepts to a wing, we can reason that a constant induced angle of attack would result in this minimized induced drag. If we think about it from an efficiency standpoint, the constant induced angle of attack means that each portion of the wing is equally contributing to pushing the air downwards. As the final piece of the puzzle, we make the connection between a constant coefficient of lift and the constant induced angle of attack.
+Using thin airfoil theory at small angles of attack, the equation for coefficient of lift is given by:
+\begin{equation}\label{eq:coefficient_of_lift}
+c_l = \alpha_0(\alpha - \alpha_{L=0} -\alpha_i)
+\end{equation}
+where $\alpha_0$, $\alpha$, $\alpha_{L=0}$ and $\alpha_i$ represent the lift-curve slope, geometric angle of attack, zero-lift angle of attack, and induced angle of attack, respectively. 
+Because our wing is symmetric (e.g.\ no camber) the zero lift angle of attack is zero, so the equation simplifies to:
+\begin{equation}\label{eq:coefficient_of_lift_final}
+c_l = \alpha_0(\alpha -\alpha_i)
+\end{equation}
+
+Noting that both the lift curve slope is a constant for any given wing, and the geometric angle of attack for a wing with no twist is constant across its span, the only way for $c_l$ to vary would be for $\alpha_i$ to vary. Because we've already noted that induced angle of attack is constant across the span of an efficient wing, we can finally conclude that an efficient wing also has a constant coefficient of lift across its span.
+
+From an empirical standpoint, examining Figure~\ref{fig:cumulative_cl} reveals that the elliptic wing most closely approximates this constant coefficient of lift distribution and as such is the most efficient of the 3 described wings.
+
+Transitioning from the coefficient of lift distribution to the lift distribution, we note the relationship between $c_l$ and $L$ is given by the panel lift force equation:
+\begin{equation}\label{eq:lift_force_equation}
+L = c_l \frac{1}{2} \rho V_{\infty}^2 S_{ref}
+\end{equation}
+
+An important distinction for our panel discretized wing is that $S_{ref}$ is the area of each individual panel section. Since our equation is a per-unit span calculation, we take the collection of all chordwise panels in given spanwise section and approximate its area as a trapezoid. 
+In our case, we have taken the freestream velocity, ($V_{\infty}$), as 100 $\frac{m}{s}$ and the air density, ($\rho$), as 1.225 $\frac{kg}{m^3}$ to represent conditions for take-off at sea level.
+
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=\textwidth]{cumulative_lift.png}
+    \caption{Lifting force distribution for the 3 described wings along with the ideal lift distribution.}\label{fig:cumulative_L}
+\end{figure}
+
+After VLM code is run on the given described wings, we use each wing's associated array of $c_l$ values to compute the lifting force at each spanwise panel and plot the given results, as shown in Figure~\ref{fig:cumulative_L}
+
+A few initial things to note on this plot is that the ideal lift distribution's maximum lift was calculated as the average of the maxima in our 3 described wings, purely for comparison purposes. In actuality, the ideal lift distribution maximum would be equivalent to our elliptical wing's max, but for comparison, we've decided to average the 3.
+The ideal lift distribution follows a perfect ellipse, while each of the 3 wings deviate slightly from the ideal. Interestingly, the elliptic wing follows more of a parabola shape than the ellipse seen in the ideal case.
+Upon close examination at the end points of this curve, we see a change in concavity (which differs from the other wings) with the curve flattening out before approaching zero lifting force. Again, we can attribute this plot characteristic
+to the geometry of the discretized wing. With the chord length going to zero at the wing tips and all chordwise panels being contained in that portion of the wing, we would expect to see some numerical artifacts in our data.
+Though we would expect the elliptic wing to more closely match the ideal, it is accurate enough to avoid throwing out the data all together.
+
+We can also notice that the constant and tapered chord wings have nearly identical lifting force's per unit span, outside the middle portion of the wing.
+Typically, a higher $c_l$ value results in a higher $L$ value, but the present situation can be explained by close analysis of Equation~\ref{eq:lift_force_equation}.
+While the value of $c_l$ for the panels near the root chord may be higher for the constant chord wing, the value of $S_{ref}$ at those panels near the root chord is actually smaller than the tapered wing counterparts.
+We note that the root chord on the tapered wing is 2.2 m in length, while the root chord on the constant chord wing is 2.0 m. This small change in chord length changes the associated trapezoidal panel area and as a result changes the lift force per unit span value.
+Before our final analysis, we note that we could have normalized the span to go from -1 to 1, as is often typical in more advanced aerodynamic analysis. However, for our application, since each wing had the same span, and we chose to plot the true planform area in Figure~\ref{fig:cumulative_planform}, the true span was used for consistency and ease in interpretability.
+
+
+For our final discussion on our planform wing exploration, a decision is to be made on which of the given wings is the most efficient.
+Examining Figure~\ref{fig:cumulative_cl}, clearly displays that the elliptic wing most closely approximates the constant $c_l$ ideal value.
+For the plot displayed in Figure~\ref{fig:cumulative_L}, it's a little more difficult to differentiate between the 3 as which is most efficient, 
+but recalling the numerical artifact argument discussed earlier that is present in the elliptic wing, and in conjunction with our observations from Figure~\ref{fig:cumulative_cl}, we can conclude that the elliptic wing in this case is also the most efficient.
+
+It would be important to note however, that this efficient elliptic wing is an oversimplification of the complex flow over the wing.
+In our exploration, we only considered wings without dihedral or twist. In reality, most wings are designed with these characteristics to improve other aerodynamic qualities.
+While the elliptic wing with no twist and dihedral may be most optimized for minimizing induced drag, it is not necessarily the most optimized for other aerodynamic properties (such as its stall characteristics).
+In the design of a wing, an aerodynamicist would need to consider all aerodynamic properties and flow characteristics to appropriately design an optimal wing.
+
+
+Ultimately, our exploration gives only a brief introduction to the vast field of computational aerodynamics. Though brief in nature, its results lead to strong foundational conclusions that guide the principles of higher level
+aerodynamic computations and research. A thorough understanding of the fundamental laws described in our theory exploration is critical for future analysis with higher level applications in the world of aerodynamics.
+
+
+\chapter{Airframe Design Optimization: Part III}
+\section{Stability and Optimization Glossary}
+\textbf{Stability:} One of the primary characteristics for aircraft design is that of its stability. One important principle regarding stability is that it comes with a cost of maneuverability.
+As such, it is sometimes preferable to decrease the aircraft's stability to increase its mobility. This gives insight into the aircraft mechanics of the highly maneuverable (yet somewhat lacking in stability) fighter jet
+and the highly stable (yet somewhat lacking in maneuverability) Airbus A380. As with any principle, there comes with it a series of definitions that aid in the understanding of the concept.
+\begin{itemize}
+    \item[] \textbf{Static Stability:}
+    The first series of definitions stems from the concept of static stability --- the principle that governs the aircraft's tendency to return to its neutral state after encountering an outside force. Fundamental to the nature of static stability is the concept of stability derivatives. This will be explained more in depth later, but it's appropriate for an initial exploration of the idea here.
+    It is natural to see how small changes in angle of attack and sideslip can effect the moments and forces acting on the airplane. In addition, the moments and forces acting on the airplane are also effected by small changes in roll, pitch, and yaw rates. These small changes in the described parameters leading to small changes in moments and forces are characterized by a series of partial derivatives to give the engineer further information about the stability of their designed wing.
+    These partial derivatives are known as stability derivatives, of which more will be said below. With this base understanding, we can now begin to explore some of the parameters that affect the stability derivatives.
+        \begin{itemize}
+            \item[] \textbf{Aerodynamic center:} A preliminary analysis on airfoil design probably taught the importance of the \textit{airfoil center of pressure}. In a sense, this is where the airfoil could be balanced on a point, with no applied moment, and remain static.
+            One of the drawbacks of the center of pressure is that its position changes with the aircraft's pitch and angle of attack, $\alpha$. From a design and engineering standpoint, it's important to identify the position on the airfoil where the moment properties do not change with angle of attack, $\alpha$.
+            
+            This point is known as the \textit{aerodynamic center}, and has great importance in designing for stability. As stated, it is the place where the pitching moment does not change with angle of attack. In math terms, we denote this property as:
+            \begin{equation}\label{eq:aerodynamic_center_condition}
+                \frac{\partial C_m}{\partial \alpha} = 0
+            \end{equation}
+
+            For reference, this location is usually located at or near the quarter-chord line --- in our exploration, we will take it to be on the quarter-chord line.
+            \item[] \textbf{Center of gravity:} In the subsequent equations relating to stability derivatives, we will see the importance of an aircraft's \textit{center of gravity} in conjunction with its aerodynamic center.
+            The center of gravity (commonly abbreviated in subscripts as `cg') is no different from the definition taught in any other physics class: it is simply the position on an aircraft where the sum of all weight-based forces could be placed without a moment acting on any axis of the airplane.
+            As we will see in our discussion on stability derivatives below, the distance between the center of gravity and the aerodynamic center (denoted as `x') is crucial in creating longitudinal static stability. It should be noted that the center of gravity of the aircraft needs to be in front of the aerodynamic center for longitudinal static stability.
+            \item[] \textbf{Static margin:} The \textit{static margin} parameter is simply defined as:
+            \begin{equation}\label{eq:static_margin}
+                \text{Static Margin} =  \frac{x_{ac} - x_{cg}}{c}
+            \end{equation}
+            where $x_{ac}$ represents the aerodynamic center position, $x_{cg}$ the center of gravity position, and $c$ a reference chord length, usually the mean aerodynamic chord.
+            This parameter is a good measure of the longitudinal stability present in the aircraft.
+            \item[]
+                \noindent
+                \begin{minipage}{\linewidth}
+                    \centering
+                    \begin{figure}[H]
+                        \centering
+                        \includegraphics[width=0.995\linewidth]{airframe_axes.png}
+                        
+                        \captionsetup{width=0.995\linewidth, justification=raggedright}
+                        \caption{A depiction of the 3 principal body axes of an aircraft. Image from
+                        \href{https://commons.wikimedia.org/wiki/File:Yaw_Axis_Corrected.svg}{Jrvz}, Wikimedia, CC BY-SA 3.0}\label{fig:airframe_axes}
+                    \end{figure}
+                \end{minipage}
+            \vspace{12pt}
+    
+            Before we get into the partial derivatives governing the stability characteristics of the aircraft, we first describe the primary axes about which the aircraft can pivot as well as a few other important parameters. A helpful diagram of the aircraft axes is present in Figure~\ref{fig:airframe_axes}.
+            \item[] \textbf{Roll:} The \textit{roll} of an aircraft is rotation about the axis running the length of the fuselage. It is essentially rotation about (what is usually referred to as) the x-axis. A pilot controls an airplane's roll with use of ailerons, which are depicted (along with the other control surfaces) in Figure~\ref{fig:control_surfaces}.
+            \item[] \textbf{Pitch:} The \textit{pitch} of an aircraft is rotation about the axis running the length of the wings. This rotation occurs about the aircraft's y-axis and controlling the airplane's pitch is done with use of elevators, located on the horizontal stabilizers of the aircraft. The vertical and horizontal stabilizers are arranged in what is known as the aircraft's \textit{empennage}. Many types of empennages exist, such as the T-tail, cruciform tail, and H-tail, just to name a few.
+            The empennage arrangement again controls the stability of the aircraft and a simple google search will provide more information on the various empennage arrangements commonly in use. 
+            \item[] \textbf{Yaw:} The \textit{yaw} of an aircraft is rotation about an aircraft's vertical axis (about the lifting direction). This axis is commonly referred to as the z-axis. Yaw can be controlled with use of the airplane's rudder, located on the vertical stabilizer. 
+            
+            In the body axis system, all positive directions of these axes are shown in Figure~\ref{fig:airframe_axes}. It should also be noted that whenever the pilot induces roll rotation via aileron use, the aileron deflecting downwards experiences more induced drag (because of its increased lift). This induced drag on that side of the aircraft creates a yawing moment, resulting in \textit{adverse yaw} which would need to be corrected with rudder use. Further, in a roll, the lift vector is also tilted, so elevators are also used in a turn. We can clearly see that ``turning right' in an airplane uses all control surfaces and requires a \textit{coordinated turn} from the pilot. 
+                \noindent
+                \begin{minipage}{\linewidth}
+                    \centering
+                    \begin{figure}[H]
+                        \centering
+                        \includegraphics[width=0.995\linewidth]{control_surfaces.jpeg}
+                        \captionsetup{width=0.995\linewidth, justification=raggedright}
+                        \caption{A depiction of the 3 control surfaces directly influencing the 3 primary axes of an aircraft. Image adapted from
+                        \href{https://commons.wikimedia.org/wiki/File:Control-surfaces-in-aircraft.jpg}{Fikret Caliskan, Youmin Zhang, N. Eva Wu, and Jong-Yeob Shin}, Wikimedia, CC 4.0 International}\label{fig:control_surfaces}
+                    \end{figure}
+                \end{minipage}
+            \vspace{12pt}        
+            \item[] \textbf{Sideslip Angle:} The final parameter to be discussed before the ultimate discussion on stability derivatives is that of an aircraft's \textit{sideslip angle}. This angle is commonly denoted as $\beta$ and is the angle between the freestream velocity vector and the longitudinal x-axis. 
+            A good depiction of this angle can be seen in Figure~\ref{fig:sideslip}. In terms of sign convention, positive sideslip angle is defined in the direction depicted in Figure~\ref{fig:sideslip}. In an ideal and stable flight scenario, this angle would be 0, and the aircraft would be flying straight into the wind. This creates the most efficient flight with minimum drag and creates the most comfortable passenger experience.
+            \item[] 
+                \noindent
+                \begin{minipage}{\linewidth}
+                    \centering
+                    \begin{figure}[H]
+                        \centering
+                        \includegraphics[width=0.995\linewidth]{sideslip.jpeg}
+                        \captionsetup{width=0.995\linewidth, justification=raggedright}
+                        \caption{A depiction of sideslip angle, $\beta$}\label{fig:sideslip}
+                    \end{figure}
+                \end{minipage}
+            \vspace{12pt}   
+            
+            \item[] \textbf{Stability Derivatives:} With all relevant parameters defined, we can now begin a more in depth discussion about stability derivatives to prepare for exploration.
+            At its core, a stability derivative is a partial derivative that relates how a specified aerodynamic coefficient (e.g.\ drag, lift, sideslip, and moment coefficients) varies with a specified flight characteristic (e.g.\ angle of attack, sideslip angle, roll rate, pitch rate, and yaw rate).
+
+            The denotations for stability derivatives can get convoluted, so below is a list of the various common subscripts used in the partial derivatives.
+
+            \begin{align*}
+            \alpha &= Angle~of~Attack &
+            \beta &= Sideslip~Angle
+            \end{align*}
+            \begin{align*}
+            p &= Roll~Rate &
+            q &= Pitch~Rate &
+            r &= Yaw~Rate
+            \end{align*}
+            \begin{align*}
+            C_D &= Drag~Coefficient &
+            C_Y &= Sideslip~Coefficient
+            \end{align*}
+            \begin{align*}
+            C_L &= Lift~Coefficient
+            \end{align*}
+            \begin{align*}
+            C_l &= Roll~Coefficient &
+            C_m &= Pitch~Coefficient
+            \end{align*}
+            \begin{align*}
+            C_n &= Yaw~Coefficient
+            \end{align*}
+
+            One other common way to notate these stability derivatives (aside from the format seen in Equation~\ref{eq:aerodynamic_center_condition}) is $C_{m,\alpha}$ (read as $C_m$ $\alpha$). 
+            This same notational format can be followed for any of the commonly used stability derivatives.
+            Further analysis of these partial derivatives will be in the exploration section of the document. 
+        \end{itemize}
+
+    \item[] \textbf{Dynamic Stability:} Even if an aircraft has the tendency to return to its original state, the dynamic stability reveals any oscillating/damping behavior in its restoring force.
+    Differential equations and matrix properties govern the stability modes of this dynamic system, the details of which are described more in depth below.
+        \begin{itemize}
+            \item[] \textbf{Stability Modes:} The dynamic stability modes of an aircraft can be broken down into two primary categories --- that of longitudinal and lateral stability.
+            
+            The first, longitudinal stability, has two associated modes --- \textit{short-period} and \textit{phugoid} modes, the latter of which is sometimes referred to as \textit{long-period} mode. The short period mode is typically heavily damped and difficult for a pilot to feel.
+            It is essentially a rapid oscillation of angle of attack and pitch rate. The phugoid mode, is typically only lightly damped and results in a continuing long period oscillation between airspeed and altitude.
+
+            The second, lateral stability, has three associated modes --- \textit{roll subsidence}, \textit{spiral}, and \textit{dutch roll} modes. The roll subsidence mode is characterized by an oscillating roll that is typically damped fairly well. One of the most common ways to improve roll stability is to add dihedral to the wing design.
+            The spiral mode is more dangerous in that it is a diverging mode. Essentially, a disturbance can cause the airplane to start rolling into a bank, causing a turn which tightens overtime, which increases the bank, and so on. This continues, resulting in a tightening and descending spiral with increased airspeed.
+            The dutch roll mode is a little more difficult to visualize, but is characterized by a combined rolling and yawing oscillation that looks as if the airplane is swaying back and forth. Visual depictions for each of the above described modes are easily found in with a simple internet search.
+            The physics behind each of these modes can also be studied in an aerodynamics textbook.
+
+
+            \item[] \textbf{Eigenvalues:} As expected from a dynamic systems course, the \textit{eigenvalues} of the system's state matrix dictate the dynamic stability of the aircraft.
+    The eigenvalues typically have a real and complex part, corresponding to their stability and oscillation frequency respectively:
+    \begin{equation}
+    \lambda = \sigma + \omega i
+    \end{equation}
+    In our analysis, we primarily focus on the real portion of the eigenvalue, $\sigma$, as this tells us whether the oscillations will decay or amplify in time.
+        \end{itemize}
+
+
+    \item[] \textbf{Tails:}
+        \begin{itemize}
+            \item[] \textbf{Tail Volume Ratios:} In our exploration section, we will examine the stability of an aircraft by varying what are known as \textit{tail volume ratios}. In a sense, these parameters are measures of a tail's ability to exert a moment on the center of gravity of the airplane.
+            Essentially, it describes the ability of the airplane's horizontal and vertical stabilizers to create static and dynamic stability in flight. The fundamental equations governing horizontal and vertical tail volume ratios are, respectively:
+            \begin{align}
+            V_h &= \frac{S_h x_h}{S_w c_w} &
+            V_v = \frac{S_v x_v}{S_w b_w}
+            \end{align}
+
+            In these definitions, we note that presence of various surface areas and distance parameters. The area notations are true to their typical meaning with an added subscript to denote what the measurement is referring to.
+            In particular, an `h' subscript represents the horizontal stabilizer, `w' the primary wing, and `v' the vertical stabilizer. We also note that the presence of $x_h$ and $x_v$ representing the distance between the aircraft's center of gravity and the horizontal/vertical stabilizer's aerodynamic center.
+
+        \end{itemize}
+\end{itemize}
+\textbf{Optimization:} With a knowledge of aircraft stability, we pivot to another fundamental concept in aircraft design (and engineering in general) to that of optimization.
+Representing the core principle of efficiency, optimization seeks to find the best possible solution to a given set of design variables, objectives, and constraints, as described below.
+    \begin{itemize}
+        \item[] \textbf{Design variables:} The \textit{design variables} of an optimization problem are the independent parameters that can be directly controlled by the user. They control the problem's dimensionality, and as such the number of design variables in any given system will aid in the selection of the optimization algorithm.
+        For emphasis, we again state that design variables must be independent for each other, and the resulting optimization system must not contain any linear combinations of variables, otherwise an ill-defined system will result.
+        Design variables can be discrete or continuous (i.e.\ they can be specific individual values, or they can take on any number in a continuous spectrum.)
+        Further, the variables can be bounded or unbounded (with both an upper and lower limit, or just one or the other). It is common practice to set realistic bounds on the variables so that the algorithm does not solve for a `solution' that is not feasible.
+        Each of these different types of design variables require different handling techniques when it comes to the specific algorithm chosen for optimization.
+        \item[] \textbf{Objective:} The objective is the particular value that the designer would like to minimize or maximize. An objective of `efficiency' is an intuitive representation of this concept as a designer typically wants to maximize efficiency.
+        The objective is characterized with a function that is then operated on with a particular optimization algorithm. An objective function with 2 design variables is often visualized in a contour plot to give a visual representation of the associated minimum or maximum value.
+        \item[] \textbf{Constraints:} Any problem comes with it a set of \textit{constraints} that dictate what a solution can and cannot be. As such, optimization solvers take into account these constraints to find the best solution within the specified solution range.
+        There are 2 types of constraints that can be imposed on a system. An equality constraint dictates exactly what a specific variable must be. An inequality constraint on the other hand provides a range of valid values that a specific parameter can take on.
+    \end{itemize}
+This brief, but important, explanation on optimization will be examined more in depth later in the semester and will become integral to efficient wing design.
+
+\section{Exploration: Stability as a Function of Wing Parameters}
+We now consider the effects of variations in the following parameters on aircraft stability derivatives:
+\begin{itemize}
+    \item[-] Vertical Tail Volume Ratios
+    \item[-] Horizontal Tail Volume Ratios
+    \item[-] Wing Sweep
+    \item[-] Wing dihedral
+\end{itemize}
+
+In particular, we will examine how these airframe parameters affect the stability about the 3 principle axes seen in Figure~\ref{fig:airframe_axes}. 
+From a static stability standpoint, we give the following notations: Lateral static stability is static stability about the roll axis, longitudinal static stability about the pitch axis, and directional static stability about the yaw axis.
+Our dynamic stability notations are simply given by roll damping, pitch damping, and yaw damping.
+
+Before leveraging the power inherent in Vortex Lattice, we first need to define how we will vary our 4 parameters, then we'll logically reason through each scenario and display relevant plots to show effects on stability.
+
+\begin{itemize}
+    \item[-] To vary the vertical tail volume ratio, we will effectively make the vertical stabilizer larger by increasing the height of the stabilizer. To do this, we use a for loop to iterate through a range of values controlling the height of the stabilizer.
+    \item[-] To vary the horizontal tail volume ratio, we also will effectively make the horizontal stabilizer bigger. We do this by iterating over a range of values for the length of the stabilizer in the y direction.
+    \item[-] Wing sweep was varied by varying the wing tip's x coordinate. For this particular range, we decided to see the effects of a slightly forward swept wing in addition to the more traditional backward swept wing.
+    \item[-] Wing dihedral was varied by varying the $\phi$ values from a slight anhedral angle to the more standard dihedral angles.
+
+\end{itemize}
+
+
+Having defined our notations and the methods by which we will vary our wing parameters, we are now ready to give more thorough analysis for each particular parameter.
+
+\bigskip
+
+For our first varying parameter, we recall that the primary purpose of a \textbf{vertical stabilizer} is to provide directional stability to the aircraft.
+Any sideslip against this vertical `paddle' provides a necessary aligning moment to align the aircraft with the freestream velocity direction.
+It can help to remember that the rudder is located on the vertical stabilizer, which directly influences the aircraft's yaw.
+
+Because of these observations, we would expect the most important derivatives associated with this parameter would involve the yaw moment coefficient $C_n$, yaw rate $r$, and/or sideslip angle $\beta$.
+For example, we could reason that $C_{n\text{,}\beta}$ would increase with a larger vertical tail (or in our case, a larger vertical tail volume ratio).
+In a typical sign convention (as is used in VortexLattice.jl) a positive value for this derivative indicates a more stable airframe.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Vertical Tail Plots/Cnb vs Vertical Tail Volume Ratio.png}
+    \caption{A depiction of the relationship between vertical tail volume ratio and the stability derivative $C_{n \text{,} \beta}$}\label{fig:cnb}
+\end{figure}
+The relationship depicted in Figure~\ref{fig:cnb} clearly displays this linear trend between increasing vertical tail volume ratio and the change in yaw moment coefficient with respect to sideslip angle, thus confirming our assumption.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Vertical Tail Plots/Cnr vs Vertical Tail Volume Ratio.png}
+    \caption{A depiction of the relationship between vertical tail volume ratio and the stability derivative $C_{n \text{,} r}$\label{fig:cnr}}
+\end{figure}
+From a dynamic stability standpoint, the vertical stabilizer aids in yaw damping such that increased tail volume ratio, makes the stability derivative $C_{n\text{,}r}$ more negative.
+We can see this strong relationship present in Figure~\ref{fig:cnr}.
+
+These two plots beg the question of when a more positive or more negative stability derivative value results in a more stable airframe.
+To understand this, we need to further understand the sign convention for the aircraft body, and how positive roll, pitch, and yaw are defined.
+
+As previously seen in Figure~\ref{fig:airframe_axes}, the positive axis directions are coupled with the right-hand rule to define positive roll, pitch, and yaw.
+Thus, a positive roll indicates the right wing goes down/the left wing comes up, a positive pitch indicates the nose pitching up, and a positive yaw indicates the nose yaws right.
+Positive moments are defined in the same way. Therefore, we must reason for each stability derivative what would be more stable.
+
+In the first example, if the nose of the aircraft points increasingly left, a positive yawing moment is needed to restore the airframe to be aligned with the freestream velocity.
+So we see that an increasing sideslip angle, $\beta$, would best be accompanied by an increasing (positive) yaw moment coefficient. This explains why we would want this stability derivative to be positive (and can see why it would naturally increase with increased vertical tail volume ratio).
+
+For the second example, we recognize that a positive yaw rate indicates the aircraft is yawing to the right (pivoting counter-clockwise about the z axis). To counter-act this, a \textit{negative} yawing moment is needed (which causes the aircraft to yaw to the left, restoring itself to equilibrium).
+Here we see that an increasing positive yaw rate will require a negative yaw moment, giving rise to the desired negative value of the $C_{n\text{,}r}$ stability derivative.
+
+\bigskip
+
+Next, the \textbf{horizontal stabilizer} is added to provide longitudinal stability to the aircraft.
+Located on the far end of the aircraft, this horizontal stabilizer provides a moment arm that can re-align an aircraft's pitch when faced with a freestream disturbance.
+This is consistent with the fact that the elevators are placed on the horizontal stabilizer to control the plane's pitch.
+With these observations, we would expect that the most analytically important stability derivatives would involve pitching moment, $m$, pitching rate, $q$, and angle of attack, $\alpha$. 
+As such, we will take a closer look at how the two following stability derivatives change with a varied horizontal tail volume ratio: $C_{m\text{,}\alpha}$ and $C_{m\text{,}q}$.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Horizontal Tail Plots/Cma vs Horizontal Tail Volume Ratio.png}
+    \caption{A depiction of the relationship between horizontal tail volume ratio and the stability derivative $C_{m \text{,} \alpha}$\label{fig:Cma}}
+\end{figure}
+
+Figure~\ref{fig:Cma} reveals again, that as horizontal tail volume ratio increases, $C_{m \text{,} \alpha}$ decreases linearly.
+A negative value for this stability derivative is critical for ensuring a statically stable flight. 
+Consider what would happen when the nose of the aircraft pitches up --- this positive angle of attack will need a negative pitching moment to counteract the upward pitch.
+A positive pitching moment would further tilt the plane up and exacerbate the pitch. Considering the primary purpose of the horizontal stabilizer is to provide this longitudinal correction,
+it would make sense that a larger horizontal stabilizer would create a more longitudinally stable aircraft. This is the exact trend we see in Figure~\ref{fig:Cma} --- confirming our assumptions.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Horizontal Tail Plots/Cmq vs Horizontal Tail Volume Ratio.png}
+    \caption{A depiction of the relationship between horizontal tail volume ratio and the stability derivative $C_{m \text{,} q}$\label{fig:Cmq}, in effect the effect of $V_h$ on pitch damping}
+\end{figure}
+Looking at the dynamic stability effects of the horizontal stabilizer, we see a similar line of reasoning to that of the $C_{m \text{,} \alpha}$ stability derivative.
+In this case however, rather than analyzing with respect to the angle of attack, we analyze the aircraft with respect to pitch rate. 
+Consider a positive pitch rate, indicating the aircraft tilting up with a positive angular velocity.
+For the same reasons as to why the positive angle of attack needed to be counteracted with a negative pitching moment, the positive pitch rate needs to be counteracted with the same, meaning a negative value for $C_{m \text{,} q}$ is needed.
+This idea is clearly illustrated in Figure~\ref{fig:Cmq}, along with the previously mentioned concept that increasing horizontal tail volume ratio will increase aircraft stability (in this case making the stability derivative more negative).
+
+\bigskip
+
+As noted previously in our discussion on stability modes, \textbf{dihedral} is added to an aircraft to improve lateral roll stability --- the next parameter of interest.
+Recall that ailerons are placed on the primary wings of the aircraft to provide roll control. 
+This gives further validity to the concept that roll stability would be improved by altering the parameters of the wing, and it turns out that dihedral is one of the best ways to do that.
+
+This stability is a little more difficult to visualize and understand than the others, but consider what would happen when an aircraft banks to the right --- this causes a tilted lift vector.
+Looking at the aircraft from behind, the sideways component of the tilted lift vector causes the wind to hit the right side of the aircraft. This is defined as a positive sideslip.
+To overcome this positive sideslip, a negative rolling moment is needed to rotate the lift vector back to its neutral position.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Dihedral Plots/CLb vs Dihedral Angle (Degrees).png}
+    \caption{A depiction of the relationship between dihedral angle and the stability derivative $C_{l \text{,} \beta}$\label{fig:Clb}}
+\end{figure}
+
+Figure~\ref{fig:Clb} displays this needed negative stability derivative, while also demonstrating that increasing dihedral angle increases roll stability (in this case, making the stability derivative more negative).
+To understand why this is the case, we recognize that dihedral causes a component vector of the wind direction to exist along the wing: a parallel and perpendicular to the dihedral component.
+In our case of the wing being banked right, the perpendicular components to these vectors act ``upwards'' on the right wing, and ``downwards'' on the left wing.
+This would clearly create a net negative rolling moment on the wing, thus confirming the assumption that dihedral would increase roll stability.
+Two notes should be made on this topic: one, that an anhedral angle will have the opposite effect on roll stability, and two, that too much roll stability is not necessarily a good thing as it will make turning the aircraft difficult.
+
+\bigskip
+
+
+Now, for our final parameter of interest, we examine the effect of \textbf{wing sweep} on aircraft stability. Though the primary purpose of wing sweep is to reduce drag, especially travelling close to Mach speed, it does have an important effect on aircraft stability.
+From the static standpoint, $C_{l\text{,}\beta}$ is affected by wing sweep in a similar way that dihedral affects the derivative.
+This time however, the sweep acts in a way that aligns the ``low'' wing more with the wind velocity.
+If we think about it, relative to the sideslip, a non-swept wing is significantly less aligned with the wind than a swept wing is.
+When this lower swept wing is more aligned with the wind, more lift can be generated across its surface, and (assuming the initial bank was to the right) thus causes a negative rolling moment that restores the aircraft to neutral.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Sweep Plots/CLb vs Sweep Angle (Degrees).png}
+    \caption{A depiction of the relationship between sweep angle and the stability derivative $C_{l \text{,} \beta}$\label{fig:Clb_sweep}}
+\end{figure}
+
+Examining Figure~\ref{fig:Clb_sweep} reveals that increasing sweep angle makes $C_{l\text{,}\beta}$ more negative (i.e.\ makes the wing more stable). 
+One thing to note in comparing Figures~\ref{fig:Clb} and~\ref{fig:Clb_sweep} is that dihedral appears to have a much stronger effect on this stability derivative than sweep angle.
+With just 10 degrees of dihedral angle increase, the coefficient decreases by over 0.20, while an over 30 degree change in sweep angle produces a coefficient decrease of under 0.1.
+
+Finally, we'll examine the dynamic stability effects of wing sweep, particularly with regard to the $C_{n\text{,} r}$ variable.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Sweep Plots/Cnr vs Sweep Angle (Degrees).png}
+    \caption{A depiction of the relationship between sweep angle and the stability derivative $C_{n \text{,} r}$\label{fig:Cnr_sweep}}
+\end{figure}
+
+Looking at Figure~\ref{fig:Cnr_sweep} again shows that this derivative value decreases with increasing wing sweep, though only by a small amount.
+This can be explained by the following --- consider an aircraft yawing to the right.
+With this positive angular velocity, the swept back left wing aligns itself more closely with the airflow direction and as such produces more lift and induced drag.
+This increased induced drag on the left wing causes a negative yawing moment that will restore the aircraft to flying into the wind.
+
+\bigskip
+\bigskip
+
+Having examined a variety of important stability derivatives and their implications for static and dynamic stable flight, we now provide a brief summary of the discussed derivatives (as well as a few other important ones we couldn't cover in this report).
+
+\begin{table}[H]
+    \centering
+    \caption{Stability derivatives and their desired values}\label{tab:stability}
+    \begin{tabular}{l c c}
+        \toprule
+        \textbf{Derivative} & \textbf{Affected By} & \textbf{Desired Value}\\
+        \midrule
+        $C_{n,\beta}$ & $V_v$  & $ > 0$ \\
+        $C_{n,r}$ & $V_v$ and $\Lambda$ & $ < 0$ \\
+        $C_{m,\alpha}$ & $V_h$ & $ < 0$ \\
+        $C_{m,q}$ & $V_h$ & $ < 0$ \\
+        $C_{l,\beta}$ & $\phi$ and $\Lambda$ & $ < 0$ \\
+        $C_{l,p}$ & $\Lambda$ & $ < 0$\\
+        $C_{n,p}$ & $\Lambda$ & $ < 0$\\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+And finally, using what we know about stability derivatives, we are ready to make an initial model of a stable airframe:
+Based off of our findings, we will provide wing parameters with increased vertical and horizontal tail volume ratios, dihedral, and wing sweep.
+We will construct this by using the following parameters: 
+\begin{itemize}
+    \item[-] An x-leading edge for the wing of 0 at the root and 1.5 at the tip
+    \item[-] A dihedral angle of 0 at the root and 0.1 at the tip
+    \item[-] A horizontal stabilizer with a halfspan of 1.4
+    \item[-] A vertical stabilizer with a height of 1.5
+\end{itemize}
+
+Using these parameters, we build the system using our code, construct the geometry in a ParaView file, and display it as seen in Figure~\ref{fig:optimized}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{optimized_airframe.png}
+    \caption{An optimized wing's geometry grid}\label{fig:optimized}
+\end{figure}
+
+We also perform the stability derivative calculations on the system producing the following values seen in Table~\ref{tab:optimized_derivs}
+
+\begin{table}[H]
+    \centering
+    \caption{Optimized wing stability derivative values}\label{tab:optimized_derivs}
+    \begin{tabular}{l c c}
+        \toprule
+        \textbf{Derivative} & \textbf{Value} \\
+        \midrule
+        $C_{n,\beta}$ & 0.126 \\
+        $C_{n,r}$ & -0.129 \\
+        $C_{m,\alpha}$ & -4.756\\
+        $C_{m,q}$ & -32.125 \\
+        $C_{l,\beta}$ & -0.344 \\
+        $C_{l,p}$ & -0.578 \\
+        $C_{n,p}$ & -0.042\\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Recognizing that all of these derivatives follow the sign convention established in Table~\ref{tab:stability}, we can conclude that this is a somewhat stable aircraft. Whether it is an optimally stable aircraft is a question we will examine in future analysis.
+
+
+\section{Conclusion}
+Ultimately, stability derivatives give key insight into the important static and dynamic stability of an airframe. 
+They tell us how an aircraft and its geometry responds to various disturbances in flow or intentional maneuvers.
+Using the information provided by these stability derivatives, an engineer can design an efficient and optimized wing that meets the desired stability characteristics.
+
+
+
+Note on plots:
+\begin{itemize}
+    \item [-] The attached code to this submission includes robust code that will plot all coefficients and stability derivatives as a function of the 4 varied parameters discussed above. Note that rather than providing a universal y-axis for each plot, the code provides an autoscaling on the y-axis, so be careful in comparing one plot with another.
+\end{itemize}
+
+\chapter{Airframe Design --- Optimization: Part IV}
+\section{Preliminary Optimization}
+The fundamental objective of our exploration is to seek wing geometry that produces an elliptic lift distribution, using the chord distribution as our design variable.
+Considering the connection between a true elliptic lift distribution and its corresponding induced drag, we gain insight into what our formal objective function should be for this optimization problem.
+We know that a true elliptic lift distribution gives the minimum induced drag (because of its constant downwash), and as such we will set out objective function to be the following:
+\begin{equation}\label{eq:objectiveFunction}
+    J(x) = C_{D,i}
+\end{equation}
+In other words, we will seek to minimize the coefficient of induced drag.
+
+A more rigorous design variable sweep will be performed using an actual optimization package like SNOW.jl (which makes it easier for higher dimensional vector sweeps), but for the analysis in this assignment we only seek to confirm that the objective function behaves as expected.
+Thus, we will manually vary our 3 dimensional chord distribution vector and observe the changes in our objective function value.
+We can reasonably assume that a wing with geometry similar to an elliptic wing will produce a relatively low $C_{D,i}$ value compared to a more rectangular wing with geometry unlike an elliptic wing.
+However, because this is a relatively simple wing, with only 3 spanwise chord specifications, it would not be surprising to see some other phenomena in our $C_{D,i}$ plots.
+
+Our approach requires a default wing with set values. Table~\ref{tab:defaults} lists the important values that defines our control wing.
+
+\begin{table}[H]
+    \centering
+    \caption{A representation of our control wing complete with necessary default values to be defined as a wing in VLM}\label{tab:defaults}
+    \begin{tabular}{l c}
+        \toprule
+        \textbf{Default Variable} & \textbf{Default Value} \\
+        \midrule
+        x Leading Edge & [0.0, 1.802, 2.0]\\
+        y Leading Edge & [0.0, 3.25, 7.5] \\
+        z Leading Edge, $\theta$, $\phi$, and Camber Line Function & [0.0, 0.0, 0.0] \\
+        Reference Chord & Average of 3 Chord Lengths \\
+        Number of Spanwise Panels & 20 \\
+        Number of Chordwise Panels & 6 \\
+        Spanwise and Chordwise Panel Spacing & Uniform \\
+        Reference Span & 7.5 \\
+        $\alpha$ & 5$\degree$ \\
+        $\beta$ & 0.0 \\
+        $V_{\infty}$ & 50 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{root_chord_vary.png}
+    \caption{The effect of varying root chord length on the induced drag coefficient. The lowest point depicts where the most efficient wing would be holding the other two chord lengths constant}\label{fig:root_chrod}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{mid_chord_vary.png}
+    \caption{The effect of varying the midpoint chord length on the induced drag coefficient. The lowest point depicts where the most efficient wing would be holding the other two chord lengths constant}\label{fig:mid_chrod}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{tip_chord_vary.png}
+    \caption{The effect of varying tip chord length on the induced drag coefficient. The lowest point depicts where the most efficient wing would be holding the other two chord lengths constant}\label{fig:tip_chrod}
+\end{figure}
+
+
+\chapter{Weber Wing Convergence Study}
+\section{Problem Setup}
+
+Before performing a preliminary convergence study analysis, it is necessary to define the wing geometry and simulation parameters used in the study.
+These parameters are defined as found in Table~\ref{tab:geometry}
+
+\begin{table}[H]
+    \centering
+    \caption{Wing geometry and simulation parameters with their given values.}\label{tab:geometry}
+    \begin{tabular}{l l l}
+        \toprule
+        \textbf{Parameter} & \textbf{Meaning} & \textbf{Value} \\
+        \midrule
+        $\alpha$ & Angle of Attack & 4.2$^\circ$ \\
+        $V_{\infty}$ & Freestream Velocity & 49.7 m/s \\
+        $\rho$ & Air Density & 0.93 kg/$m^3$ \\
+        b & Span Length & 2.489 $m$ \\
+        AR & Aspect Ratio b/${c_{tip}}$ & 5.0 \\
+        TR & Taper Ratio ${c_{tip}}/{c_{root}}$ & 1.0 \\
+        $\lambda$ & Sweep Angle & 45.0$^\circ$ \\
+        $\gamma$ & Dihedral & 0.0$^\circ$ \\
+
+    \end{tabular}
+\end{table}
+
+With the wing now defined, we are now set to begin the convergence study. We are primarily interested in the variables listed in Table~\ref{tab:adjustables}.
+The convergence mode for each is listed in the same table giving us a preliminary idea of how each variable will affect the convergence of coefficient of lift and drag values.
+
+
+\begin{table}[H]
+    \centering
+    \caption{A list of adjustable variables that alter the resolution of the output}\label{tab:adjustables}
+    \begin{adjustbox}{center}
+    \begin{tabular}{l l c}
+        \toprule
+        \textbf{Variable} & \textbf{Meaning} & \textbf{Convergence Mode} \\
+        \midrule
+        wakelength & Length particles travel down the wake & Temporal \\
+        nsteps & Number of Time Steps & Temporal \\
+        $n$ & Number of Spanwise Elements per Side & Spatial \\
+        p\_per\_step & Particles shed per step & Spatial \\
+        \bottomrule
+    \end{tabular}
+    \end{adjustbox}
+\end{table}
+
+Our convergence study will follow a systematic approach, gradually iterating through variables to suggest final parameters such that the wing will be appropriately discretized and sufficiently converged.
+
+\section{Wakelength}
+The first run through of the program consists of varying the wakelength of the wing. Obtaining convergence via wakelength varying is important as the wing simulation needs to be run long enough for the wake to settle in and the furthest aft particles no longer significantly influence the lift and drag.
+
+In our study, we vary the wakelength as a multiplicative factor of the span length given by Equation~\ref{eq:wakelength}. 
+\begin{equation}\label{eq:wakelength}
+wakelength = i \times{} b
+\end{equation}
+
+We perform a sweep across the $i$ value from 0.75 to 5.0 in 0.25-step increments. However, for computational efficiency, once when each of the coefficients of lift and drag become sufficiently converged, we break from this loop.
+Determining the metric used for convergence indication was also an important process. Here, we chose to use the coefficient of variation value for the 5 tail values of $C_L$ and $C_D$ at the end of each simulation.
+When each of these metrics fell below a threshold value (in this case 0.002 --- or 0.2\%), the simulation was considered converged, and this wakelength value was stored as a global variable to be referenced in subsequent convergence studies.
+In our sweep, this converged value ended up being 3.11125.
+The coefficient of variation is essentially a normalized standard deviation by taking the standard deviation of the given subset and dividing by its associated mean. 
+The coefficient of variation is helpful in the analysis of multiple datasets, and because the variable sweep naturally produces a variety of different datasets, it is appropriate for this study.
+
+Wakelength convergence is particularly important when it comes to temporal convergence. It is essentially testing for how long the wakelength needs to be for the $C_L$ and $C_D$ values to flatten out at the end of the simulation.
+This will be shown near the end of the study with the final proposed parameter values.
+
+\section{Number of Time Steps (\texorpdfstring{$nsteps$}{nsteps})}
+The second parameter of interest in our convergence study is that of $nsteps$. This value dictates the number of time steps that take place from the wakelength being its shortest to its longest length.
+Increasing $nsteps$ does not shorten or lengthen the wakelength, but it does increase the resolution of the wakelength, allowing for more accurate $C_L$ and $C_D$ calculations.
+For our study, we fix the wakelength to its converged value from the previous step and then sweep $nsteps$ from 10 to 100, this time in increments of 10.
+To determine convergence, we use the same metric used in the wakelength convergence test --- that is, we measure the coefficient of variation for the final 5 values of $C_L$ and $C_D$ for each run.
+Again, once when this coefficient falls below 0.002 --- or 0.2\%, we consider the study converged, store the variable in the global scope for future reference, and transition to the next test.
+In this sweep, the wing coefficients converged at a value of $nsteps = 20$.
+
+
+\section{Spanwise Elements per Side (\texorpdfstring{$n$}{n})}
+The next parameter of interest, $n$, is an important spatial convergence parameter. In essence, it is a measure of how finely the blade is discretized in spanwise panels.
+The greater the value of $n$, the greater the number of spanwise panels are present per side of the wing.
+With the wakelength and $nsteps$ values set from the previous sweeps, we now sweep the value of $n$ from 10 to 100, again in increments of 10.
+However, instead of using the coefficient of variation as the metric for convergence, we instead use a run over run percent change calculation.
+We do this because of the fundamental goal of this test. With temporal convergence already worked out we are now testing for spatial convergence --- which in this test means the final values of $C_L$ and $C_D$ not changing significantly from run to run.
+Instead of using the singular final value for both of these coefficients, we attempt to account for numerical noise by taking the average of the last 3 recorded values and then performing the percent change calculation according to Equation~\ref{eq:percent_change}.
+In effect, we take the difference between the current run's coefficient value and the previous run's coefficient value, divide it by the previous run's value, and multiply by 100\%.
+The tolerance for this study was set to be 0.25\%, and once the run over run percent change for both coefficient values fell below this tolerance, the for loop broke away, and the values were recorded as global variables for future analysis.
+For this study, the converged value for $n$ was 40 --- meaning 40 spanwise panels on each side of the simple wing.
+
+\begin{equation}\label{eq:percent_change}
+\% \text{ Change} = \frac{\text{Coeff}_{\text{curr}} - \text{Coeff}_{\text{prev}}}{\text{Coeff}_{\text{prev}}} \times{} 100\%
+\end{equation}
+
+
+\section{Particles Shed per Step (p\_per\_step)}
+A final parameter of interest necessitates discussion in this convergence study --- that of p\_per\_step.
+This parameter did not receive its own sweep, but rather was internally updated across each run of the studies various sweep.
+An understanding of what this parameter physically represents can shed light on its importance in this convergence study.
+p\_per\_step is best described as the number of particle shed per step, per spanwise panel and is a key parameter in limiting particle overlap on each spanwise panel.
+In our study, we set the minimum p\_per\_step value to be the result of Equation~\ref{eq:pperstep}, rounded up to the nearest integer.
+
+\begin{equation}\label{eq:pperstep}
+\frac{2 \cdot n \cdot \lambda_{vpm} \cdot V_\infty \cdot ttot}{nsteps \cdot b}
+\end{equation}
+
+Here, $\lambda_{vpm}$ is a particle overlap parameter and is fixed for the entire study. $ttot$ is also fixed, coming from the wakelength convergence study.
+
+The overriding principle inherent in this parameter, is that its value must change with each run, such that the true independent variable being swept can be isolated and analyzed.
+The constraint here is that particles should not overlap each other (as good as possible), and because p\_per\_step is a function of $n$, $nsteps$, and (indirectly) wakelength, its value must be updated with each run.
+It's essentially its own dependent variable and a necessary constraint to insure uniformity across the variable sweep.
+
+As such, this variable, was updated with each new variable configuration to provide the most accurate coefficient values.
+Though not an explicitly swept parameter in this study, it did require an understanding of its role in each wing discretization.
+
+\section{Proposed Values}
+
+With the above convergence studies performed, and an understanding of the meaning of p\_per\_step, we are now ready to present a list of parameter values that would provide adequate coefficient of lift and drag values in a study.
+Table~\ref{tab:proposed} presents these values below.
+
+
+
+\begin{table}[H]
+    \centering
+    \caption{A final proposed list of parameter values that can be used with sufficient confidence for producing converged \texorpdfstring{$C_L$}{CL} and \texorpdfstring{$C_D$}{CD} values on a simple wing}\label{tab:proposed}
+    \begin{tabular}{l c}
+        \toprule
+        \textbf{Variable} & \textbf{Proposed Value} \\
+        \midrule
+        wakelength & 3.111 \\
+        $nsteps$ & 20 \\
+        $n$ & 40 \\
+        p\_per\_step & 10 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\section{Verification Tests}
+With this proposed set, we now set to gain greater confidence in these converged values by performing a series of verification tests.
+These tests involve individually increasing each variable by a certain factor (in our case by 1.5 or 2), re-running the solver, and analyzing whether the values for $C_L$ or $C_D$ changed significantly.
+
+
+\begin{table}[H]
+    \centering
+    \caption{Percent change values in \texorpdfstring{$C_L$}{CL} and \texorpdfstring{$C_D$}{CD} when varying an independent variable by a multiplicative factor}\label{tab:verification}
+    \begin{adjustbox}{center}
+    \begin{tabular}{c c c}
+        \toprule
+        \textbf{Variable (Multiplicative Factor)} & \textbf{\% Change in $C_L$} & \textbf{\% Change in $C_D$}\\
+        \midrule
+        $nsteps$ (2) & 0.3739 & 0.2078 \\
+        p\_per\_step (1.5) & 0.0307 & 0.0311 \\
+        wakelength (1.5) & 0.4477 & 0.4847 \\
+        \bottomrule
+    \end{tabular}
+    \end{adjustbox}
+\end{table}
+
+The data presented in Table~\ref{tab:verification} depicts the percent change in $C_L$ and $C_D$ when independently varying the listed parameters.
+With a tolerance of 0.5\%, we can see that each verification test succeeds in returning sufficiently converged values.
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{CL_vs_time_proposed.png}
+    \caption{A visual representation of temporal convergence for the coefficient of lift value. As the wake develops in time, the coefficient level off to become steady.}\label{fig:cl_plot}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{CD_vs_time_proposed.png}
+    \caption{A visual representation of temporal convergence for the coefficient of drag value. As the wake develops in time, the coefficient begins to levels off at a steady value. Note the y-axis scale here, which deals with very small numbers.}\label{fig:cd_plot}
+\end{figure}
+
+As one final visual confirmation of the converged values, we examine both a $C_L$ vs Time and $C_D$ vs Time plot to confirm temporal convergence for each.
+This is depicted in Figures~\ref{fig:cl_plot}~and~\ref{fig:cd_plot}. In the coefficient of lift vs time plot we can see that the coefficient of lift levels off as the wakelength fully develops in time.
+As such, we have further confirmation that these parameter settings provide sufficient resolution for convergence for coefficient of lift.
+
+For the coefficient of drag plot, we note some unique behavior towards the beginning of the simulation, with the coefficient of drag value shooting up, and then exponentially decaying in time. This plot does not have as defined of a leveling off for coefficient of drag value, but we note that the y-axis has a very small scale, that varies from $4.8 \times 10^{-3}$ to $4.9 \times 10^{-3}$.
+This small range could in part explain why the graph does not appear to level off. Our study relied on coefficient of variation values in addition to run over run percent change in values to determine convergence, and with such small magnitude in numbers, this could look as if it prematurely converged.
+
+If we examine the $nsteps$ verification test and its associated $C_D$ vs Time plot, seen in Figure~\ref{fig:cd_plot_verified}, we note that there is a more defined ``leveling-off'' of the coefficient of drag value.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{CD_vs_time_verification1.png}
+    \caption{A visual representation of temporal convergence for the coefficient of drag after doubling the $nsteps$ value from its converged proposal. As the wake develops in time, the coefficient begins to levels off at a steady value.}\label{fig:cd_plot_verified}
+\end{figure}
+
+Thus, if greater convergence is desired, one can use the doubled $nsteps$ value, which will provide more of a visual level off.
+However, for most applications, the proposed values provide sufficient convergence, and will only deviate from true coefficient values by a small amount.
+
+\section{Conclusion}
+Ultimately, a convergence study provides crucial analysis for the variety of parameters that come with aerodynamic studies.
+Without the convergence test just performed, one could unnecessarily use solver settings that directly lead to a more computationally expensive solve.
+Though this does not take significant time in the case of a simple wing, the computational time greatly increases as the wing and/or propeller system becomes more complicated.
+Thus, from an optimization standpoint, it is important that the right parameter settings are determined such that with some level of confidence we can treat the resulting $C_L$ and $C_D$ values as true to their respective conditions.
+
+\chapter{Propeller Convergence Study}
+
+\section{Problem Setup}
+
+To begin our convergence study analysis, it is necessary to define the propeller geometry and simulation parameters used in the study.
+These parameters are defined in Table~\ref{tab:geometry}, and a 3D loft of the rotors is visualized in Figure~\ref{fig:lofts}.
+
+\begin{table}[H]
+    \centering
+    \caption{Propeller geometry parameters with their given values. For simplicity, only the overall rotor is defined and referenced. The blade geometry is dictated by its model (an APC 10$\times$7E rotor) with relevant geometry found on the BYU Flow Lab \href{https://github.com/byuflowlab/FLOWUnsteady/tree/master/database/rotors}{GitHub}.}\label{tab:geometry}
+    \begin{tabular}{l l l}
+        \toprule
+        \textbf{Parameter} & \textbf{Description} & \textbf{Value} \\
+        \midrule
+        $R_{tip}$ & Radius of Blade Tip (m) & 0.127 \\
+        $R_{hub}$ & Radius of Hub (m) & 0.00953 \\
+        $B$ & Number of Blades & 2 \\
+    \end{tabular}
+\end{table}
+
+As will be discussed further in Section~\ref{future}, we discovered a discrepancy between the rotor geometry linked on the manufacturer's website and what is described in the GitHub files. As such, this report will focus on the theoretical convergence using the parameters provided on GitHub. Further research will be needed to compare experimental data with our converged results.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{lofts.png}
+    \caption{A 3D representation of the rotor blade geometry.}\label{fig:lofts}
+\end{figure}
+
+
+With the rotor geometry defined, we can take the initial steps in our convergence study. We are primarily interested in the variables listed in Table~\ref{tab:adjustables}.
+The convergence mode for each is listed in the same table giving us a preliminary idea of how each variable will affect the convergence of the thrust coefficient.
+
+
+\begin{table}[H]
+    \centering
+    \caption{A list of adjustable variables that alter the resolution of the output thrust coefficient.}\label{tab:adjustables}
+    \begin{adjustbox}{center}
+    \begin{tabular}{l l c}
+        \toprule
+        \textbf{Variable} & \textbf{Meaning} & \textbf{Convergence Mode} \\
+        \midrule
+        \texttt{nrevs} & Number of Propeller Revolutions & Temporal \\
+        \texttt{nsteps\_per\_rev} & Number of Time Steps per Propeller Revolution & Temporal \\
+        \texttt{n} & Number of Spanwise Elements per Propeller Blade & Spatial \\
+        \texttt{p\_per\_step} & Particles shed per step & Spatial \\
+        \bottomrule
+    \end{tabular}
+    \end{adjustbox}
+\end{table}
+
+These variables will be the focus of our convergence study, and we will follow a systematic approach, gradually iterating through each. We will eventually suggest final parameters that can be used to sufficiently discretize the propeller blades and converge the thrust coefficient. Whether these parameters work on any blade and its respective geometry is another question that further research will be done on in the future. However, the core processes and principles presented in our report can be adapted and applied to any propeller.
+
+\section{Number of Revolutions (\texttt{nrevs})}
+The convergence of propeller revolutions was initially evaluated with a visual inspection of a $C_T$ vs time plot, seen in Figure~\ref{fig:ct_vs_time_init}.
+We examine the plot for the point where the thrust coefficient reaches a steady state (or begins to level off). We can then estimate the number of revolutions (to the nearest whole number, as required by the code documentation) before the coefficient levels off in time.
+
+The simulation results depicted in Figure~\ref{fig:ct_vs_time_init} ran for a total of 8 revolutions, and we see that the plot begins to level off about a third of the way into the simulation time. From a mathematical standpoint, Table~\ref{tab:ct_vs_time_percent} presents the revolution on revolution percent change in the thrust coefficient.
+
+\begin{table}[H]
+    \centering
+    \caption{A decline in revolution on revolution percent change with increasing number of revolutions.}\label{tab:ct_vs_time_percent}
+    \begin{adjustbox}{center}
+    \begin{tabular}{c c}
+        \toprule
+        \textbf{Revolution Number} & \textbf{Percent Change (\%)} \\
+        \midrule
+        1 & N/A \\
+        2 &  -9.8827 \\
+        3 &  -0.6778 \\
+        4 &  -0.2286 \\
+        5 &  -0.0974 \\
+        6 &  -0.0564 \\
+        7 &  -0.0345 \\
+        8 &  -0.0134 \\
+        \bottomrule
+    \end{tabular}
+    \end{adjustbox}
+\end{table}
+
+Noting that revolution 3 is accompanied by only a 0.6778\% change in thrust coefficient, we will take that to be our converged parameter value.
+Though this parameter study was done on relatively low discretization settings, the value will be confirmed again in the verification study of our converged recommended values presented in Section~\ref{Verification}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{CT_vs_time_nrevs8.png}
+    \caption{A plot representing the temporal convergence of the thrust coefficient. Convergence depicted by the plot leveling off.}\label{fig:ct_vs_time_init}
+\end{figure}
+
+
+\section[Number of Time Steps per Revolution]{Number of Time Steps per Revolution \\ \normalfont(\texttt{nsteps\_per\_rev}, hereafter referenced as \texttt{nsteps})}
+With the number of revolutions sufficiently converged, we finalize our temporal convergence with a study on the number of time steps per revolution.
+This parameter directly influences the resolution of the simulation and has a strong effect on the final coefficient values. It essentially defines the degrees each step the rotor blades traverse.
+
+Our approach to converging this parameter involves leveraging the principle of Richardson extrapolation. This technique requires at least 2 data points from preliminary runs and increases in accuracy with the more data points supplied. 
+Its purpose is to extrapolate beyond a given dataset's range and provide an estimated value for the dependent variable (in this case the thrust coefficient) as the independent variable approaches its continuum limit (in this case, as $\Delta t \rightarrow 0$). Additionally, this extrapolation theory is based on the assumption that changing the time step between runs introduces a different error from the true value. Equations~\ref{eq:richardson1} and~\ref{eq:richardson2} begin to illustrate this concept:
+
+\begin{equation}\label{eq:richardson1}
+f_{\Delta t} = f_{exact} + {C(\Delta t)}^p
+\end{equation}
+\begin{equation}\label{eq:richardson2}
+f_{\Delta t/2} = f_{\text{exact}} + {C\left(\frac{\Delta t}{2}\right)}^{p}
+\end{equation}
+
+where $f_{\Delta t}$ is the estimated value from the simulation run, $f_{exact}$ is the true value, $C$ is some constant, and $p$ is the order of accuracy from the numerical method. Because we used more than 3 data points, an observed order of accuracy can be calculated through the additional $f_{\Delta t}$ equations generated.
+These two equations can be algebraically manipulated to eliminate C and solve for $f_{exact}$. Essentially, it takes advantage of the fact that a smaller time step results in a smaller error to extrapolate for the true value.
+
+Once the Richardson extrapolation is complete, the extrapolated $C_T$ value can then be used to estimate what value of \texttt{nsteps} would give us a sufficiently converged thrust coefficient value.
+
+This Richardson extrapolation process is visualized for our case in Figure~\ref{fig:nsteps_per_rev_richardson}, where the red dashed line represents the Richardson extrapolated $C_T$ value as \texttt{nsteps} approaches $\infty$.
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{FINAL320_nsteps_richardson.png}
+    \caption{Richardson extrapolation of $C_T$ as \texttt{nsteps} $\rightarrow \infty$.}\label{fig:nsteps_per_rev_richardson}
+\end{figure}
+
+For this study, we used the following values for \texttt{nsteps}: 20, 40, 80, 160, and 320. Using the extrapolated value of 0.087177, we can tabulate the data from each run's final $C_T$ value to gain insight into the converged value of \texttt{nsteps}.
+This tabulated data is seen in Table~\ref{tab:nsteps_per_rev_richardson} where the converged $C_T$ value is taken as an average of the final 5 values of $C_T$. This is done to account for the slight oscillations present in the data near the end of the simulation.
+
+\begin{table}[H]
+    \centering
+    \caption{Tabulated data from Richardson extrapolation of $C_T$ with varying \texttt{nsteps}.}\label{tab:nsteps_per_rev_richardson}
+    \begin{adjustbox}{center}
+    \begin{tabular}{c c c}
+        \toprule
+        \textbf{\texttt{nsteps}} & \textbf{Time Averaged $C_T$} & \textbf{Percent Error from Extrapolated $C_T$ (\%)} \\
+        \midrule
+        20 & 0.08117 & 6.8931 \\
+        40 & 0.08273 & 5.0965 \\
+        80 & 0.08417 & 3.4537 \\
+        160 & 0.08549 & 1.9303 \\
+        320 & 0.08629 & 1.0132 \\
+        \bottomrule
+    \end{tabular}
+    \end{adjustbox}
+\end{table}
+
+For this parameter, we set a target percent error of 1.5\% and use simple interpolation to yield a converged value for the \texttt{nsteps} parameter of approximately 235.
+For simplicity, we round up to the nearest 10, and settle on a converged value of 240 for \texttt{nsteps}. This too will be verified later in our verification run.
+
+
+\section{Number of Spanwise Elements per Propeller Blade (\texttt{n})}\label{n_convergence}
+With the parameter settings for temporal convergence known, we then transitioned to spatial convergence by first addressing the number of spanwise elements per blade, \texttt{n}.
+Knowing that the aerodynamic forces vary across the span of the propeller, it is important to capture the varying particle vorticity with a sufficiently discretized blade.
+The process to adequately capture this distributed particle vorticity involved significant debugging, of which more information can be found in Appendix~\ref{app:debugging}.
+
+\bigskip
+
+After the debugging process, converging the number of spanwise panels per blade can occur.
+This is done similarly to the manner in which \texttt{nsteps} was converged. The script was configured to reference the converged \texttt{nsteps} value of 240, and used a job array to run multiple iterations on different supercomputer nodes.
+
+In reference to the Richardson extrapolation, this portion of the study had complications in terms of rotor generation from the \texttt{FLOWVLM} functions and numerical stability in the \texttt{FLOWUnsteady} library.
+To counteract these issues, fine-tuning parameters such as the geometric expansion factor, \texttt{r}, the Rotor on VPM (vortex particle method) smoothing radius, \texttt{sigma\_rotor\_surf}, and the VLM (vortex lattice method) relaxation, \texttt{vlm\_rlx}, were implemented.
+
+Further, an RPM ramp up scheme was imposed on the propeller to replace the instantaneous jump from 0 to 9200 RPM\@. This was done to mitigate the effects of the initial particle sheds that were difficult for the simulation to model.
+These particles typically had much stronger vortex strengths compared to particles shed later in the run. We also attempted to mitigate these adverse effects by adjusting the \texttt{vlm\_init} argument to be true in the \texttt{run\_simulation ()} function call.
+
+These fine-tuning adjustments required significant computational time and yielded inconclusive results in some instances. However, after a significant number of iterations and careful analysis, we propose that \texttt{n=46} is a strong candidate for thrust coefficient convergence.
+This decision involved the careful analysis of Figure~\ref{fig:defense_of_n46} and Table~\ref{tab:n_richardson_percent_error} described below.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{defense_of_n46.png}
+    \caption{$C_T$ simulations with varying number of spanwise panels. A ±1.5\% convergence band is overlayed to aid in convergence analysis. Purple data points, representing the simulations with adjusted spline parameters are also present illustrating the induced geometric error and numerical stability ceiling.}\label{fig:defense_of_n46}
+\end{figure}
+
+
+\begin{table}[H]
+    \centering
+    \caption{Tabulated data from the spatial convergence study of $C_T$ by varying \texttt{n}.}\label{tab:n_richardson_percent_error}
+    \begin{threeparttable}
+        % Using tabular* with \textwidth and \extracolsep{\fill} pushes columns apart to fill the page
+        \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} c c c}
+            \toprule
+            \textbf{\texttt{n}} & \textbf{Time Averaged $C_T$} & \textbf{Percent Error from n=46 (\%)} \\
+            \midrule
+            30 & 0.08498 & 1.2263 \\
+            32 & 0.08509 & 1.3572 \\
+            36 & 0.08526 & 1.5633 \\
+            38 & 0.08528 & 1.5817 \\
+            40 & 0.08503 & 1.2942 \\
+            42 & 0.08444 & 0.5825 \\
+            44 & 0.08411 & 0.1966 \\
+            46 & 0.08395 & (Reference) \\
+            48\tnote{a} & 0.08374 & 0.2515 \\
+            50\tnote{a} & 0.08412 & 0.2086 \\
+            55\tnote{a} & 0.08593 & 2.3559 \\
+            60\tnote{a} & 0.08552 & 1.8716 \\
+            65\tnote{a} & 0.08475 & 0.9523 \\
+            70\tnote{b} & 0.08449 & 0.6468 \\
+            75\tnote{b} & 0.08429 & 0.4119 \\
+            80\tnote{b} & 0.08392 & 0.039 \\
+
+            \bottomrule
+        \end{tabular*}
+        \begin{tablenotes}
+            \small
+            \item [a] Generated using Cubic Spline ($k=3$) with relaxed smoothing ($s=0.01$) to prevent solver failure
+            \item [b] Generated using Cubic Spline ($k=3$) with loose smoothing ($s=0.02$)
+        \end{tablenotes}
+    \end{threeparttable}
+\end{table}
+
+Examining the superscripts of Table~\ref{tab:n_richardson_percent_error}, it should be noted that the VLM package had trouble defining a mathematical spline to generate the blade rotors for high values of \texttt{n}.
+The default spline parameters for the \texttt{generate\_rotors()} function were to use a 5th order spline and a smoothing factor of $s = 0.0001$. For highly discretized blades, these strict constraints, were incompatible with the mathematical spline solver. As such, we needed to relax the parameters to allow the solver to successfully define the blade geometry.
+This, of course, introduced error into the data because some true rotor geometry was lost by the smoothing factor. This can partially explain the atypical behavior present in Figure~\ref{fig:defense_of_n46}.
+The lack of exponential decay (or any macroscopic trend) in the data rendered a Richardson extrapolation effectively useless.
+Because the experimental $C_T$ values are scattered throughout the green region of Figure~\ref{fig:defense_of_n46}, careful analysis is needed to describe what value of \texttt{n} should be considered ``converged.''
+
+The original convergence criterion was defined by running a verification run --- multiplying the converged value by 1.5 to prove convergence.
+However, knowing the problems described earlier that the code experienced with high values of \texttt{n}, the multiplicative factor would not be possible without introducing geometric and thrust coefficient errors.
+Because of the spline smoothing factor constraints imposed by the VLM software, the maximum discretization we can achieve is using $\texttt{n} = 46$ as the converged value. Though this may not represent a mathematically converged value, it does represent the highest fidelity possible due to the numerical stability ceiling.
+Because of this upper limit on the value for \texttt{n}, of necessity, the multiplicative factor on this parameter will be dropped in the verification study, noting the limitations of the software.
+
+
+\section{Particles Shed per Step (\texttt{p\_per\_step})}
+An important note should be added on how the \texttt{p\_per\_step}, particles shed per step, parameter was handled throughout this convergence study.
+Equation~\ref{eq:p_per_step} represents the mathematical description of \texttt{p\_per\_step}:
+
+
+\begin{equation}\label{eq:p_per_step}
+\texttt{p\_per\_step} = \frac{2 \pi \texttt{n} (\lambda_{vpm})}{\texttt{nsteps}}
+% p_per_step = Int(ceil(lambda_vpm * 2 * pi * R / (nsteps_per_rev * R/n
+\end{equation}
+
+Here, the $\frac{2 \pi}{\texttt{nsteps}}$ expression in the equation represents the angle the propeller traverses in one timestep.
+$\lambda_{vpm}$ represents a particle overlap condition. Essentially the particles must overlap to some degree such that an entire sheet of vorticity can mathematically represent the wake in the software.
+In our convergence study, $\lambda_{vpm}$ was set to 2.125, which roughly equates to the particle edges touching the center of their adjacent particles.
+Finally, \texttt{n} represents the number of spanwise elements per blade, as discussed in Section~\ref{n_convergence}.
+
+While Equation~\ref{eq:p_per_step} calculates the ideal value for \texttt{p\_per\_step}, to prevent a computationally expensive number of particles shed per step, a limit of 3 was put on the parameter.
+For the verification run, discussed in Section~\ref{Verification}, the cap was raised to 6 to prove a converged value. 
+
+\section{Recommended Parameter Values and Verification}\label{Verification}
+With each of the mentioned parameters sufficiently converged, we present in Table~\ref{tab:suggested} the recommended parameter values that sufficiently converge the value for $C_T$.
+This takes into account the VLM package limitations described in Section~\ref{n_convergence}. It represents a sufficient simulation fidelity using an efficient allocation of resources while also prioritizing computation time.
+\begin{table}[H]
+    \centering
+    \caption{A list of recommended parameter values to produce a converged simulation along with the values used to verify said parameter values.}\label{tab:suggested}
+    \begin{adjustbox}{center}
+    \begin{tabular}{l c c}
+        \toprule
+        \textbf{Parameter} & \textbf{Suggested Value} & \textbf{Verification Value} \\
+        \midrule
+        \texttt{nrevs} & 3 &  5 \\
+        \texttt{nsteps} & 240 & 360 \\
+        \texttt{n} & 46  & 46 \\
+        \texttt{p\_per\_step} Max & 3 & 6 \\
+        \bottomrule
+    \end{tabular}
+    \end{adjustbox}
+\end{table}
+
+Running the simulation with the verification parameters took significant time (approximately 8 hours while allocating 128 cores and 256 GB of RAM).
+When running with our suggested parameters, the simulation took only about an hour to run (with only 64 cores and 64 GB of memory).
+Thus, the proposed converged parameters yielded an 85\% reduction in computation time while only a 0.27\% change in the thrust coefficient as seen in Table~\ref{tab:verified_stats}.
+
+\begin{table}[H]
+    \centering
+    \caption{A side by side comparison of the thrust coefficient obtained via the recommended and verification parameters.}\label{tab:verified_stats}
+    \begin{adjustbox}{center}
+    \begin{tabular}{l c c}
+        \toprule
+        \textbf{Parameters Used} & \textbf{Thrust Coefficient Obtained} & \textbf{Percent Error (\%)} \\
+        \midrule
+        Suggested & 0.083948 & 0.2732 \\
+        Verification & 0.084177 & (Reference) \\
+        \bottomrule
+    \end{tabular}
+    \end{adjustbox}
+\end{table}
+
+This thrust coefficient difference of merely 0.2732\% more than justifies the computation time reduction of nearly 7 hours.
+As a final visual representation of our convergence study, Figure~\ref{fig:verified_color_adjust_glyphs} should be referenced. The circulation strength (Gamma Magnitude) color scale reveals that the stronger particle interactions take place at the tips of the rotor blades. This helps to justify the geometric expansion factor of $\texttt{r} = \frac{1}{5}$. In effect, this sets the particle spacing near the tips to be one fifth that of the particle spacing near the hub. More particles near the rotor tips allowed the simulation to capture more of the wake data near the complex interactions that take place there.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{n46_glyphs.png}
+    \caption{A paraview depiction of the rotor wake for the recommended convergence parameters. Color scale is based on particles closest to the blade.}\label{fig:verified_color_adjust_glyphs}
+\end{figure}
+
+
+\section{Future Applications}\label{future}
+Going forward, there are several questions yet to be answered. Further research comparing the simulation data to experimental data on the physical propeller is of key interest. However, further research resolving the geometry discrepancy from earlier will be needed before experimental validation can occur.
+
+It will also be interesting to look more into if advance ratio, \texttt{J}, affects the parameter values we suggest for thrust coefficient convergence.
+Preliminary findings revealed that adjusting the advance ratio led to a divergence from the experimental results. Again though, we discovered that the experimental data may not necessarily correspond to the actual rotor used in the simulation.
+As such, more research would be needed.
+
+Future work will also examine the convergence of the wake's average velocity field. This will aid in the analysis of multiple propellers (and larger wind turbines) lined in series and will lead to fascinating insights.
+
+The convergence study of wind turbines is another goal we have. The same principles from this study can be used on the wind turbines. This will be important as the wind turbines have much larger diameters and as such will be accompanied by a significant increase in computation time and data generation. This makes finding the most efficient parameters all the more important. If we adjust solver parameters without a significant decrease in simulation fidelity, we will be able to save significant computation time and as such be able to run more complex simulations.
+
+
+
+\begin{appendices}
+\chapter{Computational Stability and Dual Language Management}\label{app:debugging}
+Core to the \texttt{FLOWUnsteady} library, is the interplay between multiple coding languages. In particular, the primary numerical solver was executed in a Julia environment, while the background visualization plotting was executed in Python via the \texttt{PyCall} package.
+Because Python's memory management system is incompatible with threaded runs, we encountered frequent segmentation faults and race conditions associated with the non-serial execution on supercomputer nodes.
+Single threaded runs significantly increased the runtime for the simulation, and so, it was necessary to find a solution that addressed segmentation faults and race conditions while still allowing for parallel processing.
+This was accomplished through manual control of memory management in the \texttt{FLOWUnsteady} library. 
+
+A \texttt{ReentrantLock} was implemented on Python function calls to address thread safety, preventing race conditions from occuring while the program ran. It effectively serialized Python plot generation calls in the primarily parallel processing based script.
+Further, effective memory management was accomplished by periodically calling the Garbage Collector from the Julia base code. This was done by using the \texttt{GC.gc()} command at the end of looped commands to ensure that memory leaks did not occur.
+\end{appendices}
+
+\end{document}

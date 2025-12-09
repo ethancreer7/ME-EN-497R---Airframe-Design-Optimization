@@ -22,7 +22,7 @@
     citecolor=linkblue
 }
 \usepackage{booktabs}
-\title{Convergence Study of a Propeller}
+\title{Convergence Studies}
 \author{Ethan Creer}
 \date{10 December 2025}
 \begin{document}
@@ -30,24 +30,15 @@
 \maketitle
 
 \begin{abstract}
-    This report presents a series of mathematical and pragmatic convergence analysis, the principles of which can be applied to a variety of computational fluid dynamics applications.
+    This report presents a series of mathematical and pragmatic convergence study analyses, the principles of which can be applied to a variety of computational fluid dynamics applications, including complex wing and propellers.
     \bigskip
-    The Weber Wing convergence study 
-    
-    
-    ADD ABSTRACT FOR WING CONVERGENCE STUDY.
 
-    REVIEW LOGIC OF WEBER WING CHAPTER.
-
-    REWRITE NARRATIVE STYLE OF WEBER WING CHAPTER.
-
-    ADD GLYPH FIGURE OF WEBER WING.
-
-    TRANSITION BETWEEN CHAPTERS 1 AND 2.
+    The first study was on the Weber Wing via the \texttt{FLOWUnsteady} simulation package. The primary objective was to find optimal discretization settings that minimize computational cost to converge both the lift and drag coefficients. Though not as computationally expensive of a study as the following example, the principles apply directly to the propeller case and lay the groundwork for complex system analysis. The coefficient of variation was used to determine temporal convergence, while a run over run percent change was used to prove spatial convergence.
+    The study revealed the \texttt{wakelength} to converge at 3.111 meters, approximately 1.25 times the wing span of 2.489 meters. The \texttt{nsteps} parameter converged at 20, \texttt{n} at 40, and \texttt{p\_per\_step} at 10. These values were verified with appropriate multiplicate factors, and neither the lift nor drag coefficients changed more than 0.5\% in either case, thus indicating convergence. 
 
     \bigskip
 
-    The second study was on an APC 10$\times$7E propeller via the \texttt{FLOWUnsteady} simulation package. The objective was to find optimal discretization parameters that use an efficient computational cost and allocation of supercomputer resources to determine the converged thrust coefficient. Temporal convergence was established via Richardson extrapolation, with 240 time steps per revolution over 3 revolutions as the converged result. Spatial convergence, constrained by numerical and geometric instability, was limited by a numerical stability ceiling. As such, the number of spanwise elements per blade was limited to \texttt{n} = 46 and further convergence was not possible. Analyzing the number of particles shed per step revealed that limiting \texttt{p\_per\_step} to 3 provided adequate thrust coefficient convergence and effectively reduced computation time. A verification simulation, with increased parameter values, determined that computational time was reduced by 85\%, from approximately 8 hours to 1 hour, with a thrust coefficient difference of only 0.27\%. The significant drop in computational time and cost demonstrates that the suggested parameters provide high-fidelity thrust coefficient convergence for this rotor geometry.
+    The second study was on an APC 10$\times$7E propeller also via the \texttt{FLOWUnsteady} package. The objective was to apply the principles learned in the Weber Wing study and find the optimal discretization parameters that use an efficient computational cost and allocation of supercomputer resources. This time, the study was performed to converge the thrust coefficient. Temporal convergence was established via Richardson extrapolation, with 240 time steps per revolution over 3 revolutions as the converged result. Spatial convergence, constrained by numerical and geometric instability, was limited by a numerical stability ceiling. As such, the number of spanwise elements per blade was limited to \texttt{n} = 46 and further convergence was not possible. Analyzing the number of particles shed per step revealed that limiting \texttt{p\_per\_step} to 3 provided adequate thrust coefficient convergence and effectively reduced computation time. A verification simulation, with increased parameter values, determined that computational time was reduced by 85\%, from approximately 8 hours to 1 hour, with a thrust coefficient difference of only 0.27\%. The significant drop in computational time and cost demonstrates that the suggested parameters provide high-fidelity thrust coefficient convergence for this rotor geometry.
 \end{abstract}
 
 \tableofcontents
@@ -78,8 +69,8 @@ These parameters are defined as found in Table~\ref{tab:geometry_weber}
     \end{tabular}
 \end{table}
 
-With the wing now defined, we are now set to begin the convergence study on the wing. We are primarily interested in the variables listed in Table~\ref{tab:adjustables}.
-The convergence mode for each is listed in the same table giving us a preliminary idea of how each variable will affect the convergence of coefficient of lift and drag values.
+With the wing geometry now defined and parameters set, we can take initial steps for the convergence study on the wing. We are primarily interested in the variables listed in Table~\ref{tab:adjustables}.
+The convergence mode for each is listed in the same table giving us a preliminary idea of how each variable will affect the convergence of lift and drag coefficients values.
 
 
 \begin{table}[H]
@@ -90,10 +81,10 @@ The convergence mode for each is listed in the same table giving us a preliminar
         \toprule
         \textbf{Variable} & \textbf{Meaning} & \textbf{Convergence Mode} \\
         \midrule
-        \texttt{wakelength} & Length particles travel down the wake & Temporal \\
+        \texttt{wakelength} & Length of the Simulated Wake & Temporal \\
         \texttt{nsteps} & Number of Time Steps & Temporal \\
         \texttt{n} & Number of Spanwise Elements per Side & Spatial \\
-        \texttt{p\_per\_step} & Particles shed per step & Spatial \\
+        \texttt{p\_per\_step} & Particles Shed per Step & Spatial \\
         \bottomrule
     \end{tabular}
     \end{adjustbox}
@@ -102,69 +93,69 @@ The convergence mode for each is listed in the same table giving us a preliminar
 Our convergence study will follow a systematic approach, gradually iterating through variables to suggest final parameters such that the wing will be appropriately discretized and sufficiently converged.
 
 \section{Wakelength}
-The first run through of the program consists of varying the wakelength of the wing. Obtaining convergence via wakelength varying is important as the wing simulation needs to be run long enough for the wake to settle in and the furthest aft particles no longer significantly influence the lift and drag.
+The initial phase of the study involved varying the wakelength of the wing. Obtaining convergence via wakelength variance is important for a number of reasons. Critically, the wing simulation must run long enough for the wake to settle and the furthest aft particles no longer significantly influence the lift and drag coefficients.
 
-In our study, we vary the wakelength as a multiplicative factor of the span length given by Equation~\ref{eq:wakelength}. 
+In our study, we varied the wakelength by multiplying the span length by a multiplicative factor, $i$, given by Equation~\ref{eq:wakelength}. 
 \begin{equation}\label{eq:wakelength}
 wakelength = i \times{} b
 \end{equation}
 
-We perform a sweep across the $i$ value from 0.75 to 5.0 in 0.25-step increments. However, for computational efficiency, once when each of the coefficients of lift and drag become sufficiently converged, we break from this loop.
-Determining the metric used for convergence indication was also an important process. Here, we chose to use the coefficient of variation value for the 5 tail values of $C_L$ and $C_D$ at the end of each simulation.
-When each of these metrics fell below a threshold value (in this case 0.002 --- or 0.2\%), the simulation was considered converged, and this wakelength value was stored as a global variable to be referenced in subsequent convergence studies.
-In our sweep, this converged value ended up being 3.11125.
+We performed a sweep across the $i$ value from 0.75 to 5.0 in 0.25-step increments. However, for computational efficiency, once each of the coefficients of lift and drag were sufficiently converged, we broke from the loop.
+The metric used to determine coefficient convergence was the coefficient of variation for the final 5 values of $C_L$ and $C_D$.
+When each of these metrics fell below a threshold value (in this case 0.002 --- or 0.2\%), the simulation was considered converged, and the wakelength value was recorded
+In our sweep, the wakelength converged to a value of 3.11125.
 The coefficient of variation is essentially a normalized standard deviation by taking the standard deviation of the given subset and dividing by its associated mean. 
 The coefficient of variation is helpful in the analysis of multiple datasets, and because the variable sweep naturally produces a variety of different datasets, it is appropriate for this study.
-
-Wakelength convergence is particularly important when it comes to temporal convergence. It is essentially testing for how long the wakelength needs to be for the $C_L$ and $C_D$ values to flatten out at the end of the simulation.
-This will be shown near the end of the study with the final proposed parameter values.
+The temporal convergence of this variable will be further proven in Section~\ref{wing_verification}.
 
 \section{Number of Time Steps (\texttt{nsteps})}
-The second parameter of interest in our convergence study is that of \texttt{nsteps}. This value dictates the number of time steps that take place from the wakelength being its shortest to its longest length.
-Increasing \texttt{nsteps} does not shorten or lengthen the wakelength, but it does increase the resolution of the wakelength, allowing for more accurate $C_L$ and $C_D$ calculations.
-For our study, we fix the wakelength to its converged value from the previous step and then sweep \texttt{nsteps} from 10 to 100, this time in increments of 10.
+The second parameter of interest in our convergence study is that of \texttt{nsteps}. This value dictates the number of time steps that take place beginning to end of the wakelength simulation.
+Increasing \texttt{nsteps} does not shorten or lengthen the wakelength, but rather adjusts the resolution of the wakelength --- providing more accurate $C_L$ and $C_D$ calculations.
+For our study, we fix the wakelength to its converged value from the previous step and then sweep \texttt{nsteps} from 10 to 100, in increments of 10.
 To determine convergence, we use the same metric used in the wakelength convergence test --- that is, we measure the coefficient of variation for the final 5 values of $C_L$ and $C_D$ for each run.
-Again, once when this coefficient falls below 0.002 --- or 0.2\%, we consider the study converged, store the variable in the global scope for future reference, and transition to the next test.
+Again, once this coefficient falls below 0.002 --- or 0.2\%, we consider the study converged, record the variable's value for future reference, and transition to the next test.
 In this sweep, the wing coefficients converged at a value of $\texttt{nsteps} = 20$.
 
 
 \section{Spanwise Elements per Side (\texttt{n})}
-The next parameter of interest, \texttt{n}, is an important spatial convergence parameter. In essence, it is a measure of how finely the blade is discretized in spanwise panels.
-The greater the value of \texttt{n}, the greater the number of spanwise panels are present per side of the wing.
-With the wakelength and \texttt{nsteps} values set from the previous sweeps, we now sweep the value of \texttt{n} from 10 to 100, again in increments of 10.
+The next parameter of interest, \texttt{n}, is an important spatial convergence parameter. Fundamentally, this parameter defines the resolution of the blade discretization.
+The greater the value of \texttt{n}, the greater the number of spanwise panels per side of the wing.
+With the wakelength and \texttt{nsteps} values converged from the previous sweeps, we now sweep the value of \texttt{n} from 10 to 100, again in increments of 10.
 However, instead of using the coefficient of variation as the metric for convergence, we instead use a run over run percent change calculation.
-We do this because of the fundamental goal of this test. With temporal convergence already worked out we are now testing for spatial convergence --- which in this test means the final values of $C_L$ and $C_D$ not changing significantly from run to run.
-Instead of using the singular final value for both of these coefficients, we attempt to account for numerical noise by taking the average of the last 3 recorded values and then performing the percent change calculation according to Equation~\ref{eq:percent_change}.
-In effect, we take the difference between the current run's coefficient value and the previous run's coefficient value, divide it by the previous run's value, and multiply by 100\%.
-The tolerance for this study was set to be 0.25\%, and once the run over run percent change for both coefficient values fell below this tolerance, the for loop broke away, and the values were recorded as global variables for future analysis.
-For this study, the converged value for \texttt{n} was 40 --- meaning 40 spanwise panels on each side of the simple wing.
+We do this because the goal of this test is fundamentally different from the previous steps. With temporal convergence established, we proceeded to studying spatial convergence --- which in this test means the final values of $C_L$ and $C_D$ not changing significantly from run to run.
+Instead of using the singular final value for the coefficients, we accounted for numerical noise by taking the average of the last 3 recorded values and then performing the percent change calculation according to Equation~\ref{eq:percent_change}.
 
 \begin{equation}\label{eq:percent_change}
 \% \text{ Change} = \frac{\text{Coeff}_{\text{curr}} - \text{Coeff}_{\text{prev}}}{\text{Coeff}_{\text{prev}}} \times{} 100\%
 \end{equation}
 
+In effect, we take the difference between the current run's coefficient value and the previous run's coefficient value, divide it by the previous run's value, and multiply by 100\%.
+The tolerance for this study was set to be 0.25\%, and once the run over run percent change for both coefficient values fell below this tolerance, the sweep loop broke away, and the converged coefficient values were recorded for future analysis.
+For this study, the value for \texttt{n} converged at 40 --- meaning 40 spanwise panels on each side of the simple wing.
+
+
 
 \section{Particles Shed per Step (\texttt{p\_per\_step})}
-A final parameter of interest necessitates discussion in this convergence study --- that of p\_per\_step.
-This parameter did not receive its own sweep, but rather was internally updated across each run of the studies various sweep.
-An understanding of what this parameter physically represents can shed light on its importance in this convergence study.
-p\_per\_step is best described as the number of particle shed per step, per spanwise panel and is a key parameter in limiting particle overlap on each spanwise panel.
-In our study, we set the minimum p\_per\_step value to be the result of Equation~\ref{eq:pperstep}, rounded up to the nearest integer.
+The final parameter noted in Table~\ref{tab:adjustables}, \texttt{p\_per\_step} necessitates a discussion for this convergence study.
+This parameter did not receive its own variable sweep, but rather was internally updated across each run of each sweep.
+An understanding of what this parameter physically represents can partially explain our reasoning for this approach.
+The \texttt{p\_per\_step} variable is best described as the number of particle shed per step, per spanwise panel, and is a key parameter in controlling particle overlap on each spanwise panel.
+In our study, we set the \texttt{p\_per\_step} value to be the result of Equation~\ref{eq:pperstep}, rounded up to the nearest integer.
 
 \begin{equation}\label{eq:pperstep}
-\frac{2 \cdot n \cdot \lambda_{vpm} \cdot V_\infty \cdot ttot}{nsteps \cdot b}
+\frac{2 \cdot \texttt{n} \cdot \lambda_{vpm} \cdot V_\infty \cdot \texttt{ttot}}{\texttt{nsteps} \cdot \texttt{b}}
 \end{equation}
 
-Here, $\lambda_{vpm}$ is a particle overlap parameter and is fixed for the entire study. $ttot$ is also fixed, coming from the wakelength convergence study.
+Here, $\lambda_{vpm}$ is a particle overlap parameter and is fixed for the entire study. The $ttot$ value is also fixed, which comes directly from the wakelength convergence study.
 
-The overriding principle inherent in this parameter, is that its value must change with each run, such that the true independent variable being swept can be isolated and analyzed.
-The constraint here is that particles should not overlap each other (as good as possible), and because p\_per\_step is a function of \texttt{n}, \texttt{nsteps}, and (indirectly) wakelength, its value must be updated with each run.
-It's essentially its own dependent variable and a necessary constraint to insure uniformity across the variable sweep.
+The overriding principle inherent in this parameter, is that its value must change with each run, such that the true independent variable of interest can be isolated in its sweep analysis.
+The constraint here is that particles should not overlap each other. This, of course, will not be perfect as there is a non-constant spanwise distribution of particles across the span, however, we can make an attempt to control it. Because p\_per\_step is a function of \texttt{n}, \texttt{nsteps}, and (indirectly) wakelength, its value must be updated with each run.
+It's essentially its own dependent variable and a necessary constraint to ensure uniformity across each variable sweep.
 
 As such, this variable, was updated with each new variable configuration to provide the most accurate coefficient values.
 Though not an explicitly swept parameter in this study, it did require an understanding of its role in each wing discretization.
 
-\section{Weber Wing Recommended Parameter Values and Verification}
+\section{Weber Wing Recommended Parameter Values and Verification}\label{wing_verification}
 
 With the above convergence studies performed, and an understanding of the meaning of \texttt{p\_per\_step}, we are now ready to present a list of parameter values that would provide adequate coefficient of lift and drag values in a study.
 Table~\ref{tab:proposed} presents these values below.
@@ -186,8 +177,8 @@ Table~\ref{tab:proposed} presents these values below.
     \end{tabular}
 \end{table}
 
-\section{Verification Tests}
-With this proposed set, we now set to gain greater confidence in these converged values by performing a series of verification tests.
+
+With this proposed set, we can confirm these converged values by performing a series of verification tests.
 These tests involve individually increasing each variable by a certain factor (in our case by 1.5 or 2), re-running the solver, and analyzing whether the values for $C_L$ or $C_D$ changed significantly.
 
 
@@ -211,28 +202,28 @@ The data presented in Table~\ref{tab:verification} depicts the percent change in
 With a tolerance of 0.5\%, we can see that each verification test succeeds in returning sufficiently converged values.
 
 
-\begin{figure}
+As one additional visual confirmation of the converged values, we examine both a $C_L$ vs Time and $C_D$ vs Time plot to confirm temporal convergence for each.
+This is depicted in Figures~\ref{fig:cl_plot}~and~\ref{fig:cd_plot}. In the coefficient of lift vs time plot we can see that the coefficient of lift levels off as the wakelength fully develops in time.
+As such, we have further confirmation that these parameter settings provide sufficient resolution for convergence for coefficient of lift.
+
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.9\textwidth]{CL_vs_time_proposed.png}
-    \caption{A visual representation of temporal convergence for the coefficient of lift value. As the wake develops in time, the coefficient level off to become steady.}\label{fig:cl_plot}
+    \caption{A visual representation of temporal convergence for the coefficient of lift value. As the wake develops in time, the coefficient value levels off to become steady.}\label{fig:cl_plot}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.9\textwidth]{CD_vs_time_proposed.png}
     \caption{A visual representation of temporal convergence for the coefficient of drag value. As the wake develops in time, the coefficient begins to levels off at a steady value. Note the y-axis scale here, which deals with very small numbers.}\label{fig:cd_plot}
 \end{figure}
 
-As one final visual confirmation of the converged values, we examine both a $C_L$ vs Time and $C_D$ vs Time plot to confirm temporal convergence for each.
-This is depicted in Figures~\ref{fig:cl_plot}~and~\ref{fig:cd_plot}. In the coefficient of lift vs time plot we can see that the coefficient of lift levels off as the wakelength fully develops in time.
-As such, we have further confirmation that these parameter settings provide sufficient resolution for convergence for coefficient of lift.
-
 For the coefficient of drag plot, we note some unique behavior towards the beginning of the simulation, with the coefficient of drag value shooting up, and then exponentially decaying in time. This plot does not have as defined of a leveling off for coefficient of drag value, but we note that the y-axis has a very small scale, that varies from $4.8 \times 10^{-3}$ to $4.9 \times 10^{-3}$.
-This small range could in part explain why the graph does not appear to level off. Our study relied on coefficient of variation values in addition to run over run percent change in values to determine convergence, and with such small magnitude in numbers, this could look as if it prematurely converged.
+This small range partially explains why the graph does not appear to level off. Our study relied on coefficient of variation values in addition to run over run percent change in values to determine convergence, and with such small magnitude in numbers, this could appear to the eye as premature convergence, despite the math dictating it is converged.
 
 If we examine the \texttt{nsteps} verification test and its associated $C_D$ vs Time plot, seen in Figure~\ref{fig:cd_plot_verified}, we note that there is a more defined ``leveling-off'' of the coefficient of drag value.
 
-\begin{figure}
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.9\textwidth]{CD_vs_time_verification1.png}
     \caption{A visual representation of temporal convergence for the coefficient of drag after doubling the \texttt{nsteps} value from its converged proposal. As the wake develops in time, the coefficient begins to levels off at a steady value.}\label{fig:cd_plot_verified}
@@ -241,17 +232,25 @@ If we examine the \texttt{nsteps} verification test and its associated $C_D$ vs 
 Thus, if greater convergence is desired, one can use the doubled \texttt{nsteps} value, which will provide more of a visual level off.
 However, for most applications, the proposed values provide sufficient convergence, and will only deviate from true coefficient values by a small amount.
 
+As one last visual representation of the Weber Wing, Figure~\ref{fig:nsteps20_weber} presents the wake generated using the converged value of $\texttt{nsteps} = 20$. This figure provides insight into a physical representation of the wing and the mechanics of its wake generation. 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{nsteps20_weber_wing.png}
+    \caption{A ParaView representation of the generated wake of the Weber Wing. The characteristic curling that takes place around the edges of the wing tips is shown.}\label{fig:nsteps20_weber}
+\end{figure}
+
+
 \section{Weber Wing Conclusions}
 Ultimately, a convergence study provides crucial analysis for the variety of parameters that come with aerodynamic studies.
-Without the convergence test just performed, one could unnecessarily use solver settings that directly lead to a more computationally expensive solve.
-Though this does not take significant time in the case of a simple wing, the computational time greatly increases as the wing and/or propeller system becomes more complicated.
+Without the convergence test just performed, one could unnecessarily use solver settings that directly lead to a more computationally expensive solve for a given wing and its geometry.
+Though the simple wing does not take signifcant computational time, when more complex wings and/or propeller systems are used (as seen in Chapter~\ref{prop_chapter}), the computational cost greatly increases.
 Thus, from an optimization standpoint, it is important that the right parameter settings are determined such that with some level of confidence we can treat the resulting $C_L$ and $C_D$ values as true to their respective conditions.
 
 
-\chapter{10$\times$7E Propeller Convergence Study}
+\chapter{10$\times$7E Propeller Convergence Study}\label{prop_chapter}
 \section{Problem Setup}
 
-To begin our convergence study analysis, it is necessary to define the propeller geometry and simulation parameters used in the study.
+To begin a convergence study analysis on a Propeller, it is necessary to define the propeller geometry and simulation parameters used in the study.
 These parameters are defined in Table~\ref{tab:geometry_prop}, and a 3D loft of the rotors is visualized in Figure~\ref{fig:lofts}.
 
 \begin{table}[H]
@@ -267,7 +266,7 @@ These parameters are defined in Table~\ref{tab:geometry_prop}, and a 3D loft of 
     \end{tabular}
 \end{table}
 
-As will be discussed further in Section~\ref{future}, we discovered a discrepancy between the rotor geometry linked on the manufacturer's website and what is described in the GitHub files. As such, this report will focus on the theoretical convergence using the parameters provided on GitHub. Further research will be needed to compare experimental data with our converged results.
+As will be discussed further in Chapter~\ref{future}, we discovered a discrepancy between the rotor geometry linked on the manufacturer's website and what is described in the GitHub files. As such, this report will focus on the theoretical convergence using the parameters provided on GitHub. Further research will be needed to compare experimental data with our converged results.
 
 \begin{figure}[H]
     \centering
@@ -303,11 +302,11 @@ These variables will be the focus of our convergence study, and we will follow a
 The convergence of propeller revolutions was initially evaluated with a visual inspection of a $C_T$ vs time plot, seen in Figure~\ref{fig:ct_vs_time_init}.
 We examine the plot for the point where the thrust coefficient reaches a steady state (or begins to level off). We can then estimate the number of revolutions (to the nearest whole number, as required by the code documentation) before the coefficient levels off in time.
 
-The simulation results depicted in Figure~\ref{fig:ct_vs_time_init} ran for a total of 8 revolutions, and we see that the plot begins to level off about a third of the way into the simulation time. From a mathematical standpoint, Table~\ref{tab:ct_vs_time_percent} presents the revolution on revolution percent change in the thrust coefficient.
+The simulation results depicted in Figure~\ref{fig:ct_vs_time_init} ran for a total of 8 revolutions, and we see that the plot begins to level off about a third of the way into the simulation time. From a mathematical standpoint, Table~\ref{tab:ct_vs_time_percent} presents the revolution-over-revolution percent change in the thrust coefficient.
 
 \begin{table}[H]
     \centering
-    \caption{A decline in revolution on revolution percent change with increasing number of revolutions.}\label{tab:ct_vs_time_percent}
+    \caption{A decline in revolution-over-revolution percent change with increasing number of revolutions.}\label{tab:ct_vs_time_percent}
     \begin{adjustbox}{center}
     \begin{tabular}{c c}
         \toprule
@@ -344,10 +343,10 @@ Our approach to converging this parameter involves leveraging the principle of R
 Its purpose is to extrapolate beyond a given dataset's range and provide an estimated value for the dependent variable (in this case the thrust coefficient) as the independent variable approaches its continuum limit (in this case, as $\Delta t \rightarrow 0$). Additionally, this extrapolation theory is based on the assumption that changing the time step between runs introduces a different error from the true value. Equations~\ref{eq:richardson1} and~\ref{eq:richardson2} begin to illustrate this concept:
 
 \begin{equation}\label{eq:richardson1}
-f_{\Delta t} = f_{exact} + C(\Delta t)^p
+f_{\Delta t} = f_{exact} + {C(\Delta t)}^p
 \end{equation}
 \begin{equation}\label{eq:richardson2}
-f_{\Delta t/2} = f_{\text{exact}} + C\left(\frac{\Delta t}{2}\right)^{p}
+f_{\Delta t/2} = f_{\text{exact}} + {C\left(\frac{\Delta t}{2}\right)}^{p}
 \end{equation}
 
 where $f_{\Delta t}$ is the estimated value from the simulation run, $f_{exact}$ is the true value, $C$ is some constant, and $p$ is the order of accuracy from the numerical method. Because we used more than 3 data points, an observed order of accuracy can be calculated through the additional $f_{\Delta t}$ equations generated.
@@ -524,7 +523,7 @@ As a final visual representation of our convergence study, Figure~\ref{fig:verif
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.9\textwidth]{n46_glyphs.png}
-    \caption{A paraview depiction of the rotor wake for the recommended convergence parameters. Color scale is based on particles closest to the blade.}\label{fig:verified_color_adjust_glyphs}
+    \caption{A ParaView depiction of the rotor wake for the recommended convergence parameters. Color scale is based on particles closest to the blade.}\label{fig:verified_color_adjust_glyphs}
 \end{figure}
 
 
@@ -549,6 +548,6 @@ Single threaded runs significantly increased the runtime for the simulation, and
 This was accomplished through manual control of memory management in the \texttt{FLOWUnsteady} library. 
 
 A \texttt{ReentrantLock} was implemented on Python function calls to address thread safety, preventing race conditions from occuring while the program ran. It effectively serialized Python plot generation calls in the primarily parallel processing based script.
-Further, effective memory management was accomplished by periodically calling the Garbage Collector from the Julia base code. This was done by using the \texttt{GC.gc()} command at the end of looped commands to ensure that memory leaks did not occur.
+Further, effective memory management was accomplished by periodically calling the Garbage Collector from the Julia base code. This was done by using the \texttt{GC.gc()} command at the end of looped commands to ensure that memory leaks did not occur and script failures.
 \end{appendices}
 \end{document}

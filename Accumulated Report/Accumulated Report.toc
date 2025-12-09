@@ -1,0 +1,32 @@
+\contentsline {chapter}{\numberline {1}Introduction to Wing Geometry}{3}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Aeronautical Glossary}{3}{section.1.1}%
+\contentsline {section}{\numberline {1.2}A Preliminary Exploration of the Vortex Lattice Method}{9}{section.1.2}%
+\contentsline {chapter}{\numberline {2}Airframe Design, Theory, and Exploration}{16}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Wing Design Glossary}{16}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Vortex Lattice Method Theory}{21}{section.2.2}%
+\contentsline {section}{\numberline {2.3}Exploration: Lift Distributions and Wing Efficiency}{26}{section.2.3}%
+\contentsline {chapter}{\numberline {3}Airframe Design Optimization: Part III}{33}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Stability and Optimization Glossary}{33}{section.3.1}%
+\contentsline {section}{\numberline {3.2}Exploration: Stability as a Function of Wing Parameters}{40}{section.3.2}%
+\contentsline {section}{\numberline {3.3}Conclusion}{50}{section.3.3}%
+\contentsline {chapter}{\numberline {4}Airframe Design --- Optimization: Part IV}{51}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Preliminary Optimization}{51}{section.4.1}%
+\contentsline {chapter}{\numberline {5}Weber Wing Convergence Study}{54}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Problem Setup}{54}{section.5.1}%
+\contentsline {section}{\numberline {5.2}Wakelength}{55}{section.5.2}%
+\contentsline {section}{\numberline {5.3}Number of Time Steps ($nsteps$)}{56}{section.5.3}%
+\contentsline {section}{\numberline {5.4}Spanwise Elements per Side ($n$)}{56}{section.5.4}%
+\contentsline {section}{\numberline {5.5}Particles Shed per Step (p\_per\_step)}{57}{section.5.5}%
+\contentsline {section}{\numberline {5.6}Proposed Values}{57}{section.5.6}%
+\contentsline {section}{\numberline {5.7}Verification Tests}{58}{section.5.7}%
+\contentsline {section}{\numberline {5.8}Conclusion}{60}{section.5.8}%
+\contentsline {chapter}{\numberline {6}Propeller Convergence Study}{61}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Problem Setup}{61}{section.6.1}%
+\contentsline {section}{\numberline {6.2}Number of Revolutions (\texttt {nrevs})}{63}{section.6.2}%
+\contentsline {section}{\numberline {6.3}Number of Time Steps per Revolution}{64}{section.6.3}%
+\contentsline {section}{\numberline {6.4}Number of Spanwise Elements per Propeller Blade (\texttt {n})}{66}{section.6.4}%
+\contentsline {section}{\numberline {6.5}Particles Shed per Step (\texttt {p\_per\_step})}{69}{section.6.5}%
+\contentsline {section}{\numberline {6.6}Recommended Parameter Values and Verification}{69}{section.6.6}%
+\contentsline {section}{\numberline {6.7}Future Applications}{71}{section.6.7}%
+\contentsline {chapter}{Appendix}{72}{section*.52}%
+\contentsline {chapter}{\numberline {A}Computational Stability and Dual Language Management}{73}{appendix.1.A}%
